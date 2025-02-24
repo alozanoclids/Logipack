@@ -67,4 +67,4 @@ Route::controller(ClientsController::class)->group(function () {
     Route::get('/ClientsId/{id}', 'ClientsId'); // Obtener una lineas específica
     Route::put('/updateClients/{id}', 'updateClients'); // Actualizar una lineas
     Route::delete('/deleteClients/{id}', 'deleteClients'); // Eliminar una lineas
-});
+}); 
