@@ -1,0 +1,121 @@
+.loader-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(98, 108, 139, 0.514);
+    backdrop-filter: blur(8px); /* Efecto cristal */
+    display: flex;
+    flex-direction: column; /* Apilar loader y texto verticalmente */
+    justify-content: center;
+    align-items: center;
+    z-index: 9999; /* Asegura que esté sobre todo el contenido */
+}
+
+/* Loader animation */
+@keyframes honeycomb {
+  0%, 20%, 80%, 100% {
+    opacity: 0;
+    transform: scale(0);
+  }
+  30%, 70% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.honeycomb {
+  position: relative;
+  width: 40px;
+  height: 40px;
+}
+
+.honeycomb div {
+  animation: honeycomb 2.1s infinite ease-in-out;
+  background: #f3f3f3;
+  height: 20px;
+  width: 40px;
+  position: absolute;
+  margin-top: 10px;
+}
+
+.honeycomb div::after,
+.honeycomb div::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-left: 20px solid transparent;
+  border-right: 20px solid transparent;
+}
+
+.honeycomb div::after {
+  top: -10px;
+  border-bottom: 10px solid #f3f3f3;
+}
+
+.honeycomb div::before {
+  bottom: -10px;
+  border-top: 10px solid #f3f3f3;
+}
+
+/* Ajuste de posiciones y retrasos */
+.honeycomb div:nth-child(1) { animation-delay: 0s;    left: -48px; top: 0; }
+.honeycomb div:nth-child(2) { animation-delay: 0.1s;  left: -24px; top: 38px; }
+.honeycomb div:nth-child(3) { animation-delay: 0.2s;  left: 24px;  top: 38px; }
+.honeycomb div:nth-child(4) { animation-delay: 0.3s;  left: 48px;  top: 0; }
+.honeycomb div:nth-child(5) { animation-delay: 0.4s;  left: 24px;  top: -38px; }
+.honeycomb div:nth-child(6) { animation-delay: 0.5s;  left: -24px; top: -38px; }
+.honeycomb div:nth-child(7) { animation-delay: 0.6s;  left: 0;     top: 0; }
+
+
+
+/* Estilos para el texto */
+.loading-text {
+    font-size: 1.3rem; /* Tamaño del texto */
+    font-weight: bold; /* Resaltar el texto */
+    text-align: center; /* Centrar texto */
+    margin-top: 40px;
+    color: #ffffff; /* Color del texto */
+    animation: fadeInOut 2.5s ease-in-out infinite; /* Animación de aparición y desaparición */
+}
+
+/* Animación de aparición y desaparición del texto */
+@keyframes fadeInOut {
+    0%, 100% {
+        opacity: 0; /* Texto completamente transparente */
+    }
+    50% {
+        opacity: 1; /* Texto completamente visible */
+    }
+}
+
+/* Estilos para los puntos */
+.dot {
+    animation: fadeInOut 1.5s ease-in-out infinite; /* Animación de aparición y desaparición */
+    opacity: 0; /* Puntos inicialmente transparentes */
+}
+
+/* Animación escalonada para cada punto */
+.dot:nth-child(1) {
+    animation-delay: 0s; /* Sin retraso para el primer punto */
+}
+
+.dot:nth-child(2) {
+    animation-delay: 0.3s; /* Retraso para el segundo punto */
+}
+
+.dot:nth-child(3) {
+    animation-delay: 0.6s; /* Retraso para el tercer punto */
+}
+
+/* Animación de aparición y desaparición */
+@keyframes fadeInOut {
+    0%, 100% {
+        opacity: 0; /* Transparente */
+    }
+    50% {
+        opacity: 1; /* Visible */
+    }
+}
