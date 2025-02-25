@@ -48,3 +48,23 @@ export const createPermission = async (name: string, description: string, status
         throw error;
     }
 }
+
+export const deletePermission = async (id: number) => {
+    try {
+        const response = await apiRole.delete(`/deletePermission/${id}`);
+        return response.data;
+    } catch (error) {
+        console.error('Error en deletePermission:', error);
+        throw error;
+    }
+}
+
+export const updateClients = async (id: number, data: { name: string; line_types: number[] }) => {
+    try {
+        const response = await apiRole.put(`/updateClients/${id}`, data);
+        return response.data;
+    } catch (error) {
+        console.error('Error en updateClients:', error);
+        throw error;
+    }
+};

@@ -61,7 +61,7 @@ function User() {
           },
           { id: 2, title: "Roles", component: <Roles />, isProtected: true },
           { id: 3, title: "Plantas", component: <Factory />, isProtected: true },
-          { id: 4, title: "Listas", component: <Lista />, isProtected: true },
+          { id: 4, title: "Lineas", component: <Lista />, isProtected: true },
           { id: 5, title: "Clientes", component: <Clients />, isProtected: true },
         ]}
       />

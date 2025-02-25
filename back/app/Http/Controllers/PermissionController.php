@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Models\RolePermission;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class PermissionController extends Controller
@@ -96,5 +97,17 @@ class PermissionController extends Controller
         }
 
         return response()->json(['message' => 'Permisos actualizados']);
+    }
+
+    public function deletePermission($id): JsonResponse
+    {
+        $permission = Permission::find($id);
+        if (!$permission) {
+            return response()->json(['message' => 'Fábrica no encontrada'], 404);
+        }
+
+        $permission->delete();
+
+        return response()->json(['message' => 'Fábrica eliminada correctamente']);
     }
 }
