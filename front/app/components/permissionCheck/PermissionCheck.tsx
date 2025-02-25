@@ -1,43 +1,53 @@
-"use client";
+import React, { useEffect, useState, cloneElement, ReactElement } from "react";
 import { useAuth } from "../../context/AuthContext";
-import { useEffect, useState } from "react";
-import { getPermissionRole } from "../../services/roleServices";
+import { getPermissionRole } from "../../services/userDash/roleServices";
+import Loader from "../loader/Loader";
 
 type PermissionCheckProps = {
-    children: React.ReactNode;
-    requiredPermission: string;
+  children: ReactElement;
+  requiredPermission: string;
 };
 
 interface PermissionRoleResponse {
-    permissions: string[];
+  permissions: string[];
 }
 
-const PermissionCheck = ({ children, requiredPermission }: PermissionCheckProps) => {
-    const { role, loading } = useAuth();
-    const [hasPermission, setHasPermission] = useState(false);
-    const [fetched, setFetched] = useState(false);
+// Cache simple para permisos
+const permissionCache: { [role: string]: string[] } = {};
 
-    useEffect(() => {
-        if (!loading && role) {
-            getPermissionRole(role)
-                .then((data: PermissionRoleResponse) => {
-                    if (data.permissions && data.permissions.includes(requiredPermission)) {
-                        setHasPermission(true);
-                    }
-                })
-                .catch((error) => {
-                    console.error("Error en getPermissionRole:", error);
-                })
-                .finally(() => {
-                    setFetched(true);
-                });
-        }
-    }, [loading, role, requiredPermission]);
+const PermissionInputs = ({ children, requiredPermission }: PermissionCheckProps) => {
+  const { role, loading } = useAuth();
+  const [hasPermission, setHasPermission] = useState(false);
+  const [fetched, setFetched] = useState(false);
 
-    if (loading || !fetched) return <p>Cargando...</p>;
-    if (!hasPermission) return null;
+  useEffect(() => {
+    if (!loading && role) {
+      if (permissionCache[role]) {
+        // Si ya está en cache, usa la información almacenada
+        setHasPermission(permissionCache[role].includes(requiredPermission));
+        setFetched(true);
+      } else {
+        // Si no, realiza la llamada y guarda en cache
+        getPermissionRole(role)
+          .then((data: PermissionRoleResponse) => {
+            permissionCache[role] = data.permissions;
+            setHasPermission(data.permissions.includes(requiredPermission));
+          })
+          .catch((error) => {
+            console.error("Error en getPermissionRole:", error);
+          })
+          .finally(() => {
+            setFetched(true);
+          });
+      }
+    }
+  }, [loading, role, requiredPermission]);
 
-    return <>{children}</>;
+  if (loading || !fetched) return <Loader />;
+
+  if (hasPermission) return children;
+
+  return cloneElement(children as ReactElement<any>, { readOnly: true, disabled: true });
 };
 
-export default PermissionCheck;
+export default PermissionInputs;

@@ -14,7 +14,7 @@ import {
 import nookies from "nookies";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { getUserByEmail } from '../../services/authservices';
+import { getUserByEmail } from '../../services/userDash/authservices';
 import { useAuth } from "../../hooks/useAuth";
 import PermissionOnClick from "..//permissionCheck/PermissionOnclick";
 

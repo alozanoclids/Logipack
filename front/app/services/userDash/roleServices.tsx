@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-import { API_URL } from '../config/api' 
+import { API_URL } from '../../config/api' 
 
 // Se crea una instancia de axios con la configuración base de la API.
 const apiRole = axios.create({

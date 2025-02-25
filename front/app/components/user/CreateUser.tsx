@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../../hooks/useAuth";
-import { post, getRole } from "../../services/authservices";
+import { post, getRole } from "../../services/userDash/authservices";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import { BiLock } from "react-icons/bi";
 import PermissionInputs from "../permissionCheck/PermissionInputs";

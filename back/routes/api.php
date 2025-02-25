@@ -7,7 +7,9 @@ use App\Http\Controllers\FactoryController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Ingredient;  
 use App\Http\Controllers\ManufacturingController;
-use App\Http\Controllers\PermissionController; 
+use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\ProductController;
+use App\Http\Controllers\RolesController;
 
 Route::controller(AuthController::class)->group(function () {
     Route::post('login', 'login');
@@ -46,6 +48,15 @@ Route::controller(PermissionController::class)->group(function () {
     Route::put('/updatePermission/{id}', 'updatePermission'); // Actualizar una fábrica
 });
 
+//Rutas Roles
+Route::controller(RolesController::class)->group(function () {
+    Route::get('/getRole', 'getRole'); // Obtener todas las lineas
+    Route::post('/newRole', 'newRole'); // Crear una nueva lineas
+    Route::get('/RoleId/{id}', 'RoleId'); // Obtener una lineas específica
+    Route::put('/updateRole/{id}', 'updateRole'); // Actualizar una lineas
+    Route::delete('/deleteRole/{id}', 'deleteRole'); // Eliminar una lineas
+});  
+
 //Rutas Factories
 Route::controller(FactoryController::class)->group(function () {
     Route::get('/getFactories', 'getFactories'); // Obtener todas las fábricas
@@ -70,4 +81,13 @@ Route::controller(ClientsController::class)->group(function () {
     Route::get('/ClientsId/{id}', 'ClientsId'); // Obtener una lineas específica
     Route::put('/updateClients/{id}', 'updateClients'); // Actualizar una lineas
     Route::delete('/deleteClients/{id}', 'deleteClients'); // Eliminar una lineas
-});   
+});  
+
+//Rutas Productos
+Route::controller(ProductController::class)->group(function () {
+    Route::get('/getProduct', 'getProduct'); // Obtener todas las lineas
+    Route::post('/newProduct', 'newProduct'); // Crear una nueva lineas
+    Route::get('/ProductId/{id}', 'ProductId'); // Obtener una lineas específica
+    Route::put('/updateProduct/{id}', 'updateProduct'); // Actualizar una lineas
+    Route::delete('/deleteProduct/{id}', 'deleteProduct'); // Eliminar una lineas
+});  

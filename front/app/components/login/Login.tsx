@@ -1,6 +1,6 @@
 'use client';
 import React, { useState } from 'react';
-import { login } from '../../services/authservices';
+import { login } from '../../services/userDash/authservices';
 import { useRouter } from 'next/navigation';
 import nookies from 'nookies';
 import { motion } from 'framer-motion';

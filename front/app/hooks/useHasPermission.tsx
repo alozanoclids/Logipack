@@ -2,7 +2,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
-import { getPermissionRole } from "../services/roleServices";
+import { getPermissionRole } from "../services/userDash/roleServices";
 
 interface PermissionRoleResponse {
     permissions: string[];

@@ -2,14 +2,15 @@ import React, { useState, useEffect } from "react";
 import CreateUser from "./CreateUser";
 import DataUsers from "./DataUsers";
 import WindowManager from "../windowManager/WindowManager";
-import Roles from "../roles/Roles";
+import Roles from "./CreateRoles";
+import Products from "./CreateProducts";
 import Factory from "./CreateFactory"
 import Lista from "./CreateManufacturing"
 import Clients from "./CreateClient"
 import { useAuth } from "../../hooks/useAuth";
-import { getUserByEmail } from "../../services/authservices";
+import { getUserByEmail } from "../../services/userDash/authservices";
 import PermissionCheck from "..//permissionCheck/PermissionCheck";
-import nookies from "nookies"; 
+import nookies from "nookies";
 
 function User() {
   const { isAuthenticated } = useAuth();
@@ -44,25 +45,26 @@ function User() {
         windowsData={[
           {
             id: 1, title: "Usuarios", component:
-              <div>
-                {/* Botón arriba y tabla abajo */}
-                <div className="flex flex-col md:flex-row justify-between items-center mb-4">
-                  <PermissionCheck requiredPermission="crear_usuarios">
+              <PermissionCheck requiredPermission="crear_usuarios">
+                <div>
+                  {/* Botón arriba y tabla abajo */}
+                  <div className="flex flex-col md:flex-row justify-between items-center mb-4">
                     <CreateUser />
-                  </PermissionCheck>
-                </div>
+                  </div>
 
-                {/* Tabla de usuarios */}
-                <div className="overflow-x-auto">
-                  <DataUsers />
+                  {/* Tabla de usuarios */}
+                  <div className="overflow-x-auto">
+                    <DataUsers />
+                  </div>
                 </div>
-              </div>
+              </PermissionCheck>
             , isProtected: true
           },
           { id: 2, title: "Roles", component: <Roles />, isProtected: true },
           { id: 3, title: "Plantas", component: <Factory />, isProtected: true },
           { id: 4, title: "Lineas", component: <Lista />, isProtected: true },
-          { id: 5, title: "Clientes", component: <Clients />, isProtected: true },
+          { id: 5, title: "Productos", component: <Products />, isProtected: true },
+          { id: 6, title: "Clientes", component: <Clients />, isProtected: true },
         ]}
       />
     </div>

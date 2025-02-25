@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { getUsers, deleteUser, getDate, updateUser, getRole } from '../../services/authservices';
+import { getUsers, deleteUser, getDate, updateUser, getRole } from '../../services/userDash/authservices';
 import Table from "../table/Table";
 
 interface Role {
@@ -65,7 +65,7 @@ function DataUsers() {
         } catch (error) {
             console.error("Error al eliminar usuario:", error);
         }
-    };    
+    };
 
     const handleEdit = async (id: number) => {
         try {
@@ -77,7 +77,7 @@ function DataUsers() {
                 name: userData.name,
                 email: userData.email,
                 role: userData.role || ""
-            }); 
+            });
         } catch (error) {
             console.error("Error obteniendo datos del usuario:", error);
         }
@@ -100,9 +100,8 @@ function DataUsers() {
 
 
     return (
-        <div>
-            <Table columns={columns} rows={users} columnLabels={columnLabels} onDelete={handleDelete} onEdit={handleEdit} />
-
+        <div> 
+                <Table columns={columns} rows={users} columnLabels={columnLabels} onDelete={handleDelete} onEdit={handleEdit} /> 
             {/* MODAL DE EDICIÓN */}
             {editingUser && (
                 <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">

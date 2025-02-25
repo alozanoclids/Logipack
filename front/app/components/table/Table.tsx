@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { FaEdit, FaTrash, FaArrowUp, FaArrowDown, FaSort } from "react-icons/fa";
+import PermissionInputs from "../permissionCheck/PermissionInputs";
 
 interface TableProps {
     rows: Record<string, any>[];
@@ -117,14 +118,14 @@ export const Table: React.FC<TableProps> = ({ rows, columns, columnLabels = {}, 
                                         {row[column]}
                                     </td>
                                 ))}
-                                <td className="px-6 py-3 flex justify-center gap-3">
-                                    <button onClick={() => onEdit(row.id)} className="text-blue-400 hover:text-blue-500">
-                                        <FaEdit size={18} />
-                                    </button>
-                                    <button onClick={() => onDelete(row.id)} className="text-red-400 hover:text-red-500">
-                                        <FaTrash size={18} />
-                                    </button>
-                                </td>
+                                    <td className="px-6 py-3 flex justify-center gap-3"> 
+                                        <button onClick={() => onEdit(row.id)} className="text-blue-400 hover:text-blue-500">
+                                            <FaEdit size={18} />
+                                        </button>
+                                        <button onClick={() => onDelete(row.id)} className="text-red-400 hover:text-red-500">
+                                            <FaTrash size={18} />
+                                        </button> 
+                                    </td>
                             </tr>
                         ))}
                     </tbody>
@@ -141,14 +142,16 @@ export const Table: React.FC<TableProps> = ({ rows, columns, columnLabels = {}, 
                                 <span className="text-gray-300">{row[column]}</span>
                             </div>
                         ))}
-                        <div className="flex justify-end gap-3 mt-3">
-                            <button onClick={() => onEdit(row.id)} className="text-blue-400 hover:text-blue-500">
-                                <FaEdit size={18} />
-                            </button>
-                            <button onClick={() => onDelete(row.id)} className="text-red-400 hover:text-red-500">
-                                <FaTrash size={18} />
-                            </button>
-                        </div>
+                        <PermissionInputs requiredPermission="gestionar_usuarios" >
+                            <div className="flex justify-end gap-3 mt-3">
+                                <button onClick={() => onEdit(row.id)} className="text-blue-400 hover:text-blue-500">
+                                    <FaEdit size={18} />
+                                </button>
+                                <button onClick={() => onDelete(row.id)} className="text-red-400 hover:text-red-500">
+                                    <FaTrash size={18} />
+                                </button>
+                            </div>
+                        </PermissionInputs>
                     </div>
                 ))}
             </div>
@@ -192,7 +195,7 @@ export const Table: React.FC<TableProps> = ({ rows, columns, columnLabels = {}, 
                     ))}
                 </div>
             </div>
-        </div>
+        </div >
     );
 };
 
