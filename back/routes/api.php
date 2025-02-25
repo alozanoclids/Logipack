@@ -7,7 +7,8 @@ use App\Http\Controllers\FactoryController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Ingredient;  
 use App\Http\Controllers\ManufacturingController;
-use App\Http\Controllers\PermissionController; 
+use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\RolesController;
 
 Route::controller(AuthController::class)->group(function () {
     Route::post('login', 'login');
@@ -45,6 +46,15 @@ Route::controller(PermissionController::class)->group(function () {
     Route::get('/PermissionId/{id}', 'permissionId'); // Obtener una fábrica específica
     Route::put('/updatePermission/{id}', 'updatePermission'); // Actualizar una fábrica
 });
+
+//Rutas Roles
+Route::controller(RolesController::class)->group(function () {
+    Route::get('/getRole', 'getRole'); // Obtener todas las lineas
+    Route::post('/newRole', 'newRole'); // Crear una nueva lineas
+    Route::get('/RoleId/{id}', 'RoleId'); // Obtener una lineas específica
+    Route::put('/updateRole/{id}', 'updateRole'); // Actualizar una lineas
+    Route::delete('/deleteRole/{id}', 'deleteRole'); // Eliminar una lineas
+});  
 
 //Rutas Factories
 Route::controller(FactoryController::class)->group(function () {

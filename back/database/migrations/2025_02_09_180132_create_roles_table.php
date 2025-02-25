@@ -22,12 +22,6 @@ return new class extends Migration
         $roles = [
             'admin',
             'gerente',
-            'coordinador',
-            'supervisor',
-            'tecnico',
-            'operario',
-            'moderador',
-            'externo'
         ];
 
         foreach ($roles as $role) {

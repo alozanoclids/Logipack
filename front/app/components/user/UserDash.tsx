@@ -9,7 +9,7 @@ import Clients from "./CreateClient"
 import { useAuth } from "../../hooks/useAuth";
 import { getUserByEmail } from "../../services/authservices";
 import PermissionCheck from "..//permissionCheck/PermissionCheck";
-import nookies from "nookies"; 
+import nookies from "nookies";
 
 function User() {
   const { isAuthenticated } = useAuth();
@@ -44,19 +44,19 @@ function User() {
         windowsData={[
           {
             id: 1, title: "Usuarios", component:
-              <div>
-                {/* Botón arriba y tabla abajo */}
-                <div className="flex flex-col md:flex-row justify-between items-center mb-4">
-                  <PermissionCheck requiredPermission="crear_usuarios">
+              <PermissionCheck requiredPermission="crear_usuarios">
+                <div>
+                  {/* Botón arriba y tabla abajo */}
+                  <div className="flex flex-col md:flex-row justify-between items-center mb-4">
                     <CreateUser />
-                  </PermissionCheck>
-                </div>
+                  </div>
 
-                {/* Tabla de usuarios */}
-                <div className="overflow-x-auto">
-                  <DataUsers />
+                  {/* Tabla de usuarios */}
+                  <div className="overflow-x-auto">
+                    <DataUsers />
+                  </div>
                 </div>
-              </div>
+              </PermissionCheck>
             , isProtected: true
           },
           { id: 2, title: "Roles", component: <Roles />, isProtected: true },
