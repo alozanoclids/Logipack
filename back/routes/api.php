@@ -30,7 +30,7 @@ Route::controller(Ingredient::class)->group(function () {
     Route::get('ingredients/{id}', 'show');
     Route::post('ingredients/create', 'store');
     Route::put('ingredients/{id}/update', 'update');
-    Route::put('ingredients/{id}/deactivate', 'deactivate'); // Ruta para desactivar
+    Route::put('ingredients/{id}/toggle-status',  'toggleStatus');
     Route::delete('ingredients/{id}/delete', 'destroy'); // Ruta para eliminar
 
 });

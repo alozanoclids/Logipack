@@ -11,7 +11,10 @@ export interface Ingredient {
     tipo: string;
     concentracion: string;
     [key: string]: any; // Para otros campos dinámicos
+
   };
+  status: boolean; // Agrega la propiedad `status`
+
 }
 
 
@@ -94,12 +97,12 @@ export const updateIngredient = async (id: string | number, data: Partial<Ingred
 };
 
 // 🔹 Desactivar un ingrediente
-export const deactivateIngredient = async (id: string | number): Promise<Ingredient> => {
+export const toggleIngredientStatus = async (id: string | number): Promise<Ingredient> => {
   try {
-    const response = await ingredientService.put<Ingredient>(`/ingredients/${id}/deactivate`);
+    const response = await ingredientService.put<Ingredient>(`/ingredients/${id}/toggle-status`);
     return response.data;
   } catch (error) {
-    console.error("Error en deactivateIngredient:", error);
+    console.error("Error en toggleIngredientStatus:", error);
     throw error;
   }
 };

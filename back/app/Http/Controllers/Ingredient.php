@@ -9,7 +9,7 @@ class Ingredient extends Controller
 { // Obtener todos los ingredientes activos
     public function index()
     {
-        $ingredients = Ingredients::where('status', true)->get(); // Ahora usa la columna status
+        $ingredients = Ingredients::all();
         return response()->json($ingredients);
     }
 
@@ -87,17 +87,21 @@ public function store(Request $request)
         return response()->json($ingredient);
     }
     
-    // Desactivar un ingrediente
-    public function deactivate($id)
+    // status un ingrediente
+    public function toggleStatus($id)
     {
         $ingredient = Ingredients::find($id);
-
+    
         if (!$ingredient) {
             return response()->json(['error' => 'Ingrediente no encontrado'], 404);
         }
-
-        $ingredient->update(['status' => false]); // Ahora se actualiza la columna status
-
-        return response()->json(['message' => 'Ingrediente desactivado']);
+    
+        // Alternar el estado (true -> false, false -> true)
+        $ingredient->update(['status' => !$ingredient->status]);
+    
+        return response()->json([
+            'message' => $ingredient->status ? 'Ingrediente activado' : 'Ingrediente desactivado',
+            'status' => $ingredient->status,
+        ]);
     }
 }
