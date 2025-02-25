@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { usePathname } from "next/navigation";
 import Navbar from "./components/navbar/Navbar";
 import Sidebar from "./components/sidebar/Sidebar";
+import Toaster from "./components/toastr/Toaster";
 import { AuthProvider } from "./context/AuthContext";
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
@@ -30,6 +31,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
         <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
         <main className="flex-1 p-4">
           {children}
+          <Toaster />
         </main>
       </AuthProvider>
     </div>

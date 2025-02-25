@@ -19,7 +19,7 @@ class PermissionController extends Controller
             'roles' => $roles,
             'permissions' => $permissions
         ]);
-    }
+    } 
 
     public function updateRolePermissions(Request $request)
     {
@@ -77,6 +77,15 @@ class PermissionController extends Controller
         return response()->json($permission);
     }
 
+    public function permissionId($id): JsonResponse
+    {
+        $permission = Permission::find($id);
+        if (!$permission) {
+            return response()->json(['message' => 'Permiso no encontrada'], 404);
+        }
+        return response()->json($permission);
+    }
+
     public function updatePermissions(Request $request)
     {
         $permissionIds = $request->input('permissionIds'); // Aquí se recibe un array de IDs
@@ -103,11 +112,11 @@ class PermissionController extends Controller
     {
         $permission = Permission::find($id);
         if (!$permission) {
-            return response()->json(['message' => 'Fábrica no encontrada'], 404);
+            return response()->json(['message' => 'Permiso no encontrada'], 404);
         }
 
         $permission->delete();
 
-        return response()->json(['message' => 'Fábrica eliminada correctamente']);
+        return response()->json(['message' => 'Permiso eliminada correctamente']);
     }
 }

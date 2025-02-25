@@ -39,7 +39,7 @@ export const getPermissionRole = async (role: string) => {
     }
 }
 
-export const createPermission = async (name: string, description: string, status: boolean) => {
+export const createPermission = async (name: string, description: string, status: number) => {
     try {
         const response = await apiRole.post('/newPermission', { name, description, status });
         return response.data;
@@ -59,12 +59,22 @@ export const deletePermission = async (id: number) => {
     }
 }
 
-export const updateClients = async (id: number, data: { name: string; line_types: number[] }) => {
+export const getPermissionId = async (id: number) => {
     try {
-        const response = await apiRole.put(`/updateClients/${id}`, data);
+        const response = await apiRole.get(`/PermissionId/${id}`);
         return response.data;
     } catch (error) {
-        console.error('Error en updateClients:', error);
+        console.error('Error en PermissionId:', error);
+        throw error;
+    }
+}
+
+export const updatePermission = async (id: number, data: {name: string,description: string, status: number}) => {
+    try {
+        const response = await apiRole.put(`/updatePermission/${id}`, data);
+        return response.data;
+    } catch (error) {
+        console.error('Error en updatePermission:', error);
         throw error;
     }
 };
