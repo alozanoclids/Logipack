@@ -42,6 +42,8 @@ Route::controller(PermissionController::class)->group(function () {
     Route::post('/permissionsUpdate', 'updateRolePermissions');
     Route::get('/role-permissions/{roleName}', 'getPermissionsByRoleName');
     Route::delete('/deletePermission/{id}', 'deletePermission'); // Eliminar una lineas
+    Route::get('/PermissionId/{id}', 'permissionId'); // Obtener una fábrica específica
+    Route::put('/updatePermission/{id}', 'updatePermission'); // Actualizar una fábrica
 });
 
 //Rutas Factories

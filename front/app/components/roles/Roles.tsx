@@ -1,7 +1,9 @@
 "use client";
 import { useState, useEffect } from "react";
-import { getPermissions, updateRolePermissions, createPermission, deletePermission } from "../../services/roleServices";
-import { FaEdit, FaTrash, FaArrowUp, FaArrowDown, FaSort } from "react-icons/fa";
+import { getPermissions, updateRolePermissions, createPermission, deletePermission, getPermissionId, updatePermission } from "../../services/roleServices";
+import { FaEdit, FaTrash } from "react-icons/fa";
+import { motion } from "framer-motion";
+import { showSuccess, showError, showConfirm } from "../toastr/Toaster";
 
 // 🛠️ Definición de Interfaces
 interface Permission {
@@ -23,28 +25,27 @@ const Roles = () => {
   const [name, setName] = useState<string>('');
   const [description, setDescription] = useState<string>('');
   const [status, setStatus] = useState<number>(0);
+  const [editingId, setEditingId] = useState<number | null>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
-
-  // 🛠️ Cargar Roles y Permisos
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await getPermissions();
-        if (response && typeof response === "object") {
-          setRoles(Array.isArray(response.roles) ? response.roles : []);
-          setPermissions(Array.isArray(response.permissions) ? response.permissions : []);
-        } else {
-          setRoles([]);
-          setPermissions([]);
-        }
-      } catch (error) {
-        console.error("Error cargando datos:", error);
+  const fetchData = async () => {
+    try {
+      const response = await getPermissions();
+      if (response && typeof response === "object") {
+        setRoles(Array.isArray(response.roles) ? response.roles : []);
+        setPermissions(Array.isArray(response.permissions) ? response.permissions : []);
+      } else {
         setRoles([]);
         setPermissions([]);
       }
-    };
+    } catch (error) {
+      console.error("Error cargando datos:", error);
+      setRoles([]);
+      setPermissions([]);
+    }
+  };
 
+  useEffect(() => {
     fetchData();
   }, []);
 
@@ -74,34 +75,57 @@ const Roles = () => {
     }
   };
 
-  const handleSave = async (name: string, description: string, status: string) => {
+  const handleSave = async (name: string, description: string, status: number) => {
     try {
-      const response = await createPermission(name, description, status === 'true');
-      if (response && typeof response === 'object') {
-        setPermissions(Array.isArray(response.permissions) ? response.permissions : []);
-      } else {
-        setPermissions([]);
-      }
+      await createPermission(name, description, status);
+      await fetchData(); // 🔄 Recargar datos después de crear
+      showSuccess('Permiso creado correctamenete')
     } catch (error) {
-      console.error('Error creando permiso:', (error));
-      setPermissions([]);
+      console.error("Error creando permiso:", error);
+      showError("Hubo un error al crear el permiso");
     }
     setIsModalOpen(false);
   };
 
-  const handleDelete = async (id: number) => {
+  const handleUpdate = async (id: number) => {
     try {
-      await deletePermission(id);
-      setPermissions(permissions.filter((perm) => perm.id !== id));
+      const data = { name, description, status };
+      await updatePermission(id, data);
+      await fetchData(); // 🔄 Recargar datos después de actualizar
+      showSuccess('Permiso actualizado correctamenete')
     } catch (error) {
-      console.error("Error eliminando permiso:", error);
+      console.error("Error al actualizar cliente:", error);
     }
   };
 
-  const handleEdit = (permission: Permission) => {
-    setSelectedPermission(permission);
-    setIsModalOpen(true);
+  const handleDelete = async (id: number) => {
+    showConfirm("¿Estás seguro de eliminar este permiso?", async () => {
+      try {
+        await deletePermission(id);
+        setPermissions(permissions.filter((perm) => perm.id !== id));
+        showSuccess("Permiso eliminado correctamente");
+      } catch (error) {
+        console.error("Error eliminando permiso:", error);
+        showError("Hubo un error al eliminar el permiso");
+      }
+    });
   };
+
+  const handleEdit = async (id: number) => {
+    try {
+      const permiso = await getPermissionId(id);
+      if (permiso) {
+        setName(permiso.name);
+        setDescription(permiso.description);
+        setStatus(permiso.status);
+        setEditingId(id);
+      }
+      setIsModalOpen(true);
+    } catch (error) {
+      console.error("Error al obtener datos del cliente:", error);
+    }
+  };
+
 
   return (
     <div className="overflow-x-auto">
@@ -112,26 +136,36 @@ const Roles = () => {
         Crear Permiso
       </button>
 
+
+
       {isModalOpen && (
         <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center">
-          <div className="bg-white p-6 rounded shadow-lg w-96">
-            <h2 className="text-lg font-bold mb-4">Crear Permiso</h2>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+            className="bg-white p-6 rounded shadow-lg w-96"
+          >
+            <h2 className="text-lg font-bold text-center text-black mb-4">
+              Crear Permiso
+            </h2>
             <input
               type="text"
               placeholder="Nombre"
-              className="w-full border p-2 rounded mb-2"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              className="w-full border p-2 rounded mb-2 text-black"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
             />
             <input
               type="text"
               placeholder="Descripción"
-              className="w-full border p-2 rounded mb-2"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              className="w-full border p-2 rounded mb-2 text-black"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
             />
             <select
-              className="w-full border p-2 rounded mb-4"
+              className="w-full border p-2 rounded mb-4 text-black"
               value={status}
               onChange={(e) => setStatus(Number(e.target.value))}
             >
@@ -141,18 +175,18 @@ const Roles = () => {
             <div className="flex justify-end space-x-2">
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="bg-gray-500 text-white px-4 py-2 rounded"
+                className="bg-black text-white px-4 py-2 rounded"
               >
                 Cancelar
               </button>
               <button
-                onClick={handleSave}
-                className="bg-blue-600 text-white px-4 py-2 rounded"
+                onClick={() => editingId ? handleUpdate(editingId) : handleSave(name, description, status)}
+                className="bg-green-600 text-white px-4 py-2 rounded"
               >
                 Guardar
               </button>
             </div>
-          </div>
+          </motion.div>
         </div>
       )}
 
@@ -183,7 +217,7 @@ const Roles = () => {
               <td className="p-2 text-center">
                 <button
                   className="text-blue-400 hover:text-red-500 mr-2"
-                  onClick={() => handleEdit(permission)}
+                  onClick={() => handleEdit(permission.id)}
                 >
                   <FaEdit size={18} />
                 </button>
