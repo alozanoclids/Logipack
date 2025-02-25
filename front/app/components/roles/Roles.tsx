@@ -1,8 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
-import { getPermissions, updateRolePermissions, createPermission } from "../../services/roleServices";
+import { getPermissions, updateRolePermissions, createPermission, deletePermission } from "../../services/roleServices";
 import { FaEdit, FaTrash, FaArrowUp, FaArrowDown, FaSort } from "react-icons/fa";
-import Modal from "../modal/Modal";
 
 // 🛠️ Definición de Interfaces
 interface Permission {
@@ -113,31 +112,49 @@ const Roles = () => {
         Crear Permiso
       </button>
 
-      <Modal
-        isOpen={isModalOpen}
-        title="Crear Permiso"
-        fields={[
-          { label: 'Nombre', name: 'description', type: 'text', initialValue: name },
-          { label: 'Clave', name: 'name', type: 'text', initialValue: description },
-          {
-            label: 'Estado',
-            name: 'status',
-            type: 'select',
-            initialValue: 'active',
-            options: [
-              { value: '1', label: 'Activo' },
-              { value: '0', label: 'Inactivo' },
-            ]
-          },
-        ]}
-        onSave={(values) => {
-          const name = values.name;
-          const description = values.description;
-          const status = values.status;
-          handleSave(name, description, status);
-        }}
-        onClose={() => setIsModalOpen(false)}
-      />
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center">
+          <div className="bg-white p-6 rounded shadow-lg w-96">
+            <h2 className="text-lg font-bold mb-4">Crear Permiso</h2>
+            <input
+              type="text"
+              placeholder="Nombre"
+              className="w-full border p-2 rounded mb-2"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+            <input
+              type="text"
+              placeholder="Descripción"
+              className="w-full border p-2 rounded mb-2"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+            <select
+              className="w-full border p-2 rounded mb-4"
+              value={status}
+              onChange={(e) => setStatus(Number(e.target.value))}
+            >
+              <option value={0}>Inactivo</option>
+              <option value={1}>Activo</option>
+            </select>
+            <div className="flex justify-end space-x-2">
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="bg-gray-500 text-white px-4 py-2 rounded"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleSave}
+                className="bg-blue-600 text-white px-4 py-2 rounded"
+              >
+                Guardar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <table className="w-full bg-gray-700 shadow-md rounded-lg border border-gray-200">
         <thead>

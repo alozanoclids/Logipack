@@ -41,6 +41,7 @@ Route::controller(PermissionController::class)->group(function () {
     Route::get('/permissions', 'getPermisos');
     Route::post('/permissionsUpdate', 'updateRolePermissions');
     Route::get('/role-permissions/{roleName}', 'getPermissionsByRoleName');
+    Route::delete('/deletePermission/{id}', 'deletePermission'); // Eliminar una lineas
 });
 
 //Rutas Factories
@@ -67,4 +68,4 @@ Route::controller(ClientsController::class)->group(function () {
     Route::get('/ClientsId/{id}', 'ClientsId'); // Obtener una lineas específica
     Route::put('/updateClients/{id}', 'updateClients'); // Actualizar una lineas
     Route::delete('/deleteClients/{id}', 'deleteClients'); // Eliminar una lineas
-});
+});   
