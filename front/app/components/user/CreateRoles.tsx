@@ -1,13 +1,13 @@
 "use client";
 import { useState, useEffect } from "react";
-import { getPermissions, updateRolePermissions, createPermission, deletePermission, getPermissionId, updatePermission } from "../../services/roleServices";
+import { getPermissions, updateRolePermissions, createPermission, deletePermission, getPermissionId, updatePermission } from "../../services/userDash/roleServices";
 import {
   getRole,
   getRoleId,
   createRole,
   updateRole,
   deleteRole
-} from "../../services/rolesServices";
+} from "../../services/userDash/rolesServices";
 import { FaEdit, FaTrash } from "react-icons/fa";
 import { motion } from "framer-motion";
 import { showSuccess, showError, showConfirm } from "../toastr/Toaster";

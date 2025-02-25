@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Ingredient;  
 use App\Http\Controllers\ManufacturingController;
 use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\ProductController;
 use App\Http\Controllers\RolesController;
 
 Route::controller(AuthController::class)->group(function () {
@@ -80,4 +81,13 @@ Route::controller(ClientsController::class)->group(function () {
     Route::get('/ClientsId/{id}', 'ClientsId'); // Obtener una lineas específica
     Route::put('/updateClients/{id}', 'updateClients'); // Actualizar una lineas
     Route::delete('/deleteClients/{id}', 'deleteClients'); // Eliminar una lineas
-});   
+});  
+
+//Rutas Productos
+Route::controller(ProductController::class)->group(function () {
+    Route::get('/getProduct', 'getProduct'); // Obtener todas las lineas
+    Route::post('/newProduct', 'newProduct'); // Crear una nueva lineas
+    Route::get('/ProductId/{id}', 'ProductId'); // Obtener una lineas específica
+    Route::put('/updateProduct/{id}', 'updateProduct'); // Actualizar una lineas
+    Route::delete('/deleteProduct/{id}', 'deleteProduct'); // Eliminar una lineas
+});  

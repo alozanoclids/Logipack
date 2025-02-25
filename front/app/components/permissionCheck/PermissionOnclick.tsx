@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState, ReactElement } from "react";
 import { useAuth } from "../../context/AuthContext";
-import { getPermissionRole } from "../../services/roleServices";
+import { getPermissionRole } from "../../services/userDash/roleServices";
 
 type PermissionCheckProps = {
   children: ReactElement; // se espera un único elemento React

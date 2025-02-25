@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { createManu, getManu, getManuId, deleteManu, updateManu } from '../../services/manufacturingServices';
+import { createManu, getManu, getManuId, deleteManu, updateManu } from '../../services/userDash/manufacturingServices';
 
 interface Manu {
     id: number;

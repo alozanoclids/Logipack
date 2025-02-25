@@ -35,7 +35,6 @@ class ManufacturingController extends Controller
         ], 201);
     }
 
-
     // Obtener una fábrica por ID
     public function ManuId($id): JsonResponse
     {

@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { getUsers, deleteUser, getDate, updateUser, getRole } from '../../services/authservices';
+import { getUsers, deleteUser, getDate, updateUser, getRole } from '../../services/userDash/authservices';
 import Table from "../table/Table";
 
 interface Role {

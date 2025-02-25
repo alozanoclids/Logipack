@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState, cloneElement, ReactElement } from "react";
 import { useAuth } from "../../context/AuthContext";
-import { getPermissionRole } from "../../services/roleServices";
+import { getPermissionRole } from "../../services/userDash/roleServices";
 import Loader from "../loader/Loader";
 
 type PermissionCheckProps = {

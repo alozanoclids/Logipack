@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useEffect } from "react";  
 import { useAuth } from '../../hooks/useAuth'
-import { getUserByEmail } from '../../services/authservices';
+import { getUserByEmail } from '../../services/userDash/authservices';
 import nookies from "nookies";
 
 const Dashboard = () => { 

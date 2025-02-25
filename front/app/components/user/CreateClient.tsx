@@ -6,8 +6,8 @@ import {
   getClientsId,
   deleteClients,
   updateClients,
-} from "../../services/clientServices";
-import { getManu } from "../../services/manufacturingServices";
+} from "../../services/userDash/clientServices";
+import { getManu } from "../../services/userDash/manufacturingServices";
 import Table from "../table/Table";
 
 interface Clients {

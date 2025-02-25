@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { createFactory, getFactory, deleteFactory, getFactoryId, updateFactory } from "../../services/factoryServices";
+import { createFactory, getFactory, deleteFactory, getFactoryId, updateFactory } from "../../services/userDash/factoryServices";
 import Table from "../table/Table";
 
 interface Factory {

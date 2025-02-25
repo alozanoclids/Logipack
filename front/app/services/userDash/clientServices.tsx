@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { API_URL } from '../config/api';
+import { API_URL } from '../../config/api';
 
 // Se crea una instancia de axios configurada con la URL base de la API y los encabezados necesarios.
 const apiClients = axios.create({

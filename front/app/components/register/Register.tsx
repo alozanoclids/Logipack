@@ -1,6 +1,6 @@
 'use client';
 import React, { useState } from 'react';
-import { register } from '../../services/authservices';
+import { register } from '../../services/userDash/authservices';
 import { motion } from 'framer-motion';
 
 function Register() {

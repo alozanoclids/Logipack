@@ -1,6 +1,6 @@
 "use client";
 import { createContext, useContext, useEffect, useState } from "react";
-import { getUserByEmail } from "../services/authservices";
+import { getUserByEmail } from "../services/userDash/authservices";
 import nookies from "nookies";
 
 type AuthContextType = {
