@@ -122,6 +122,7 @@ export const getUsers = async () => {
 
 // Servicio para eliminar un usuario por su ID
 export const deleteUser = async (id: number) => {
+  console.log(id);
   try {
     const response = await authUser.delete(`/delete/${id}`);
     return response.data;
