@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { getUsers, deleteUser, getDate, updateUser, getRole } from '../../services/userDash/authservices';
 import Table from "../table/Table";
+import { showError, showSuccess, showConfirm } from "../toastr/Toaster";
 
 interface Role {
     id: number;
@@ -57,15 +58,17 @@ function DataUsers() {
     }, []);
 
     const handleDelete = async (id: number) => {
-        if (!window.confirm("¿Seguro que quieres eliminar este usuario?")) return;
-        try {
+        showConfirm("¿Seguro que quieres eliminar este usuario?", async () => {
+          try {
             await deleteUser(id);
             setUsers((prevUsers) => prevUsers.filter((user) => user.id !== id));
-            alert("Usuario eliminado con éxito"); // Muestra un mensaje de alerta
-        } catch (error) {
+            showSuccess("Usuario eliminado con éxito"); // Muestra un mensaje de éxito
+          } catch (error) {
             console.error("Error al eliminar usuario:", error);
-        }
-    };
+            showError("Error al eliminar usuario"); // Muestra un mensaje de error
+          }
+        });
+      };
 
     const handleEdit = async (id: number) => {
         try {
@@ -80,6 +83,7 @@ function DataUsers() {
             });
         } catch (error) {
             console.error("Error obteniendo datos del usuario:", error);
+            showError("Error obteniendo datos del usuario");
         }
     };
 
@@ -92,9 +96,10 @@ function DataUsers() {
             await updateUser(id, editForm);
             setUsers(users.map(user => (user.id === id ? { ...user, ...editForm } : user)));
             setEditingUser(null);
-            alert("Usuario editado con éxito"); // Muestra un mensaje de alerta
+            showSuccess("Usuario editado con éxito"); // Muestra un mensaje de alerta
         } catch (error) {
             console.error("Error al actualizar usuario:", error);
+            showError("Error al actualizar usuario");
         }
     };
 

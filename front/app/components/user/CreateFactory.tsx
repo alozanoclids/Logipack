@@ -2,6 +2,8 @@
 import { useState, useEffect } from "react";
 import { createFactory, getFactory, deleteFactory, getFactoryId, updateFactory } from "../../services/userDash/factoryServices";
 import Table from "../table/Table";
+import { showSuccess, showError, showConfirm } from "../toastr/Toaster";
+
 
 interface Factory {
     id: number;
@@ -35,14 +37,15 @@ function CreateFactory() {
         try {
             if (editingFactory) {
                 await handleUpdate(editingFactory.id);
-                alert("Planta actualizada exitosamente");
+                showSuccess("Planta actualizada exitosamente");
             } else {
                 await createFactory({ name, location, capacity, manager, employees, status });
-                alert("Planta creada exitosamente");
+                showSuccess("Planta creada exitosamente");
             }
             fetchFactories();
         } catch (error) {
             console.error('Error guardando la planta:', error);
+            showError('Error guardando la planta');
         }
         setIsModalOpen(false);
     };
@@ -61,15 +64,17 @@ function CreateFactory() {
     }, []);
 
     const handleDelete = async (id: number) => {
-        if (!window.confirm("¿Seguro que quieres eliminar esta planta?")) return;
-        try {
+        showConfirm("¿Seguro que quieres eliminar esta planta?", async () => {
+          try {
             await deleteFactory(id);
             setFactories((prevFactory) => prevFactory.filter((factory) => factory.id !== id));
-            alert("Planta eliminada con éxito");
-        } catch (error) {
+            showSuccess("Planta eliminada con éxito");
+          } catch (error) {
             console.error("Error al eliminar planta:", error);
-        }
-    };
+            showError("Error al eliminar planta");
+          }
+        });
+      };
 
     const handleEdit = async (id: number) => {
         try {
@@ -95,9 +100,13 @@ function CreateFactory() {
                 fetchFactories();
             } else {
                 console.error("No hay planta seleccionada para actualizar.");
+                showError("No hay planta seleccionada para actualizar.");
+
             }
         } catch (error) {
             console.error("Error actualizando la planta:", error);
+            showError("Error actualizando la planta:");
+
         }
     };
 

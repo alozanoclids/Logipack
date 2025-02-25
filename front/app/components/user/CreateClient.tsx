@@ -8,6 +8,7 @@ import {
   updateClients,
 } from "../../services/userDash/clientServices";
 import { getManu } from "../../services/userDash/manufacturingServices";
+import { showSuccess, showError, showConfirm } from "../toastr/Toaster";
 import Table from "../table/Table";
 
 interface Clients {
@@ -63,12 +64,14 @@ function CreateClient() {
       } else {
         const payload = { name, line_types: lineTypes, details };
         await createClients(payload);
-        alert("Cliente creado exitosamente");
+        showSuccess("Cliente creado exitosamente");
       }
       fetchClients();
       closeModal();
     } catch (error) {
       console.error("Error al guardar cliente:", error);
+      showError("Error al guardar cliente");
+
     }
   };
 
@@ -76,11 +79,13 @@ function CreateClient() {
     try {
       const payload = { name, line_types: lineTypes, details };
       await updateClients(id, payload);
-      alert("Cliente actualizado exitosamente");
+      showSuccess("Cliente actualizado exitosamente");
       fetchClients();
       closeModal();
     } catch (error) {
       console.error("Error al actualizar cliente:", error);
+      showError("Error al actualizar cliente");
+
     }
   };
 
@@ -98,14 +103,16 @@ function CreateClient() {
   };
 
   const handleDelete = async (id: number) => {
-    if (!window.confirm("¿Estás seguro de eliminar este cliente?")) return;
-    try {
-      await deleteClients(id);
-      setClients((prevClients) => prevClients.filter((client) => client.id !== id));
-      alert("Cliente eliminado exitosamente");
-    } catch (error) {
-      console.error("Error al eliminar cliente:", error);
-    }
+    showConfirm("¿Estás seguro de eliminar este cliente?", async () => {
+      try {
+        await deleteClients(id);
+        setClients((prevClients) => prevClients.filter((client) => client.id !== id));
+        showSuccess("Cliente eliminado exitosamente");
+      } catch (error) {
+        console.error("Error al eliminar cliente:", error);
+        showError("Error al eliminar cliente");
+      }
+    });
   };
 
   const closeModal = () => {

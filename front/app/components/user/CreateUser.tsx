@@ -4,6 +4,7 @@ import { post, getRole } from "../../services/userDash/authservices";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import { BiLock } from "react-icons/bi";
 import PermissionInputs from "../permissionCheck/PermissionInputs";
+import { showError, showSuccess } from "../toastr/Toaster";
 
 function CreateUser() {
   const { isAuthenticated } = useAuth();
@@ -50,10 +51,12 @@ function CreateUser() {
     setLoading(true);
     try {
       await post({ name, email, password, role, factory, signature_bpm });
-      alert("Usuario creado exitosamente");
+      showSuccess("Usuario creado exitosamente");
       setIsModalOpen(false);
     } catch (error) {
       console.error("Error creando usuario:", error);
+      showError("Error creando usuario:");
+
     } finally {
       setLoading(false);
     }
