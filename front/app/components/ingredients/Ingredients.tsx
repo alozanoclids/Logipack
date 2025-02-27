@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import Table from "../table/Table";
 import { useRouter } from "next/navigation"; // Importa el hook useRouter
 import { getIngredients, Ingredient, deleteIngredient } from "../../services/ingredientsService";
+import { showSuccess, showError, showConfirm } from "../toastr/Toaster";
 
 const Ingredients: React.FC = () => {
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
@@ -53,20 +54,21 @@ const Ingredients: React.FC = () => {
     console.log("Editar ingrediente con ID:", id);
   };
 
-  const handleDelete = async (id: string | number) => {
-    const confirmDelete = window.confirm(
-      "¿Estás seguro de que deseas eliminar este ingrediente? Esta acción no se puede deshacer."
-    );
-
-    if (!confirmDelete) return;
-
-    try {
-      await deleteIngredient(id);
-      setIngredients((prev) => prev.filter((ingredient) => ingredient.id !== id));
-    } catch (error) {
-      console.error("Error al eliminar el ingrediente:", error);
+const handleDelete = async (id: string | number) => {
+  showConfirm(
+    "¿Estás seguro de que deseas eliminar este ingrediente? Esta acción no se puede deshacer.",
+    async () => {
+      try {
+        await deleteIngredient(id);
+        setIngredients((prev) => prev.filter((ingredient) => ingredient.id !== id));
+        showSuccess("Ingrediente eliminado correctamente"); // Mensaje de éxito
+      } catch (error) {
+        console.error("Error al eliminar el ingrediente:", error);
+        showError("Error al eliminar el ingrediente"); // Mensaje de error
+      }
     }
-  };
+  );
+};
 
   return (
     <div>

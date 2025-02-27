@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { getIngredientById, updateIngredient, toggleIngredientStatus } from "../../services/ingredientsService";
 import { Power } from "lucide-react"; // Importa el ícono Power de lucide-react
+import { showSuccess, showError, showConfirm } from "../toastr/Toaster";
 
 interface IngredientData {
   nombre: string;
@@ -64,10 +65,10 @@ const EditIngredients = () => {
       };
 
       await updateIngredient(Number(id), updateData);
-      alert("Ingrediente actualizado correctamente");
+      showSuccess("Ingrediente actualizado correctamente");
     } catch (error) {
       console.error("Error al actualizar el ingrediente:", error);
-      alert("Hubo un error al actualizar el ingrediente.");
+      showError("Hubo un error al actualizar el ingrediente.");
     }
   };
 
@@ -81,10 +82,10 @@ const EditIngredients = () => {
     try {
       const updatedIngredient = await toggleIngredientStatus(Number(id)); // Llama al servicio para alternar el estado
       setStatus(updatedIngredient.status); // Actualiza el estado local con la respuesta del servicio
-      alert(`Ingrediente ${updatedIngredient.status ? "activado" : "desactivado"} correctamente`);
+      showSuccess(`Ingrediente ${updatedIngredient.status ? "activado" : "desactivado"} correctamente`);
     } catch (error) {
       console.error("Error al cambiar el estado del ingrediente:", error);
-      alert("Hubo un error al cambiar el estado del ingrediente.");
+      showError("Hubo un error al cambiar el estado del ingrediente.");
     }
   };
 
