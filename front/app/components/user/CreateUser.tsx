@@ -64,9 +64,10 @@ function CreateUser() {
   };
 
   return (
-    <div className="flex justify-center"> 
-      <Button onClick={() => setIsModalOpen(true)} variant="create" label="Crear Usuario" />
-
+    <div className="flex justify-center">
+      <div className="flex justify-center space-x-2 mb-2">
+        <Button onClick={() => setIsModalOpen(true)} variant="create" label="Crear Usuario" />
+      </div>
       {isModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg w-96 animate-fadeIn z-50">
@@ -142,9 +143,9 @@ function CreateUser() {
                 className="w-full text-black border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
 
-              <div className="flex justify-center gap-2"> 
-                <Button onClick={() => setIsModalOpen(false)} variant="cancel" /> 
-                <Button onClick={() => {handleCreateUser}} variant="save" />
+              <div className="flex justify-center gap-2">
+                <Button onClick={() => setIsModalOpen(false)} variant="cancel" />
+                <Button onClick={handleCreateUser} variant="save" />
               </div>
             </form>
           </div>
