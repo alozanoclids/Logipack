@@ -88,6 +88,7 @@ Route::controller(ProductController::class)->group(function () {
     Route::get('/getProduct', 'getProduct'); // Obtener todas las lineas
     Route::post('/newProduct', 'newProduct'); // Crear una nueva lineas
     Route::get('/ProductId/{id}', 'ProductId'); // Obtener una lineas específica
+    Route::get('/ProductName/{name}', 'ProductName'); // Obtener una lineas específica
     Route::put('/updateProduct/{id}', 'updateProduct'); // Actualizar una lineas
     Route::delete('/deleteProduct/{id}', 'deleteProduct'); // Eliminar una lineas
 });  

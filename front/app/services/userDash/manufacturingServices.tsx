@@ -47,7 +47,7 @@ export const deleteManu = async (id: number) => {
 
 export const getManuId = async (id: number) => {
     try {
-        const response = await apiManu.put(`/ManuId/${id}`);
+        const response = await apiManu.get(`/ManuId/${id}`);
         return response.data;
     } catch (error) {
         console.error('Error en getManuId:', error);

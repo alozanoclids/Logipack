@@ -13,6 +13,7 @@ import { motion } from "framer-motion";
 import { showSuccess, showError, showConfirm } from "../toastr/Toaster";
 import PermissionCheck from "..//permissionCheck/PermissionCheck";
 import PermissionInputs from "../permissionCheck/PermissionInputs";
+import Button from "../buttons/buttons"
 
 // 🛠️ Definición de Interfaces
 interface Permission {
@@ -41,6 +42,8 @@ const Roles = () => {
   const [roleName, setRoleName] = useState<string>('');
   const [rolePermissions, setRolePermissions] = useState<number[]>([]);
   const [editingRoleId, setEditingRoleId] = useState<number | null>(null);
+  const [hoveredRole, setHoveredRole] = useState<number | null>(null);
+  let hideTimeout: NodeJS.Timeout;
 
   // Función para reiniciar el formulario del modal de roles
   const resetRoleModal = () => {
@@ -263,31 +266,21 @@ const Roles = () => {
 
   return (
     <div className="overflow-x-auto">
-      <div className="flex space-x-2 mb-2">
+      <div className="flex justify-center space-x-2 mb-2">
         <PermissionCheck requiredPermission="crear_permiso">
-          <button
-            onClick={() => {
-              setName('');
-              setDescription('');
-              setStatus(0);
-              setEditingId(null);
-              setIsModalOpen(true);
-            }}
-            className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition"
-          >
-            Crear Permiso
-          </button>
+          <Button onClick={() => {
+            setName('');
+            setDescription('');
+            setStatus(0);
+            setEditingId(null);
+            setIsModalOpen(true);
+          }} variant="create" label="Crear Permiso" />
         </PermissionCheck>
         <PermissionCheck requiredPermission="crear_roles">
-          <button
-            onClick={() => {
-              resetRoleModal();
-              setIsRoleModalOpen(true);
-            }}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition"
-          >
-            Crear Rol
-          </button>
+          <Button onClick={() => {
+            resetRoleModal();
+            setIsRoleModalOpen(true);
+          }} variant="create" label="Crear Roles" />
         </PermissionCheck>
       </div>
       {/*Modal Permisos*/}
@@ -325,19 +318,9 @@ const Roles = () => {
               <option value={0}>Inactivo</option>
               <option value={1}>Activo</option>
             </select>
-            <div className="flex justify-end space-x-2">
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="bg-black text-white px-4 py-2 rounded"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={() => editingId ? handleUpdate(editingId) : handleSave(name, description, status)}
-                className="bg-green-600 text-white px-4 py-2 rounded"
-              >
-                Guardar
-              </button>
+            <div className="flex justify-center space-x-2">
+              <Button onClick={() => setIsModalOpen(false)} variant="cancel" />
+              <Button onClick={() => { editingId ? handleUpdate(editingId) : handleSave(name, description, status) }} variant="save" />
             </div>
           </motion.div>
         </div>
@@ -363,24 +346,12 @@ const Roles = () => {
               value={roleName}
               onChange={(e) => setRoleName(e.target.value)}
             />
-            <div className="flex justify-end space-x-2">
-              <button
-                onClick={() => {
-                  resetRoleModal();
-                  setIsRoleModalOpen(false);
-                }}
-                className="bg-black text-white px-4 py-2 rounded"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={() =>
-                  editingRoleId ? handleUpdateRole() : handleSaveRole()
-                }
-                className="bg-blue-600 text-white px-4 py-2 rounded"
-              >
-                Guardar
-              </button>
+            <div className="flex justify-center space-x-2">
+              <Button onClick={() => {
+                resetRoleModal();
+                setIsRoleModalOpen(false);
+              }} variant="cancel" />
+              <Button onClick={() => { editingRoleId ? handleUpdateRole() : handleSaveRole() }} variant="save" />
             </div>
           </motion.div>
         </div>
@@ -391,23 +362,38 @@ const Roles = () => {
           <tr className="bg-gray-900 text-white">
             <th className="p-2 text-left text-sm text-gray-300">Permiso</th>
             {roles.map((role) => (
-              <th key={role.id} className="p-2 text-center text-sm capitalize">
-                <div className="flex flex-col items-center">
-                  <span>{role.name}</span>
-                  {/* <PermissionCheck requiredPermission="gestionar_roles"> */}
-                    <div className="flex flex-row space-x-2 mt-1">
-                      <button onClick={() => handleEditRole(role.id)}>
-                        <FaEdit size={16} className="text-blue-400" />
-                      </button>
-                      <button
-                        className="text-red-400 hover:text-red-500"
-                        onClick={() => handleDeleteRole(role.id)}
-                      >
-                        <FaTrash size={18} />
-                      </button>
-                    </div>
-                  {/* </PermissionCheck> */}
+              <th key={role.id} className="p-2 text-center text-sm capitalize relative">
+                <div
+                  className="flex flex-col items-center"
+                  onMouseEnter={() => {
+                    clearTimeout(hideTimeout);
+                    setHoveredRole(role.id);
+                  }}
+                  onMouseLeave={() => {
+                    hideTimeout = setTimeout(() => setHoveredRole(null), 300); // ⏳ Pequeño delay
+                  }}
+                >
+                  <span className="cursor-pointer">{role.name}</span>
                 </div>
+
+                {hoveredRole === role.id && (
+                  <div
+                    className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2"
+                    onMouseEnter={() => clearTimeout(hideTimeout)}
+                    onMouseLeave={() => setHoveredRole(null)}
+                  >
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.8, y: -10 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.8, y: -10 }}
+                      transition={{ duration: 0.3, ease: "easeInOut" }}
+                      className="bg-white shadow-lg rounded-lg p-2 flex space-x-2 border border-gray-200"
+                    >
+                      <Button onClick={() => handleEditRole(role.id)} variant="edit" />
+                      <Button onClick={() => handleDeleteRole(role.id)} variant="delete" />
+                    </motion.div>
+                  </div>
+                )}
               </th>
             ))}
             <th className="p-2 text-center text-sm text-gray-300">Acciones</th>
@@ -424,36 +410,26 @@ const Roles = () => {
               {roles.map((role) => (
                 <td key={`${role.id}-${permission.id}`} className="text-center">
                   {/* <PermissionInputs requiredPermission="gestionar_permisos"> */}
-                    <input
-                      type="checkbox"
-                      className="w-5 h-5 accent-blue-500 cursor-pointer"
-                      checked={role.permissions.some(
-                        (p) => p.id === permission.id
-                      )}
-                      onChange={(e) =>
-                        handlePermissionToggle(
-                          role.id,
-                          permission.id,
-                          e.target.checked
-                        )
-                      }
-                    />
+                  <input
+                    type="checkbox"
+                    className="w-5 h-5 accent-blue-500 cursor-pointer"
+                    checked={role.permissions.some(
+                      (p) => p.id === permission.id
+                    )}
+                    onChange={(e) =>
+                      handlePermissionToggle(
+                        role.id,
+                        permission.id,
+                        e.target.checked
+                      )
+                    }
+                  />
                   {/* </PermissionInputs> */}
                 </td>
               ))}
-              <td className="p-2 text-center">
-                <button
-                  className="text-blue-400 hover:text-red-500 mr-2"
-                  onClick={() => handleEdit(permission.id)}
-                >
-                  <FaEdit size={18} />
-                </button>
-                <button
-                  className="text-red-400 hover:text-red-500"
-                  onClick={() => handleDelete(permission.id)}
-                >
-                  <FaTrash size={18} />
-                </button>
+              <td className="px-6 py-3 flex justify-center gap-3">
+                <Button onClick={() => { handleEdit(permission.id) }} variant="edit" />
+                <Button onClick={() => { handleDelete(permission.id) }} variant="delete" />
               </td>
             </tr>
           ))}

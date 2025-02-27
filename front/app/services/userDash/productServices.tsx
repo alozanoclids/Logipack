@@ -59,6 +59,19 @@ export const getProductId = async (id: number) => {
     }
 };
 
+// Función para obtener un Product específico por su ID.
+// Nota: Se utiliza el método PUT en lugar de GET, lo cual es inusual para obtener datos. 
+// Es posible que se deba revisar si la ruta o el método es el correcto.
+export const getProductName = async (name: string) => {
+    try {
+        const response = await apiProducts.get(`/ProductName/${name}`);
+        return response.data;
+    } catch (error) {
+        console.error('Error en getProductId:', error);
+        throw error;
+    }
+};
+
 // Función para actualizar un Product existente.
 // Envía una solicitud PUT a la ruta `/updateProduct/${id}` con los nuevos datos del Product. 
 export const updateProduct = async (id: number, data: { name: string }) => {

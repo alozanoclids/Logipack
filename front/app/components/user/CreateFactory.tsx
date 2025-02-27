@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { createFactory, getFactory, deleteFactory, getFactoryId, updateFactory } from "../../services/userDash/factoryServices";
 import Table from "../table/Table";
 import { showSuccess, showError, showConfirm } from "../toastr/Toaster";
-
+import Button from "../buttons/buttons"
 
 interface Factory {
     id: number;
@@ -65,16 +65,16 @@ function CreateFactory() {
 
     const handleDelete = async (id: number) => {
         showConfirm("¿Seguro que quieres eliminar esta planta?", async () => {
-          try {
-            await deleteFactory(id);
-            setFactories((prevFactory) => prevFactory.filter((factory) => factory.id !== id));
-            showSuccess("Planta eliminada con éxito");
-          } catch (error) {
-            console.error("Error al eliminar planta:", error);
-            showError("Error al eliminar planta");
-          }
+            try {
+                await deleteFactory(id);
+                setFactories((prevFactory) => prevFactory.filter((factory) => factory.id !== id));
+                showSuccess("Planta eliminada con éxito");
+            } catch (error) {
+                console.error("Error al eliminar planta:", error);
+                showError("Error al eliminar planta");
+            }
         });
-      };
+    };
 
     const handleEdit = async (id: number) => {
         try {
@@ -112,8 +112,8 @@ function CreateFactory() {
 
     return (
         <div>
-            <button
-                onClick={() => {
+            <div className="flex justify-center mb-2">
+                <Button onClick={() => {
                     setIsModalOpen(true);
                     setFactory(null);
                     setName('');
@@ -122,11 +122,8 @@ function CreateFactory() {
                     setManager('');
                     setEmployees(0);
                     setStatus(false);
-                }}
-                className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition mb-2"
-            >
-                Crear Planta
-            </button>
+                }} variant="create" label="Crear Planta" />
+            </div>
             <Table columns={columns} rows={factories} columnLabels={columnLabels} onDelete={handleDelete} onEdit={handleEdit} />
             {isModalOpen && (
                 <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">
@@ -149,9 +146,9 @@ function CreateFactory() {
                             </select>
 
                         </div>
-                        <div className="flex justify-end mt-4">
-                            <button onClick={() => setIsModalOpen(false)} className="bg-gray-400 text-white py-2 px-4 rounded mr-2">Cancelar</button>
-                            <button onClick={handleSave} className="bg-blue-600 text-white py-2 px-4 rounded">{editingFactory ? "Actualizar" : "Guardar"}</button>
+                        <div className="flex justify-center gap-2">
+                            <Button onClick={() => setIsModalOpen(false)} variant="cancel" />
+                            <Button onClick={() => { handleSave }} variant="save" />
                         </div>
                     </div>
                 </div>

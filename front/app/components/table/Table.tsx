@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { FaEdit, FaTrash, FaArrowUp, FaArrowDown, FaSort } from "react-icons/fa";
 import PermissionInputs from "../permissionCheck/PermissionInputs";
+import Button from "../buttons/buttons"
 
 interface TableProps {
     rows: Record<string, any>[];
@@ -118,14 +119,10 @@ export const Table: React.FC<TableProps> = ({ rows, columns, columnLabels = {}, 
                                         {row[column]}
                                     </td>
                                 ))}
-                                    <td className="px-6 py-3 flex justify-center gap-3"> 
-                                        <button onClick={() => onEdit(row.id)} className="text-blue-400 hover:text-blue-500">
-                                            <FaEdit size={18} />
-                                        </button>
-                                        <button onClick={() => onDelete(row.id)} className="text-red-400 hover:text-red-500">
-                                            <FaTrash size={18} />
-                                        </button> 
-                                    </td>
+                                <td className="px-6 py-3 flex justify-center gap-3">
+                                    <Button onClick={() => { onEdit(row.id) }} variant="edit" />
+                                    <Button onClick={() => { onDelete(row.id) }} variant="delete" />
+                                </td>
                             </tr>
                         ))}
                     </tbody>
@@ -144,12 +141,8 @@ export const Table: React.FC<TableProps> = ({ rows, columns, columnLabels = {}, 
                         ))}
                         <PermissionInputs requiredPermission="gestionar_usuarios" >
                             <div className="flex justify-end gap-3 mt-3">
-                                <button onClick={() => onEdit(row.id)} className="text-blue-400 hover:text-blue-500">
-                                    <FaEdit size={18} />
-                                </button>
-                                <button onClick={() => onDelete(row.id)} className="text-red-400 hover:text-red-500">
-                                    <FaTrash size={18} />
-                                </button>
+                                <Button onClick={() => { onEdit(row.id); }} variant="edit" />
+                                <Button onClick={() => { onDelete(row.id) }} variant="delete" />
                             </div>
                         </PermissionInputs>
                     </div>
