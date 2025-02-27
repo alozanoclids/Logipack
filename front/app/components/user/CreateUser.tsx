@@ -5,6 +5,7 @@ import { FiEye, FiEyeOff } from "react-icons/fi";
 import { BiLock } from "react-icons/bi";
 import PermissionInputs from "../permissionCheck/PermissionInputs";
 import { showError, showSuccess } from "../toastr/Toaster";
+import Button from "../buttons/buttons"
 
 function CreateUser() {
   const { isAuthenticated } = useAuth();
@@ -63,18 +64,13 @@ function CreateUser() {
   };
 
   return (
-    <div className="flex justify-center">
-      <button
-        onClick={() => setIsModalOpen(true)}
-        className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition"
-      >
-        Crear Usuario
-      </button>
+    <div className="flex justify-center"> 
+      <Button onClick={() => setIsModalOpen(true)} variant="create" label="Crear Usuario" />
 
       {isModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg w-96 animate-fadeIn z-50">
-            <h1 className="text-2xl font-semibold mb-4 text-center">Crear Usuario</h1>
+            <h1 className="text-2xl font-semibold mb-4 text-black text-center">Crear Usuario</h1>
             <form className="space-y-3">
               <PermissionInputs requiredPermission="crear_usuarios">
                 <input
@@ -146,22 +142,9 @@ function CreateUser() {
                 className="w-full text-black border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
 
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="w-1/2 bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-4 rounded transition"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="button"
-                  onClick={handleCreateUser}
-                  disabled={loading}
-                  className="w-1/2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition"
-                >
-                  {loading ? "Creando..." : "Crear Usuario"}
-                </button>
+              <div className="flex justify-center gap-2"> 
+                <Button onClick={() => setIsModalOpen(false)} variant="cancel" /> 
+                <Button onClick={() => {handleCreateUser}} variant="save" />
               </div>
             </form>
           </div>

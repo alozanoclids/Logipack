@@ -55,6 +55,21 @@ class ProductController extends Controller
         return response()->json($product);
     }
 
+    public function ProductName($name): JsonResponse
+    {
+        // Se busca el producto por su nombre
+        $product = Products::where('name', $name)->first();
+
+        // Si no se encuentra, se devuelve un mensaje de error con código 404
+        if (!$product) {
+            return response()->json(['message' => 'Producto no encontrado'], 404);
+        }
+
+        // Se devuelve el producto encontrado en formato JSON
+        return response()->json($product);
+    }
+
+
     // Método para actualizar un product existente
     public function updateproduct(Request $request, $id): JsonResponse
     {
