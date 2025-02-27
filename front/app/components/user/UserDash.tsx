@@ -48,7 +48,7 @@ function User() {
               <PermissionCheck requiredPermission="crear_usuarios">
                 <div>
                   {/* Botón arriba y tabla abajo */}
-                  <div className="flex flex-col md:flex-row justify-between items-center mb-4">
+                  <div className="flex flex-col md:flex-row justify-center items-center mb-4">
                     <CreateUser />
                   </div>
 

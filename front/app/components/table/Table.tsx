@@ -82,14 +82,19 @@ export const Table: React.FC<TableProps> = ({ rows, columns, columnLabels = {}, 
 
 
     return (
-        <div className="w-full overflow-hidden rounded-xl shadow-md p-4 bg-gray-900">
+        <div className="w-full overflow-hidden rounded-xl shadow-lg p-4 bg-gray-900 transition-all duration-300">
+            {/* Input de búsqueda con animación sutil */}
             <div className="flex justify-end mb-3">
                 <input
                     type="text"
                     placeholder="Buscar..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="px-4 py-2 text-gray-300 bg-gray-800 border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="px-4 py-2 text-gray-300 bg-gray-800 border border-gray-700 rounded-md 
+                       transition-all duration-300 ease-in-out 
+                       focus:outline-none focus:ring-2 focus:ring-blue-500 
+                       focus:bg-gray-850 focus:border-blue-400 
+                       focus:shadow-md hover:shadow-lg"
                 />
             </div>
 
@@ -113,15 +118,21 @@ export const Table: React.FC<TableProps> = ({ rows, columns, columnLabels = {}, 
                     </thead>
                     <tbody>
                         {paginatedRows.map((row, index) => (
-                            <tr key={index} className="border-b border-gray-700 odd:bg-gray-800 even:bg-gray-850 hover:bg-gray-700 transition-all">
+                            <tr key={index} className="border-b border-gray-700 odd:bg-gray-800 even:bg-gray-850 hover:bg-gray-700 transition-all duration-300">
                                 {columns.map((column) => (
-                                    <td key={column} className="px-6 py-3 text-sm transition-all hover:text-white">
+                                    <td key={column} className="px-6 py-3 text-sm transition-all duration-300 hover:text-white">
                                         {row[column]}
                                     </td>
                                 ))}
                                 <td className="px-6 py-3 flex justify-center gap-3">
-                                    <Button onClick={() => { onEdit(row.id) }} variant="edit" />
-                                    <Button onClick={() => { onDelete(row.id) }} variant="delete" />
+                                    <Button
+                                        onClick={() => { onEdit(row.id) }}
+                                        variant="edit" 
+                                    />
+                                    <Button
+                                        onClick={() => { onDelete(row.id) }}
+                                        variant="delete" 
+                                    />
                                 </td>
                             </tr>
                         ))}
@@ -132,31 +143,37 @@ export const Table: React.FC<TableProps> = ({ rows, columns, columnLabels = {}, 
             {/* Tarjetas en pantallas pequeñas */}
             <div className="md:hidden space-y-4">
                 {paginatedRows.map((row, index) => (
-                    <div key={index} className="bg-gray-800 p-4 rounded-lg shadow-md">
+                    <div key={index} className="bg-gray-800 p-4 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg">
                         {columns.map((column) => (
                             <div key={column} className="flex justify-between py-1 border-b border-gray-700 last:border-none">
                                 <span className="font-semibold text-gray-400">{columnLabels[column] || column}:</span>
                                 <span className="text-gray-300">{row[column]}</span>
                             </div>
                         ))}
-                        <PermissionInputs requiredPermission="gestionar_usuarios" >
+                        <PermissionInputs requiredPermission="gestionar_usuarios">
                             <div className="flex justify-end gap-3 mt-3">
-                                <Button onClick={() => { onEdit(row.id); }} variant="edit" />
-                                <Button onClick={() => { onDelete(row.id) }} variant="delete" />
+                                <Button
+                                    onClick={() => { onEdit(row.id); }}
+                                    variant="edit" 
+                                />
+                                <Button
+                                    onClick={() => { onDelete(row.id) }}
+                                    variant="delete" 
+                                />
                             </div>
                         </PermissionInputs>
                     </div>
                 ))}
             </div>
 
-            {/* Paginación */}
+            {/* Paginación con mejoras en diseño y animación */}
             <div className="relative flex items-center w-full mt-6">
                 {/* Controles de navegación bien centrados */}
                 <div className="absolute left-1/2 transform -translate-x-1/2 flex space-x-1">
                     <button
                         onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                         disabled={currentPage === 1}
-                        className="px-2 py-1 bg-gray-700 text-gray-300 rounded-md hover:bg-gray-600 disabled:opacity-50"
+                        className="px-2 py-1 bg-gray-700 text-gray-300 rounded-md hover:bg-gray-600 disabled:opacity-50 transition-all"
                     >
                         ‹
                     </button>
@@ -166,7 +183,7 @@ export const Table: React.FC<TableProps> = ({ rows, columns, columnLabels = {}, 
                     <button
                         onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
                         disabled={currentPage === totalPages}
-                        className="px-2 py-1 bg-gray-700 text-gray-300 rounded-md hover:bg-gray-600 disabled:opacity-50"
+                        className="px-2 py-1 bg-gray-700 text-gray-300 rounded-md hover:bg-gray-600 disabled:opacity-50 transition-all"
                     >
                         ›
                     </button>
@@ -178,9 +195,9 @@ export const Table: React.FC<TableProps> = ({ rows, columns, columnLabels = {}, 
                         <button
                             key={page}
                             onClick={() => setCurrentPage(page)}
-                            className={`px-2 py-1 rounded-md ${page === currentPage
-                                ? "bg-blue-600 text-white"
-                                : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                            className={`px-2 py-1 rounded-md transition-all duration-300 ${page === currentPage
+                                    ? "bg-blue-600 text-white shadow-md transform scale-105"
+                                    : "bg-gray-700 text-gray-300 hover:bg-gray-600"
                                 }`}
                         >
                             {page}
@@ -188,7 +205,7 @@ export const Table: React.FC<TableProps> = ({ rows, columns, columnLabels = {}, 
                     ))}
                 </div>
             </div>
-        </div >
+        </div>
     );
 };
 

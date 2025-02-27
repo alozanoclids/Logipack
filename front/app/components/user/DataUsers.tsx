@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { getUsers, deleteUser, getDate, updateUser, getRole } from '../../services/userDash/authservices';
 import Table from "../table/Table";
 import { showError, showSuccess, showConfirm } from "../toastr/Toaster";
+import Button from "../buttons/buttons"
 
 interface Role {
     id: number;
@@ -59,16 +60,16 @@ function DataUsers() {
 
     const handleDelete = async (id: number) => {
         showConfirm("¿Seguro que quieres eliminar este usuario?", async () => {
-          try {
-            await deleteUser(id);
-            setUsers((prevUsers) => prevUsers.filter((user) => user.id !== id));
-            showSuccess("Usuario eliminado con éxito"); // Muestra un mensaje de éxito
-          } catch (error) {
-            console.error("Error al eliminar usuario:", error);
-            showError("Error al eliminar usuario"); // Muestra un mensaje de error
-          }
+            try {
+                await deleteUser(id);
+                setUsers((prevUsers) => prevUsers.filter((user) => user.id !== id));
+                showSuccess("Usuario eliminado con éxito"); // Muestra un mensaje de éxito
+            } catch (error) {
+                console.error("Error al eliminar usuario:", error);
+                showError("Error al eliminar usuario"); // Muestra un mensaje de error
+            }
         });
-      };
+    };
 
     const handleEdit = async (id: number) => {
         try {
@@ -95,8 +96,7 @@ function DataUsers() {
         try {
             await updateUser(id, editForm);
             setUsers(users.map(user => (user.id === id ? { ...user, ...editForm } : user)));
-            setEditingUser(null);
-            showSuccess("Usuario editado con éxito"); // Muestra un mensaje de alerta
+            setEditingUser(null); 
         } catch (error) {
             console.error("Error al actualizar usuario:", error);
             showError("Error al actualizar usuario");
@@ -105,13 +105,13 @@ function DataUsers() {
 
 
     return (
-        <div> 
-                <Table columns={columns} rows={users} columnLabels={columnLabels} onDelete={handleDelete} onEdit={handleEdit} /> 
+        <div>
+            <Table columns={columns} rows={users} columnLabels={columnLabels} onDelete={handleDelete} onEdit={handleEdit} />
             {/* MODAL DE EDICIÓN */}
             {editingUser && (
                 <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-                    <div className="bg-white p-6 rounded-lg shadow-lg w-96 animate-fade-in">
-                        <h2 className="text-xl font-semibold mb-4">Editar Usuario</h2>
+                    <div className="bg-white p-6 rounded-2xl shadow-xl w-96 animate-fade-in">
+                        <h2 className="text-2xl font-bold text-black mb-4 text-center">Editar Usuario</h2>
 
                         <input
                             type="text"
@@ -119,7 +119,7 @@ function DataUsers() {
                             value={editForm.name}
                             onChange={handleChange}
                             placeholder="Nombre"
-                            className="w-full px-3 py-2 mb-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-4 py-2 mb-3 border border-gray-300 rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
 
                         <input
@@ -128,14 +128,14 @@ function DataUsers() {
                             value={editForm.email}
                             onChange={handleChange}
                             placeholder="Email"
-                            className="w-full px-3 py-2 mb-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-4 py-2 mb-3 border border-gray-300 rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
 
                         <select
                             name="role"
-                            value={editForm.role}  // Usar el valor del estado correcto
+                            value={editForm.role}
                             onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
-                            className="border p-2 mb-2 w-full"
+                            className="w-full px-4 py-2 mb-3 border border-gray-300 rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
                             <option value="">Seleccionar rol</option>
                             {roles.map((role) => (
@@ -144,18 +144,9 @@ function DataUsers() {
                                 </option>
                             ))}
                         </select>
-
-                        <div className="flex justify-end gap-3">
-                            <button onClick={() => handleSubmit(editingUser?.id ?? 0)}
-                                className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
-                                Guardar
-                            </button>
-                            <button
-                                onClick={() => setEditingUser(null)}
-                                className="bg-gray-400 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition"
-                            >
-                                Cancelar
-                            </button>
+                        <div className="flex justify-center gap-2">
+                            <Button onClick={() => handleSubmit(editingUser?.id ?? 0)} variant="cancel" />
+                            <Button onClick={() => setEditingUser(null)} variant="save" />
                         </div>
                     </div>
                 </div>
