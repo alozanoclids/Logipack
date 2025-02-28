@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { createIngredient } from '../../services/ingredientsService';
+import { showSuccess, showError, showConfirm } from "../toastr/Toaster";
 
 const CreateIngredientForm = () => {
   const router = useRouter();
@@ -47,11 +48,11 @@ const CreateIngredientForm = () => {
       console.log("Datos enviados:", JSON.stringify(ingredientData, null, 2));
   
       await createIngredient(ingredientData); // Envía el objeto directamente
-      alert("Ingrediente creado correctamente");
+      showSuccess("Ingrediente creado correctamente");
       router.push("/pages/ingredients"); // Redirige a la ruta deseada
     } catch (error) {
       console.error("Error al guardar el ingrediente:", error);
-      alert("Error al guardar el ingrediente");
+      showError("Error al guardar el ingrediente");
     }
   };
 
