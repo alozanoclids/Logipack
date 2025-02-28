@@ -21,7 +21,7 @@ function CreateFactory() {
     const [location, setLocation] = useState<string>('');
     const [capacity, setCapacity] = useState<string>('');
     const [manager, setManager] = useState<string>('');
-    const [employees, setEmployees] = useState<number>(0);
+    const [employees, setEmployees] = useState<string>('');
     const [status, setStatus] = useState<boolean>(false);
     const [factories, setFactories] = useState<Factory[]>([]);
     const [editingFactory, setFactory] = useState<Factory | null>(null);
@@ -34,21 +34,26 @@ function CreateFactory() {
     };
 
     const handleSave = async () => {
+        const factoryData = {
+            name,
+            location,
+            capacity,
+            manager,
+            employees,
+            status,
+        };
+    
+        console.log("Datos enviados al backend:", factoryData);
+    
         try {
-            if (editingFactory) {
-                await handleUpdate(editingFactory.id);
-                showSuccess("Planta actualizada exitosamente");
-            } else {
-                await createFactory({ name, location, capacity, manager, employees, status });
-                showSuccess("Planta creada exitosamente");
-            }
+            await createFactory(factoryData);
+            showSuccess("Planta creada exitosamente");
             fetchFactories();
+            setIsModalOpen(false);
         } catch (error) {
-            console.error('Error guardando la planta:', error);
-            showError('Error guardando la planta');
+            showError("Error guardando la planta");
         }
-        setIsModalOpen(false);
-    };
+    };    
 
     const fetchFactories = async () => {
         try {
@@ -120,7 +125,7 @@ function CreateFactory() {
                     setLocation('');
                     setCapacity('');
                     setManager('');
-                    setEmployees(0);
+                    setEmployees('');
                     setStatus(false);
                 }} variant="create" label="Crear Planta" />
             </div>
@@ -133,7 +138,7 @@ function CreateFactory() {
                         <input type="text" placeholder="Locación" value={location} onChange={(e) => setLocation(e.target.value)} className="w-full text-black p-2 border mb-2" />
                         <input type="text" placeholder="Capacidad" value={capacity} onChange={(e) => setCapacity(e.target.value)} className="w-full text-black p-2 border mb-2" />
                         <input type="text" placeholder="Persona a Cargo" value={manager} onChange={(e) => setManager(e.target.value)} className="w-full text-black p-2 border mb-2" />
-                        <input type="number" placeholder="Empleados" value={employees} onChange={(e) => setEmployees(Number(e.target.value))} className="w-full text-black p-2 border mb-2" />
+                        <input type="number" placeholder="Empleados" value={employees} onChange={(e) => setEmployees(e.target.value)} className="w-full text-black p-2 border mb-2" />
                         <div className="mb-4">
                             <label className="block text-black mb-2">Estado</label>
                             <select
@@ -148,7 +153,7 @@ function CreateFactory() {
                         </div>
                         <div className="flex justify-center gap-2">
                             <Button onClick={() => setIsModalOpen(false)} variant="cancel" />
-                            <Button onClick={() => { handleSave }} variant="save" />
+                            <Button onClick= { handleSave } variant="save" />
                         </div>
                     </div>
                 </div>

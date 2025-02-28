@@ -15,7 +15,7 @@ export interface FactoryData {
     location: string;
     capacity: string;
     manager: string;
-    employees: number;
+    employees: string;
     status: boolean;
 }
 
@@ -24,11 +24,16 @@ export const createFactory = async (dataFactory: FactoryData): Promise<void> => 
     try {
         const response = await apiFactory.post('/newFactory', dataFactory);
         return response.data;
-    } catch (error) {
-        console.error('Error al crear la fábrica:', error);
+    } catch (error: any) {
+        if (error.response) {
+            console.error("Error al crear la fábrica:", error.response.data);
+        } else {
+            console.error("Error al crear la fábrica:", error);
+        }
         throw error;
     }
 };
+
 
 export const getFactory = async () => {
     try {

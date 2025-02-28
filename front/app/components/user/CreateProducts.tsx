@@ -64,39 +64,58 @@ function Products() {
     }
   };
 
-  // Crear o actualizar un producto
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  // Crear un producto
+  const handleCreate = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!name) {
       setError("El nombre es requerido");
       return;
     }
     try {
-      if (editingProduct) {
-        await updateProduct(editingProduct.id, { name });
-        setProducts((prev) =>
-          prev.map((p) => (p.id === editingProduct.id ? { ...p, name } : p))
-        );
-        showSuccess("Producto actualizado correctamente");
-      } else {
-        const newProduct = await createProduct({ name });
+      const newProduct = await createProduct({ name });
 
-        if (!newProduct || !newProduct.id) {
-          throw new Error("Error: Producto no creado correctamente");
-        }
-
-        setProducts((prev) => [...prev, newProduct]); // Actualiza la tabla con el nuevo producto
-        await fetchProducts(); // Recargar la lista completa por seguridad
-        showSuccess("Producto creado exitosamente");
+      if (!newProduct || !newProduct.id) {
+        throw new Error("Error: Producto no creado correctamente");
       }
+
+      setProducts((prev) => [...prev, newProduct]); // Actualiza la tabla con el nuevo producto
+      await fetchProducts(); // Recargar la lista completa por seguridad
+      showSuccess("Producto creado exitosamente");
+
+      // Resetear estado
+      setShowModal(false);
+      setName("");
+      setError("");
+    } catch (err) {
+      setError("Error al crear el producto");
+      console.error(err);
+      showError("Ocurrió un error al crear el producto");
+    }
+  };
+
+  // Actualizar un producto
+  const handleUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!name || !editingProduct) {
+      setError("El nombre es requerido");
+      return;
+    }
+    try {
+      await updateProduct(editingProduct.id, { name });
+      setProducts((prev) =>
+        prev.map((p) => (p.id === editingProduct.id ? { ...p, name } : p))
+      );
+      showSuccess("Producto actualizado correctamente");
+
+      // Resetear estado
       setShowModal(false);
       setName("");
       setError("");
       setEditingProduct(null);
     } catch (err) {
-      setError("Error al guardar el producto");
+      setError("Error al actualizar el producto");
       console.error(err);
-      showError("Ocurrió un error al guardar el producto");
+      showError("Ocurrió un error al actualizar el producto");
     }
   };
 
@@ -113,6 +132,7 @@ function Products() {
       showError("No se pudo eliminar el producto");
     }
   };
+
 
   return (
     <div>
@@ -139,7 +159,7 @@ function Products() {
               <h2 className="text-xl text-center font-semibold text-black mb-4">
                 {editingProduct ? "Editar Producto" : "Crear Producto"}
               </h2>
-              <form onSubmit={handleSubmit}>
+              <form onSubmit={editingProduct ? handleUpdate : handleCreate}>
                 <div className="mb-4">
                   <label htmlFor="name" className="block text-gray-700 mb-1">
                     Nombre:

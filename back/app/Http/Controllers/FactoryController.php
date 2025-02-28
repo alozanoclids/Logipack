@@ -21,9 +21,9 @@ class FactoryController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'location' => 'required|string|max:255',
-            'capacity' => 'required|integer|min:1',
+            'capacity' => 'required|string|min:1',
             'manager' => 'required|string|max:255',
-            'employees' => 'required|integer|min:0',
+            'employees' => 'required|string|min:1',
             'status' => 'required|boolean',
         ]);
 
@@ -56,9 +56,9 @@ class FactoryController extends Controller
         $request->validate([
             'name' => 'sometimes|string|max:255',
             'location' => 'sometimes|string|max:255',
-            'capacity' => 'sometimes|integer|min:1',
+            'capacity' => 'sometimes|string|min:1',
             'manager' => 'sometimes|string|max:255',
-            'employees' => 'sometimes|integer|min:0',
+            'employees' => 'sometimes|string|min:0',
             'status' => 'sometimes|boolean',
         ]);
 

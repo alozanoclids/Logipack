@@ -1,11 +1,22 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../../hooks/useAuth";
 import { post, getRole } from "../../services/userDash/authservices";
+import { getFactory } from "../../services/userDash/factoryServices";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import { BiLock } from "react-icons/bi";
 import PermissionInputs from "../permissionCheck/PermissionInputs";
 import { showError, showSuccess } from "../toastr/Toaster";
-import Button from "../buttons/buttons"
+import Button from "../buttons/buttons";
+
+interface Role {
+  id: number;
+  name: string;
+}
+
+interface Factory {
+  id: number;
+  name: string;
+}
 
 function CreateUser() {
   const { isAuthenticated } = useAuth();
@@ -13,17 +24,13 @@ function CreateUser() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [signature_bpm, setSignatureBPM] = useState("");
-  const [factory, setFactory] = useState("");
+  const [selectedFactories, setSelectedFactories] = useState<number[]>([]);
   const [role, setRole] = useState("");
   const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-
-  interface Role {
-    id: number;
-    name: string;
-  }
   const [roles, setRoles] = useState<Role[]>([]);
+  const [factories, setFactories] = useState<Factory[]>([]);
 
   useEffect(() => {
     const fetchRoles = async () => {
@@ -35,7 +42,17 @@ function CreateUser() {
       }
     };
 
+    const fetchFactories = async () => {
+      try {
+        const data = await getFactory(); 
+        setFactories(data);
+      } catch (error) {
+        console.error("Error fetching factories:", error);
+      }
+    };
+
     fetchRoles();
+    fetchFactories();
   }, []);
 
   const generatePassword = () => {
@@ -48,16 +65,30 @@ function CreateUser() {
     setPassword(newPassword);
   };
 
+  const handleFactorySelection = (factoryId: number) => {
+    setSelectedFactories((prev) =>
+      prev.includes(factoryId) ? prev.filter((id) => id !== factoryId) : [...prev, factoryId]
+    );
+  };
+
   const handleCreateUser = async () => {
+    if (!name || !email || !password || !role) {
+      showError("Todos los campos obligatorios deben estar llenos");
+      return;
+    }
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+      showError("El correo electrónico no es válido");
+      return;
+    }
+
     setLoading(true);
     try {
-      await post({ name, email, password, role, factory, signature_bpm });
+      await post({ name, email, password, role, factories: selectedFactories, signature_bpm });
       showSuccess("Usuario creado exitosamente");
       setIsModalOpen(false);
     } catch (error) {
       console.error("Error creando usuario:", error);
-      showError("Error creando usuario:");
-
+      showError("Error creando usuario");
     } finally {
       setLoading(false);
     }
@@ -89,7 +120,6 @@ function CreateUser() {
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full text-black border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-
               <div className="relative w-full">
                 <input
                   type={showPassword ? "text" : "password"}
@@ -113,7 +143,6 @@ function CreateUser() {
                   <BiLock size={16} />
                 </button>
               </div>
-
               <select
                 value={role}
                 onChange={(e) => setRole(e.target.value)}
@@ -135,13 +164,19 @@ function CreateUser() {
                 className="w-full text-black border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
 
-              <input
-                type="text"
-                placeholder="Planta"
-                value={factory}
-                onChange={(e) => setFactory(e.target.value)}
-                className="w-full text-black border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+              <p className="text-black mb-2">Seleccionar Plantas:</p>
+              <select
+                value={selectedFactories.map(String)} // Convierte todos los valores a string
+                onChange={(e) => setSelectedFactories(Array.from(e.target.selectedOptions, option => Number(option.value)))}
+                multiple
+                className="border p-2 mb-2 w-full text-black"
+              >
+                {factories.map((factory) => (
+                  <option key={factory.id} value={factory.id}>
+                    {factory.name}
+                  </option>
+                ))}
+              </select>
 
               <div className="flex justify-center gap-2">
                 <Button onClick={() => setIsModalOpen(false)} variant="cancel" />

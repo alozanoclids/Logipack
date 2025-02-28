@@ -5,7 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ClientsController;
 use App\Http\Controllers\FactoryController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Ingredient;  
+use App\Http\Controllers\Ingredient;
 use App\Http\Controllers\ManufacturingController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ProductController;
@@ -55,7 +55,7 @@ Route::controller(RolesController::class)->group(function () {
     Route::get('/RoleId/{id}', 'RoleId'); // Obtener una lineas específica
     Route::put('/updateRole/{id}', 'updateRole'); // Actualizar una lineas
     Route::delete('/deleteRole/{id}', 'deleteRole'); // Eliminar una lineas
-});  
+});
 
 //Rutas Factories
 Route::controller(FactoryController::class)->group(function () {
@@ -76,12 +76,13 @@ Route::controller(ManufacturingController::class)->group(function () {
 
 //Rutas Clientes
 Route::controller(ClientsController::class)->group(function () {
+    Route::get('/clients/sync', 'getClientDataApi');
     Route::get('/getClients', 'getClients'); // Obtener todas las lineas
     Route::post('/newClients', 'newClients'); // Crear una nueva lineas
     Route::get('/ClientsId/{id}', 'ClientsId'); // Obtener una lineas específica
     Route::put('/updateClients/{id}', 'updateClients'); // Actualizar una lineas
     Route::delete('/deleteClients/{id}', 'deleteClients'); // Eliminar una lineas
-});  
+});
 
 //Rutas Productos
 Route::controller(ProductController::class)->group(function () {
@@ -91,4 +92,4 @@ Route::controller(ProductController::class)->group(function () {
     Route::get('/ProductName/{name}', 'ProductName'); // Obtener una lineas específica
     Route::put('/updateProduct/{id}', 'updateProduct'); // Actualizar una lineas
     Route::delete('/deleteProduct/{id}', 'deleteProduct'); // Eliminar una lineas
-});  
+});
