@@ -17,10 +17,17 @@ export interface Data {
 
 // Función para crear un nuevo Product.
 // Envía una solicitud POST a la ruta '/newProduct' con los datos proporcionados.
-export const createProduct = async (data: { name: string }) => { 
-    const response = await apiProducts.post('/newProduct', data);
-    return response.data;
-  };
+export const createProduct = async (data: { name: string }) => {
+    try {
+        const response = await apiProducts.post('/newProduct', data);
+        if (!response.data || !response.data.product || !response.data.product.id) {
+            throw new Error("Respuesta inválida del servidor");
+        }
+        return response.data.product; // 🔥 Ahora devuelve el objeto correcto
+    } catch (error) {
+        throw new Error("No se pudo crear el producto");
+    }
+};
 
 // Función para obtener todos los Products.
 // Realiza una solicitud GET a la ruta '/getProduct' y retorna los datos recibidos.
@@ -36,7 +43,7 @@ export const getProduct = async () => {
 
 // Función para eliminar un Product en específico por su ID.
 // Realiza una solicitud DELETE a la ruta `/deleteProduct/${id}`.
-export const deleteProduct = async (id: number) => { 
+export const deleteProduct = async (id: number) => {
     try {
         const response = await apiProducts.delete(`/deleteProduct/${id}`);
         return response.data;

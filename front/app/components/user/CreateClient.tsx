@@ -7,36 +7,36 @@ import {
   deleteClients,
   updateClients,
 } from "../../services/userDash/clientServices";
-import { getManu } from "../../services/userDash/manufacturingServices";
 import { showSuccess, showError, showConfirm } from "../toastr/Toaster";
 import Table from "../table/Table";
+import Button from "../buttons/buttons";
 
 interface Clients {
   id: number;
   name: string;
-  line_types: number; // Ahora guarda IDs en lugar de nombres
-  details: { key: string; value: string }[];
-}
-
-interface Manufacturing {
-  id: number;
-  name: string;
+  code: string;
+  email?: string;
+  phone?: string;
+  job_position?: string;
+  responsible_person?: { name: string; email: string }[];
 }
 
 function CreateClient() {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const [name, setName] = useState<string>("");
-  const [lineTypes, setLineTypes] = useState<number[]>([]);
   const [clients, setClients] = useState<Clients[]>([]);
-  const [manufacturingOptions, setManufacturingOptions] = useState<Manufacturing[]>([]);
   const [editingClients, setEditingClients] = useState<Clients | null>(null);
-  const [details, setDetails] = useState<{ key: string; value: string }[]>([]);
-  const [newDetailKey, setNewDetailKey] = useState<string>("");
-  const [newDetailValue, setNewDetailValue] = useState<string>("");
+
+  const [name, setName] = useState("");
+  const [code, setCode] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [jobPosition, setJobPosition] = useState("");
+  const [responsiblePerson, setResponsiblePerson] = useState<{ name: string; email: string }[]>([]);
+  const [newResponsibleName, setNewResponsibleName] = useState("");
+  const [newResponsibleEmail, setNewResponsibleEmail] = useState("");
 
   useEffect(() => {
     fetchClients();
-    fetchManufacturingOptions();
   }, []);
 
   const fetchClients = async () => {
@@ -48,54 +48,37 @@ function CreateClient() {
     }
   };
 
-  const fetchManufacturingOptions = async () => {
-    try {
-      const data = await getManu();
-      setManufacturingOptions(data);
-    } catch (error) {
-      console.error("Error al obtener opciones de manufactura:", error);
-    }
-  };
-
   const handleSave = async () => {
     try {
+      const payload = { name, code, email, phone, job_position: jobPosition, responsible_person: responsiblePerson };
+
       if (editingClients) {
-        await handleUpdate(editingClients.id);
+        await updateClients(editingClients.id, payload);
+        showSuccess("Cliente actualizado exitosamente");
       } else {
-        const payload = { name, line_types: lineTypes, details };
         await createClients(payload);
         showSuccess("Cliente creado exitosamente");
       }
+
       fetchClients();
       closeModal();
     } catch (error) {
       console.error("Error al guardar cliente:", error);
       showError("Error al guardar cliente");
-
-    }
-  };
-
-  const handleUpdate = async (id: number) => {
-    try {
-      const payload = { name, line_types: lineTypes, details };
-      await updateClients(id, payload);
-      showSuccess("Cliente actualizado exitosamente");
-      fetchClients();
-      closeModal();
-    } catch (error) {
-      console.error("Error al actualizar cliente:", error);
-      showError("Error al actualizar cliente");
-
     }
   };
 
   const handleEdit = async (id: number) => {
     try {
       const clientData = await getClientsId(id);
+      // console.log("Cliente obtenido:", clientData); // Verificar qué datos se están obteniendo
       setEditingClients(clientData);
       setName(clientData.name);
-      setLineTypes(clientData.line_types || []);
-      setDetails(clientData.details || []);
+      setCode(clientData.code);
+      setEmail(clientData.email || "");
+      setPhone(clientData.phone || "");
+      setJobPosition(clientData.job_position || "");
+      setResponsiblePerson(clientData.responsible_person ? JSON.parse(clientData.responsible_person) : []);
       setIsModalOpen(true);
     } catch (error) {
       console.error("Error al obtener datos del cliente:", error);
@@ -119,29 +102,38 @@ function CreateClient() {
     setIsModalOpen(false);
     setEditingClients(null);
     setName("");
-    setLineTypes([]);
-    setDetails([]);
+    setCode("");
+    setEmail("");
+    setPhone("");
+    setJobPosition("");
+    setResponsiblePerson([]);
   };
 
   return (
     <div>
-      <button
-        onClick={() => setIsModalOpen(true)}
-        className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg shadow-md transition-all duration-300 mb-2"
-      >
-        Crear Cliente
-      </button>
+      <div className="flex justify-center mb-2">
+        <Button onClick={() => setIsModalOpen(true)} variant="create" label="Crear Cliente" />
+      </div>
+
       <Table
-        columns={["name"]}
+        columns={["name", "code", "email", "phone", "job_position"]}
         rows={clients}
-        columnLabels={{ name: "Nombre del Cliente" }}
+        columnLabels={{
+          name: "Nombre",
+          code: "Código",
+          email: "Correo",
+          phone: "Teléfono",
+          job_position: "Puesto"
+        }}
         onDelete={handleDelete}
         onEdit={handleEdit}
       />
+
       {isModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white p-6 rounded-lg shadow-lg w-96">
             <h2 className="text-lg font-bold mb-4">{editingClients ? "Editar Cliente" : "Crear Cliente"}</h2>
+
             <input
               type="text"
               placeholder="Nombre del Cliente"
@@ -149,69 +141,59 @@ function CreateClient() {
               onChange={(e) => setName(e.target.value)}
               className="w-full border p-2 rounded mb-2 text-black"
             />
+            <input
+              type="text"
+              placeholder="Código"
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              className="w-full border p-2 rounded mb-2 text-black"
+            />
+            <input
+              type="email"
+              placeholder="Correo"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full border p-2 rounded mb-2 text-black"
+            />
+            <input
+              type="number"
+              placeholder="Teléfono"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              className="w-full border p-2 rounded mb-2 text-black"
+            />
+            <input
+              type="text"
+              placeholder="Puesto de trabajo"
+              value={jobPosition}
+              onChange={(e) => setJobPosition(e.target.value)}
+              className="w-full border p-2 rounded mb-2 text-black"
+            />
 
-            {/* Select de Tipos de Línea */}
+            {/* Sección de Responsable */}
             <div className="mb-2">
-              <h3 className="text-sm font-semibold">Tipos de Línea:</h3>
-              <select
-                className="w-full border p-2 rounded text-black"
-                onChange={(e) => {
-                  const selectedId = parseInt(e.target.value);
-                  if (!lineTypes.includes(selectedId)) {
-                    setLineTypes([...lineTypes, selectedId]);
-                  }
-                }}
-              >
-                <option value="">Seleccionar tipo de línea</option>
-                {manufacturingOptions.map((option) => (
-                  <option key={option.id} value={option.id}>
-                    {option.name}
-                  </option>
-                ))}
-              </select>
-
-              <ul>
-                {lineTypes.map((id, index) => {
-                  const lineType = manufacturingOptions.find((opt) => opt.id === id);
-                  return (
-                    <li key={index} className="flex justify-between items-center bg-gray-100 p-1 rounded mb-1">
-                      {lineType?.name || "Desconocido"}
-                      <button
-                        onClick={() => setLineTypes(lineTypes.filter((_, i) => i !== index))}
-                        className="text-red-500 text-xs"
-                      >
-                        Eliminar
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-
-            {/* Sección de Variables Dinámicas */}
-            <div className="mb-2">
-              <h3 className="text-sm font-semibold">Detalles del Cliente:</h3>
+              <h3 className="text-sm font-semibold">Responsables:</h3>
               <div className="flex gap-2 mb-2">
                 <input
                   type="text"
-                  placeholder="Nombre de la Variable"
-                  value={newDetailKey}
-                  onChange={(e) => setNewDetailKey(e.target.value)}
+                  placeholder="Nombre"
+                  value={newResponsibleName}
+                  onChange={(e) => setNewResponsibleName(e.target.value)}
                   className="border p-2 rounded w-1/2 text-black"
                 />
                 <input
-                  type="text"
-                  placeholder="Valor"
-                  value={newDetailValue}
-                  onChange={(e) => setNewDetailValue(e.target.value)}
+                  type="email"
+                  placeholder="Correo"
+                  value={newResponsibleEmail}
+                  onChange={(e) => setNewResponsibleEmail(e.target.value)}
                   className="border p-2 rounded w-1/2 text-black"
                 />
                 <button
                   onClick={() => {
-                    if (newDetailKey && newDetailValue) {
-                      setDetails([...details, { key: newDetailKey, value: newDetailValue }]);
-                      setNewDetailKey("");
-                      setNewDetailValue("");
+                    if (newResponsibleName && newResponsibleEmail) {
+                      setResponsiblePerson([...responsiblePerson, { name: newResponsibleName, email: newResponsibleEmail }]);
+                      setNewResponsibleName("");
+                      setNewResponsibleEmail("");
                     }
                   }}
                   className="bg-blue-500 text-white px-3 py-1 rounded"
@@ -220,29 +202,25 @@ function CreateClient() {
                 </button>
               </div>
               <ul>
-                {details.map((detail, index) => (
+                {Array.isArray(responsiblePerson) ? responsiblePerson.map((person, index) => (
                   <li key={index} className="flex justify-between items-center bg-gray-100 p-1 rounded mb-1">
                     <p className="text-black">
-                      <strong>{detail.key}:</strong> {detail.value}
+                      <strong>{person.name}:</strong> {person.email}
                     </p>
                     <button
-                      onClick={() => setDetails(details.filter((_, i) => i !== index))}
+                      onClick={() => setResponsiblePerson(responsiblePerson.filter((_, i) => i !== index))}
                       className="text-red-500 text-xs"
                     >
                       Eliminar
                     </button>
                   </li>
-                ))}
+                )) : <p className="text-gray-500">No hay responsables asignados.</p>}
               </ul>
             </div>
 
-            <div className="flex justify-end gap-2 mt-4">
-              <button onClick={closeModal} className="bg-gray-500 text-white px-4 py-2 rounded">
-                Cancelar
-              </button>
-              <button onClick={handleSave} className="bg-green-600 text-white px-4 py-2 rounded">
-                {editingClients ? "Actualizar" : "Guardar"}
-              </button>
+            <div className="flex justify-center gap-2">
+              <Button onClick={closeModal} variant="cancel" />
+              <Button onClick={handleSave} variant="save" />
             </div>
           </div>
         </div>

@@ -15,9 +15,9 @@ return new class extends Migration
             $table->id();
             $table->string('name'); // Nombre de la planta
             $table->string('location'); // Ubicación de la planta
-            $table->integer('capacity')->nullable(); // Capacidad de producción
+            $table->string('capacity')->nullable(); // Capacidad de producción
             $table->string('manager')->nullable(); // Nombre del gerente
-            $table->integer('employees')->nullable(); // Número de empleados
+            $table->string('employees')->nullable(); // Número de empleados
             $table->boolean('status')->default(true); // Estado de la planta
             $table->timestamps();
         });
