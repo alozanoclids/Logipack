@@ -87,10 +87,15 @@ export const postUserImage = async (decodedEmail: string, imageFile: File) => {
   }
 };
 
-// Servicio para crear un nuevo usuario en la base de datos
 export const post = async (datosUsuario: any) => { 
+  console.log('Antes de enviar:', datosUsuario);
+
   try {
-    const response = await authUser.post('/users', datosUsuario);
+    const response = await authUser.post('/users', {
+      ...datosUsuario,
+      factory: JSON.stringify(datosUsuario.factories),
+    });
+
     return response.data;
   } catch (error) {
     console.error('Error en post:', error);

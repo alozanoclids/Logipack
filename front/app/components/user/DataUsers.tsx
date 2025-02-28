@@ -1,9 +1,10 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { getUsers, deleteUser, getDate, updateUser, getRole } from '../../services/userDash/authservices';
+import { getFactory } from "../../services/userDash/factoryServices";
 import Table from "../table/Table";
 import { showError, showSuccess, showConfirm } from "../toastr/Toaster";
-import Button from "../buttons/buttons"
+import Button from "../buttons/buttons";
 
 interface Role {
     id: number;
@@ -16,19 +17,32 @@ interface User {
     name: string;
     email: string;
     role: Role[];
+    factory?: number;
+}
+
+interface Factory {
+    id: number;
+    name: string;
 }
 
 function DataUsers() {
     const [editingUser, setEditingUser] = useState<User | null>(null);
-    const [editForm, setEditForm] = useState({ name: "", email: "", role: "" });
+    const [editForm, setEditForm] = useState({ 
+        name: "", 
+        email: "", 
+        role: "", 
+        factory: "" as number | string  // Permite números y cadenas
+    });
+    
     const [users, setUsers] = useState<{ [key: string]: any }[]>([]);
+    const [factories, setFactories] = useState<Factory[]>([]);
     const columns = ["name", "email", "role", "factory"];
     const [roles, setRoles] = useState<Role[]>([]);
     const columnLabels: { [key: string]: string } = {
         name: "Nombre",
         email: "Email",
         role: "Rol",
-        factory: "Planta",
+        factory: "Fábrica",
     };
 
     useEffect(() => {
@@ -37,24 +51,37 @@ function DataUsers() {
                 const data: User[] = await getUsers();
                 setUsers(data.map(user => ({
                     ...user,
-                    role: user.role ? user.role : "Sin rol"
+                    role: user.role ? user.role : "Sin rol",
+                    factory: user.factory || "Sin fábrica"
                 })));
             } catch (error) {
                 console.error("Error fetching users:", error);
             }
         };
+
+        const fetchFactories = async () => {
+            try {
+                const data = await getFactory();
+                setFactories(data);
+            } catch (error) {
+                console.error("Error fetching factories:", error);
+            }
+        };
+        
+        fetchFactories();
         fetchUsers();
     }, []);
+
     useEffect(() => {
         const fetchRoles = async () => {
             try {
-                const data = await getRole();  // Usamos el servicio getRole
-                setRoles(data); // Suponiendo que la respuesta tiene la forma [{ id, name }, ...]
+                const data = await getRole();
+                setRoles(data);
             } catch (error) {
                 console.error("Error fetching roles:", error);
             }
         };
-
+        
         fetchRoles();
     }, []);
 
@@ -63,10 +90,10 @@ function DataUsers() {
             try {
                 await deleteUser(id);
                 setUsers((prevUsers) => prevUsers.filter((user) => user.id !== id));
-                showSuccess("Usuario eliminado con éxito"); // Muestra un mensaje de éxito
+                showSuccess("Usuario eliminado con éxito");
             } catch (error) {
                 console.error("Error al eliminar usuario:", error);
-                showError("Error al eliminar usuario"); // Muestra un mensaje de error
+                showError("Error al eliminar usuario");
             }
         });
     };
@@ -80,7 +107,8 @@ function DataUsers() {
             setEditForm({
                 name: userData.name,
                 email: userData.email,
-                role: userData.role || ""
+                role: userData.role || "",
+                factory: userData.factory ? String(userData.factory) : ""
             });
         } catch (error) {
             console.error("Error obteniendo datos del usuario:", error);
@@ -88,26 +116,27 @@ function DataUsers() {
         }
     };
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         setEditForm({ ...editForm, [e.target.name]: e.target.value });
     };
 
     const handleSubmit = async (id: number) => {
         try {
-            await updateUser(id, editForm);
+            await updateUser(id, {
+                ...editForm,
+                factory: editForm.factory ? Number(editForm.factory) : null,
+            });
             setUsers(users.map(user => (user.id === id ? { ...user, ...editForm } : user)));
-            setEditingUser(null); 
+            setEditingUser(null);
         } catch (error) {
             console.error("Error al actualizar usuario:", error);
             showError("Error al actualizar usuario");
         }
     };
 
-
     return (
         <div>
             <Table columns={columns} rows={users} columnLabels={columnLabels} onDelete={handleDelete} onEdit={handleEdit} />
-            {/* MODAL DE EDICIÓN */}
             {editingUser && (
                 <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
                     <div className="bg-white p-6 rounded-2xl shadow-xl w-96 animate-fade-in">
@@ -134,19 +163,30 @@ function DataUsers() {
                         <select
                             name="role"
                             value={editForm.role}
-                            onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
+                            onChange={handleChange}
                             className="w-full px-4 py-2 mb-3 border border-gray-300 rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
                             <option value="">Seleccionar rol</option>
                             {roles.map((role) => (
-                                <option key={role.id} value={role.name}>
-                                    {role.name.charAt(0).toUpperCase() + role.name.slice(1)}
-                                </option>
+                                <option key={role.id} value={role.name}>{role.name}</option>
                             ))}
                         </select>
+
+                        <select
+                            name="factory"
+                            value={editForm.factory}
+                            onChange={(e) => setEditForm({ ...editForm, factory: Number(e.target.value) })}
+                            className="w-full px-4 py-2 mb-3 border border-gray-300 rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                            <option value="">Seleccionar fábrica</option>
+                            {factories.map((factory) => (
+                                <option key={factory.id} value={factory.id}>{factory.name}</option>
+                            ))}
+                        </select>
+
                         <div className="flex justify-center gap-2">
-                            <Button onClick={() => handleSubmit(editingUser?.id ?? 0)} variant="cancel" />
-                            <Button onClick={() => setEditingUser(null)} variant="save" />
+                            <Button onClick={() => handleSubmit(editingUser?.id ?? 0)} variant="save" />
+                            <Button onClick={() => setEditingUser(null)} variant="cancel" />
                         </div>
                     </div>
                 </div>

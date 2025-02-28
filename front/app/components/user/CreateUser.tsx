@@ -44,7 +44,7 @@ function CreateUser() {
 
     const fetchFactories = async () => {
       try {
-        const data = await getFactory(); 
+        const data = await getFactory();
         setFactories(data);
       } catch (error) {
         console.error("Error fetching factories:", error);
@@ -83,7 +83,15 @@ function CreateUser() {
 
     setLoading(true);
     try {
-      await post({ name, email, password, role, factories: selectedFactories, signature_bpm });
+      await post({
+        name,
+        email,
+        password,
+        role,
+        signature_bpm,
+        factories: JSON.stringify(selectedFactories), // 🔥 Convertir a JSON
+      });
+
       showSuccess("Usuario creado exitosamente");
       setIsModalOpen(false);
     } catch (error) {
@@ -93,6 +101,7 @@ function CreateUser() {
       setLoading(false);
     }
   };
+
 
   return (
     <div className="flex justify-center">
@@ -166,8 +175,12 @@ function CreateUser() {
 
               <p className="text-black mb-2">Seleccionar Plantas:</p>
               <select
-                value={selectedFactories.map(String)} // Convierte todos los valores a string
-                onChange={(e) => setSelectedFactories(Array.from(e.target.selectedOptions, option => Number(option.value)))}
+                value={selectedFactories.map(String)} // Convierte los números en strings
+                onChange={(e) =>
+                  setSelectedFactories(
+                    Array.from(e.target.selectedOptions, (option) => Number(option.value))
+                  )
+                }
                 multiple
                 className="border p-2 mb-2 w-full text-black"
               >
@@ -177,6 +190,7 @@ function CreateUser() {
                   </option>
                 ))}
               </select>
+
 
               <div className="flex justify-center gap-2">
                 <Button onClick={() => setIsModalOpen(false)} variant="cancel" />

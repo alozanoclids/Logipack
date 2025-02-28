@@ -150,7 +150,7 @@ class AuthController extends Controller
             'password' => 'required|string|min:6',
             'role' => 'required',
             'signature_bpm' => 'required|string|max:255',
-            'factory' => 'required|string|max:255',
+            'factory' => 'required|json',
         ]);
 
         // Verificar si el correo ya existe
