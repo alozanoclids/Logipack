@@ -47,20 +47,23 @@ const WindowManager: React.FC<WindowManagerProps> = ({ windowsData = [] }) => {
     };
 
     return (
-        <div className="relative max-h-[94vh] h-screen flex flex-col bg-gray-900 rounded-lg text-white overflow-hidden">
+        <div className="relative max-h-[94vh] h-screen flex flex-col bg-gray-900 rounded-xl border border-gray-500 text-white overflow-hidden shadow-lg">
             {/* Barra de pestañas estilo navegador */}
-            <div className="relative flex items-center gap-1 p-2 bg-gray-800 rounded-t-lg shadow-md border-b border-gray-700">
+            <div className="relative flex items-center gap-1 px-3 py-2 bg-gray-850 rounded-t-xl shadow-md border-b border-gray-700">
                 {windows.map(win => (
                     <div key={win.id} className="relative">
                         <button
-                            className={`px-3 py-1.5 text-sm font-medium rounded-t-md transition-all flex items-center gap-2
-                            ${activeWindow === win.id ? "bg-gray-900 text-white" : "bg-gray-700 text-gray-300 hover:bg-gray-600"}`}
+                            className={`px-4 py-2 text-sm font-semibold rounded-t-md transition-all flex items-center gap-2 border border-gray-700 shadow-sm
+                        ${activeWindow === win.id
+                                    ? "bg-gray-950 text-white shadow-md border-blue-500"
+                                    : "bg-gray-800 text-gray-300 hover:bg-gray-700 transition-colors"
+                                }`}
                             onClick={() => setActiveWindow(win.id)}
                         >
                             {win.title}
                             {!win.isProtected && (
                                 <span
-                                    className="text-red-400 hover:text-red-300 transition-all cursor-pointer text-xs"
+                                    className="text-red-400 hover:text-red-300 transition-opacity cursor-pointer text-xs hover:scale-110"
                                     onClick={(e) => { e.stopPropagation(); closeWindow(win.id); }}
                                     aria-label={`Cerrar ${win.title}`}
                                 >
@@ -72,7 +75,8 @@ const WindowManager: React.FC<WindowManagerProps> = ({ windowsData = [] }) => {
                         {activeWindow === win.id && (
                             <motion.div
                                 layoutId="active-tab"
-                                className="absolute bottom-0 left-0 w-full h-0.5 bg-blue-500 rounded-t-md"
+                                className="absolute bottom-0 left-0 w-full h-[3px] bg-blue-500 rounded-t-md"
+                                transition={{ type: "spring", stiffness: 300, damping: 20 }}
                             />
                         )}
                     </div>
@@ -80,7 +84,7 @@ const WindowManager: React.FC<WindowManagerProps> = ({ windowsData = [] }) => {
             </div>
 
             {/* Contenido de la Ventana Activa con animación y Loader */}
-            <div className="flex-grow bg-gray-700 rounded-b-lg shadow-lg border border-gray-600 w-full max-h-full overflow-auto flex items-center justify-center">
+            <div className="flex-grow bg-gray-800 rounded-b-xl shadow-inner border border-gray-500 w-full max-h-full overflow-auto flex items-center justify-center p-4">
                 <AnimatePresence mode="wait">
                     {isLoading ? (
                         <motion.div
@@ -101,7 +105,7 @@ const WindowManager: React.FC<WindowManagerProps> = ({ windowsData = [] }) => {
                                 animate={{ opacity: 1, x: 0 }}
                                 exit={{ opacity: 0, x: -20 }}
                                 transition={{ duration: 0.3, ease: "easeOut" }}
-                                className="w-full h-full overflow-auto p-4 md:p-6"
+                                className="w-full h-full overflow-auto p-6"
                             >
                                 {currentWindow.content}
                                 {currentWindow.component}
@@ -111,6 +115,7 @@ const WindowManager: React.FC<WindowManagerProps> = ({ windowsData = [] }) => {
                 </AnimatePresence>
             </div>
         </div>
+
     );
 };
 

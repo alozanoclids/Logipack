@@ -4,8 +4,8 @@ import { post, getRole } from "../../services/userDash/authservices";
 import { getFactory } from "../../services/userDash/factoryServices";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import { BiLock } from "react-icons/bi";
-import PermissionInputs from "../permissionCheck/PermissionInputs";
 import { showError, showSuccess } from "../toastr/Toaster";
+import PermissionInputs from "../permissionCheck/PermissionInputs";
 import Button from "../buttons/buttons";
 
 interface Role {

@@ -31,13 +31,12 @@ function DataUsers() {
         name: "", 
         email: "", 
         role: "", 
-        factory: "" as number | string  // Permite números y cadenas
+        factory: "" as number | string
     });
-    
     const [users, setUsers] = useState<{ [key: string]: any }[]>([]);
     const [factories, setFactories] = useState<Factory[]>([]);
-    const columns = ["name", "email", "role", "factory"];
     const [roles, setRoles] = useState<Role[]>([]);
+    const columns = ["name", "email", "role", "factory"];
     const columnLabels: { [key: string]: string } = {
         name: "Nombre",
         email: "Email",

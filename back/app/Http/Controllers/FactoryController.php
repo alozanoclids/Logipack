@@ -11,7 +11,7 @@ class FactoryController extends Controller
     // Obtener todas las fábricas
     public function getFactories(): JsonResponse
     {
-        $factories = Factory::all();
+        $factories = Factory::with('manufacturings')->get();
         return response()->json($factories);
     }
 

@@ -4,8 +4,8 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ClientsController;
 use App\Http\Controllers\FactoryController;
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Ingredient;
+use Illuminate\Support\Facades\Route; 
+use App\Http\Controllers\MaestrasController;
 use App\Http\Controllers\ManufacturingController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ProductController;
@@ -26,17 +26,6 @@ Route::controller(AuthController::class)->group(function () {
     Route::delete('/delete/{id}', 'getUserDelete');
     Route::put('/update/{id}', 'getUserUpdate');
     Route::get('/date/{id}', 'getuserById');
-});
-
-//Rutas Ingredients
-Route::controller(Ingredient::class)->group(function () {
-    Route::get('ingredients/list', 'index');
-    Route::get('ingredients/{id}', 'show');
-    Route::post('ingredients/create', 'store');
-    Route::put('ingredients/{id}/update', 'update');
-    Route::put('ingredients/{id}/toggle-status',  'toggleStatus');
-    Route::delete('ingredients/{id}/delete', 'destroy'); // Ruta para eliminar
-
 });
 
 //Rutas Permissions
@@ -94,4 +83,14 @@ Route::controller(ProductController::class)->group(function () {
     Route::get('/ProductName/{name}', 'ProductName'); // Obtener una lineas específica
     Route::put('/updateProduct/{id}', 'updateProduct'); // Actualizar una lineas
     Route::delete('/deleteProduct/{id}', 'deleteProduct'); // Eliminar una lineas
+});
+
+//Rutas Maestras
+Route::controller(MaestrasController::class)->group(function () {
+    Route::get('/getMaestra', 'getMaestra'); // Obtener todas las lineas
+    Route::post('/newMaestra', 'newMaestra'); // Crear una nueva lineas
+    Route::get('/MaestraId/{id}', 'MaestraId'); // Obtener una lineas específica
+    Route::get('/MaestraName/{name}', 'MaestraName'); // Obtener una lineas específica
+    Route::put('/updateMaestra/{id}', 'updateMaestra'); // Actualizar una lineas
+    Route::delete('/deleteMaestra/{id}', 'deleteMaestra'); // Eliminar una lineas
 });
