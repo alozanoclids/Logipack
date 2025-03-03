@@ -41,9 +41,9 @@ const menuItems: MenuItem[] = [
     icon: <FaCapsules />,
     children: [
       {
-        label: "Ingredientes",
+        label: "Informacion de Maestras",
         icon: <FaVials />,
-        link: "/pages/ingredients"
+        link: "/pages/maestra"
       },
 
     ],
@@ -98,7 +98,7 @@ const Sidebar: React.FC<SidebarProps> = ({ sidebarOpen, setSidebarOpen }) => {
 
   return (
     <aside
-      className={`transition-all duration-500 ease-in-out h-screen sticky top-0 bg-[#000] ${sidebarOpen ? "w-64" : "w-16"
+      className={`transition-all duration-500 ease-in-out h-screen sticky top-0 bg-[#242424] ${sidebarOpen ? "w-64" : "w-16"
         }`}
     >
       <div className="h-full w-full bg-white/10 backdrop-blur-lg border border-white/20 rounded-xl shadow-lg flex flex-col">

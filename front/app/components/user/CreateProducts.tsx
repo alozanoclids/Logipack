@@ -157,12 +157,12 @@ function Products() {
               transition={{ duration: 0.3 }}
             >
               <h2 className="text-xl text-center font-semibold text-black mb-4">
-                {editingProduct ? "Editar Producto" : "Crear Producto"}
+                {editingProduct ? "Editar Tipo de Producto" : "Crear Tipo de Producto"}
               </h2>
               <form onSubmit={editingProduct ? handleUpdate : handleCreate}>
                 <div className="mb-4">
                   <label htmlFor="name" className="block text-gray-700 mb-1">
-                    Nombre:
+                    Nombre del Tipo:
                   </label>
                   <input
                     type="text"

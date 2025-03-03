@@ -28,7 +28,7 @@ function CreateFactory() {
     const columns = ["name", "location", "manager"];
     const columnLabels: { [key: string]: string } = {
         name: "Nombre de Planta",
-        location: "Locación",
+        location: "Ubicación",
         manager: "Persona a Cargo", 
     };
 
@@ -134,7 +134,7 @@ function CreateFactory() {
                     <div className="bg-white p-6 rounded shadow-lg w-1/3">
                         <h2 className="text-xl text-black font-bold mb-4">{editingFactory ? "Editar Planta" : "Crear Planta"}</h2>
                         <input type="text" placeholder="Nombre" value={name} onChange={(e) => setName(e.target.value)} className="w-full text-black p-2 border mb-2" />
-                        <input type="text" placeholder="Locación" value={location} onChange={(e) => setLocation(e.target.value)} className="w-full text-black p-2 border mb-2" />
+                        <input type="text" placeholder="Ubicación" value={location} onChange={(e) => setLocation(e.target.value)} className="w-full text-black p-2 border mb-2" />
                         <input type="text" placeholder="Capacidad" value={capacity} onChange={(e) => setCapacity(e.target.value)} className="w-full text-black p-2 border mb-2" />
                         <input type="text" placeholder="Persona a Cargo" value={manager} onChange={(e) => setManager(e.target.value)} className="w-full text-black p-2 border mb-2" />
                         <input type="number" placeholder="Empleados" value={employees} onChange={(e) => setEmployees(e.target.value)} className="w-full text-black p-2 border mb-2" />

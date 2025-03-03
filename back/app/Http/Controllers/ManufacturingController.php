@@ -20,13 +20,15 @@ class ManufacturingController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'line_types' => 'nullable|array' // Validamos que sea un array si se envía
+            'line_types' => 'nullable|array', // Validamos que sea un array si se envía
+            'factory_id' => 'required|exists:factories,id',
         ]);
 
         // Guardamos correctamente el name y el JSON
         $Manu = Manufacturing::create([
             'name' => $request->name,
-            'line_types' => $request->has('line_types') ? json_encode($request->line_types) : json_encode([])
+            'line_types' => $request->has('line_types') ? json_encode($request->line_types) : json_encode([]),
+            'factory_id' => $request->factory_id
         ]);
 
         return response()->json([
@@ -50,22 +52,19 @@ class ManufacturingController extends Controller
     {
         $Manu = Manufacturing::find($id);
         if (!$Manu) {
-            return response()->json(['message' => 'Fábrica no encontrada'], 404);
+            return response()->json(['message' => 'Manufactura no encontrada'], 404);
         }
 
         $request->validate([
             'name' => 'sometimes|string|max:255',
-            'location' => 'sometimes|string|max:255',
-            'capacity' => 'sometimes|integer|min:1',
-            'manager' => 'sometimes|string|max:255',
-            'employees' => 'sometimes|integer|min:0',
-            'status' => 'sometimes|boolean',
+            'line_types' => 'sometimes|array',
+            'factory_id' => 'sometimes|exists:factories,id'
         ]);
 
         $Manu->update($request->all());
 
         return response()->json([
-            'message' => 'Fábrica actualizada correctamente',
+            'message' => 'Manufactura actualizada correctamente',
             'Manu' => $Manu
         ]);
     }
