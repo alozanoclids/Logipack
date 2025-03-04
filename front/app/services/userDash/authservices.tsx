@@ -61,13 +61,13 @@ export const getUserByEmail = async (decodedEmail: string) => {
   }
 };
 
-// Servicio para subir una imagen de perfil de usuario
-export const postUserImage = async (decodedEmail: string, imageFile: File) => {
+// Servicio para subir una imagen (usada en crear y editar usuarios)
+export const uploadUserImage = async (imageFile: File) => {
   try {
     const formData = new FormData();
     formData.append('image', imageFile);
 
-    const response = await authUser.post(`/upload-image/${decodedEmail}`, formData, {
+    const response = await authUser.post('/users/upload-image', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       }
@@ -75,7 +75,7 @@ export const postUserImage = async (decodedEmail: string, imageFile: File) => {
 
     return { success: true, data: response.data };
   } catch (error: any) {
-    console.error('Error en postUserImage:', error);
+    console.error('Error en uploadUserImage:', error);
     if (error.response) {
       return {
         success: false,

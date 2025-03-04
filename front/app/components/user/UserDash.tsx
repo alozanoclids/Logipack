@@ -46,11 +46,7 @@ function User() {
           {
             id: 1, title: "Usuarios", component:
               <PermissionCheck requiredPermission="crear_usuarios">
-                <div>
-                  {/* Botón arriba y tabla abajo */}
-                  <div className="flex flex-col md:flex-row justify-center items-center mb-4">
-                    <CreateUser />
-                  </div>
+                <div>        
 
                   {/* Tabla de usuarios */}
                   <div className="overflow-x-auto">

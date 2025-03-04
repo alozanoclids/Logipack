@@ -112,7 +112,7 @@ class AuthController extends Controller
         ]);
     }
 
-    public function uploadImage(Request $request, $email)
+    public function EditImage(Request $request, $email)
     {
         // Verificar si el usuario existe
         $user = User::where('email', $email)->first();
@@ -140,6 +140,26 @@ class AuthController extends Controller
             'image' => asset('storage/' . $imagePath)
         ]);
     }
+
+    public function uploadUserImage(Request $request)
+    {
+        $request->validate([
+            'image' => 'required|image|mimes:jpg,png,jpeg,gif|max:2048',
+        ]);
+    
+        $imagePath = $request->file('image')->store('images', 'public');
+    
+        // Genera la URL manualmente
+        $imageUrl = env('APP_URL') . '/storage/' . $imagePath;
+    
+        return response()->json([
+            'estado' => 'éxito',
+            'mensaje' => 'Imagen subida correctamente',
+            'image_url' => $imageUrl, // URL manualmente generada
+            'image_path' => $imagePath,
+        ]);
+    }
+
 
     public function create(Request $request)
     {
@@ -169,7 +189,7 @@ class AuthController extends Controller
             'password' => Hash::make($request->password),
             'role' => $request->role,
             'signature_bpm' => $request->signature_bpm,
-            'factory' => $request->factory,
+            'factory' => $request->factories,
         ]);
 
         // Respuesta exitosa
@@ -235,10 +255,13 @@ class AuthController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255',
             'role' => 'required',
+            'factory' => 'required|json',
         ]);
         $user->name = $request->name;
         $user->email = $request->email;
         $user->role = $request->role;
+        $user->factory = $request->factory;
+
         $user->save();
         return response()->json([
             'estado' => 'éxito',
