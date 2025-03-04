@@ -25,6 +25,8 @@ class StagesController extends Controller
             'repeat_minutes' => 'nullable|integer',
             'alert' => 'boolean',
             'can_pause' => 'boolean',
+            'status' => 'boolean',
+            'activities' => 'required|json',
         ]);
 
         // Generar código autoincremental manualmente
@@ -65,6 +67,8 @@ class StagesController extends Controller
             'repeat_minutes' => 'nullable|integer',
             'alert' => 'boolean',
             'can_pause' => 'boolean',
+            'status' => 'boolean',
+            'activities' => 'required|json',
         ]);
 
         $Fase->update($validatedData);

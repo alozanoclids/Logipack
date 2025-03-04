@@ -16,10 +16,12 @@ return new class extends Migration
             $table->integer('code')->unique(); // Código autoincrementado manualmente
             $table->string('description'); // Descripción de la fase
             $table->enum('phase_type', ['Planeacion', 'Conciliación', 'Actividades']); // Tipo de fase
+            $table->json('activities')->nullable();
             $table->boolean('repeat')->default(false); // Indica si se repite
             $table->integer('repeat_minutes')->nullable(); // Minutos entre repeticiones
             $table->boolean('alert')->default(false); // Indica si tiene alerta
             $table->boolean('can_pause')->default(false); // Indica si se puede pausar
+            $table->boolean('status')->default(false); // Indica si se puede pausar
             $table->timestamps(); // Fechas de creación y actualización
         });
     }
