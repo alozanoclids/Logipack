@@ -95,6 +95,10 @@ function CreateUser({ onUserCreated }: CreateUserProps) {
       showError("El correo electrónico no es válido");
       return;
     }
+    if (!/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d!@#$%^&*()_+{}\[\]:;<>,.?~\\/-]{8,}$/.test(password)) {
+      showError("La contraseña debe tener al menos 8 caracteres, incluir letras, números y puede contener caracteres especiales");
+      return;
+    }
 
     setLoading(true);
     try {
