@@ -13,8 +13,7 @@
     z-index: 9999; /* Asegura que esté sobre todo el contenido */
 }
 
-/* Loader animation */
-/* From Uiverse.io by Nawsome */ 
+/* Loader animation */ 
 .socket {
   width: 200px;
   height: 200px;
