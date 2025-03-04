@@ -37,24 +37,37 @@ function CreateManufacturing() {
     const columnLabels = { name: "Nombre", factory: "Fábrica" };
     const columns = ["name", "factory"];
 
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const [productsResponse, manuResponse, factoriesResponse] = await Promise.all([
-                    getProduct(),
-                    getManu(),
-                    getFactory() // Obtener fábricas
-                ]);
-                setProducts(productsResponse);
-                setManu(manuResponse);
-                setFactories(factoriesResponse); // Guardar fábricas en el estado
-            } catch (error) {
-                console.error("Error al obtener datos:", error);
-                showError("No se pudieron cargar los datos");
-            }
-        };
-        fetchData();
-    }, []);
+    // Función para obtener los datos
+    const fetchData = async () => {
+        try {
+            const [productsResponse, manuResponse, factoriesResponse] = await Promise.all([
+                getProduct(),
+                getManu(),
+                getFactory()
+            ]);
+    
+            const manuWithFactoryNames = manuResponse.map((manu: Manu) => {
+                const factory = factoriesResponse.find((f: Factory) => f.id === manu.factory_id);
+                return { ...manu, factory: factory ? factory.name : "Sin fábrica" };
+            });
+    
+            setProducts(productsResponse);
+            setManu(manuWithFactoryNames);
+            setFactories(factoriesResponse);
+        } catch (error) {
+            console.error("Error al obtener datos:", error);
+            showError("No se pudieron cargar los datos");
+        }
+    };
+
+useEffect(() => {
+    fetchData();
+}, []);
+
+
+
+
+   
 
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -77,8 +90,14 @@ function CreateManufacturing() {
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         try {
-            formData.id ? await updateManu(formData.id, formData) : await createManu(formData);
-            showSuccess(`Manufactura ${formData.id ? "actualizada" : "creada"} correctamente`);
+            if (formData.id) {
+                await updateManu(formData.id, formData);
+                showSuccess("Manufactura actualizada correctamente");
+            } else {
+                await createManu(formData);
+                showSuccess("Manufactura creada correctamente");
+            }
+            await fetchData(); // Actualizar la tabla después de crear o editar
             closeModal();
         } catch (error) {
             console.error("Error al guardar manufactura", error);

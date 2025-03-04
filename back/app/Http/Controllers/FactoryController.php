@@ -31,7 +31,7 @@ class FactoryController extends Controller
 
         return response()->json([
             'message' => 'Fábrica creada exitosamente',
-            'factory' => $factory
+            'factory' => $factory 
         ], 201);
     }
 

@@ -4,8 +4,8 @@ import { post, getRole } from "../../services/userDash/authservices";
 import { getFactory } from "../../services/userDash/factoryServices";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import { BiLock } from "react-icons/bi";
-import { showError, showSuccess } from "../toastr/Toaster";
 import PermissionInputs from "../permissionCheck/PermissionInputs";
+import { showError, showSuccess } from "../toastr/Toaster";
 import Button from "../buttons/buttons";
 
 interface Role {
@@ -18,7 +18,11 @@ interface Factory {
   name: string;
 }
 
-function CreateUser() {
+interface CreateUserProps {
+  onUserCreated: () => void; // Prop para actualizar la lista de usuarios
+}
+
+function CreateUser({ onUserCreated }: CreateUserProps) {
   const { isAuthenticated } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -55,6 +59,17 @@ function CreateUser() {
     fetchFactories();
   }, []);
 
+  // Función para restablecer el formulario
+  const resetForm = () => {
+    setName("");
+    setEmail("");
+    setPassword("");
+    setSignatureBPM("");
+    setSelectedFactories([]);
+    setRole("");
+    setShowPassword(false);
+  };
+
   const generatePassword = () => {
     const length = 12;
     const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()";
@@ -89,11 +104,13 @@ function CreateUser() {
         password,
         role,
         signature_bpm,
-        factories: JSON.stringify(selectedFactories), // 🔥 Convertir a JSON
+        factories: JSON.stringify(selectedFactories),
       });
 
       showSuccess("Usuario creado exitosamente");
       setIsModalOpen(false);
+      onUserCreated(); // Llama a la función para actualizar la lista de usuarios
+      resetForm(); // Restablece el formulario después de crear el usuario
     } catch (error) {
       console.error("Error creando usuario:", error);
       showError("Error creando usuario");
@@ -102,11 +119,16 @@ function CreateUser() {
     }
   };
 
+  // Función para abrir el modal y restablecer el formulario
+  const openModal = () => {
+    resetForm(); // Restablece el formulario antes de abrir el modal
+    setIsModalOpen(true);
+  };
 
   return (
     <div className="flex justify-center">
       <div className="flex justify-center space-x-2 mb-2">
-        <Button onClick={() => setIsModalOpen(true)} variant="create" label="Crear Usuario" />
+        <Button onClick={openModal} variant="create" label="Crear Usuario" />
       </div>
       {isModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm z-50">
@@ -175,7 +197,7 @@ function CreateUser() {
 
               <p className="text-black mb-2">Seleccionar Plantas:</p>
               <select
-                value={selectedFactories.map(String)} // Convierte los números en strings
+                value={selectedFactories.map(String)}
                 onChange={(e) =>
                   setSelectedFactories(
                     Array.from(e.target.selectedOptions, (option) => Number(option.value))
@@ -190,7 +212,6 @@ function CreateUser() {
                   </option>
                 ))}
               </select>
-
 
               <div className="flex justify-center gap-2">
                 <Button onClick={() => setIsModalOpen(false)} variant="cancel" />
