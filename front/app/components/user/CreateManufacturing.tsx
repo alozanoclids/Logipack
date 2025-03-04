@@ -89,6 +89,11 @@ useEffect(() => {
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        // Validación para campos vacíos
+        if (!formData.name || !formData.factory_id || formData.line_types.length === 0) {
+            showError("Por favor, completa todos los campos antes de guardar.");
+            return;
+        }
         try {
             if (formData.id) {
                 await updateManu(formData.id, formData);

@@ -57,6 +57,11 @@ function CreateFactory() {
     };
 
     const handleSave = async () => {
+        if (!name || !location || !capacity || !manager || !employees) {
+            showError("Por favor, completa todos los campos antes de continuar.");
+            return;
+        }
+        
         const factoryData = { name, location, capacity, manager, employees, status };
         
         try {
@@ -145,3 +150,4 @@ function CreateFactory() {
 }
 
 export default CreateFactory;
+ 

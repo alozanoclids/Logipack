@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { createStage, getStageId, updateStage, deleteStage, getStage } from "../../services/maestras/stageServices";
 import { showError, showSuccess, showConfirm } from "../toastr/Toaster";
 import Table from "../table/Table";
+import Button from "../buttons/buttons";
 
 const phases = ["Planeacion", "Conciliación", "Actividades"];
 interface Stage {

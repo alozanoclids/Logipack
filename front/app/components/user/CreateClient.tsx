@@ -49,6 +49,10 @@ function CreateClient() {
   };
 
   const handleSave = async () => {
+    if (!name || !code || !email || !phone || !jobPosition) {
+      showError("Por favor completa todos los campos obligatorios");
+      return;
+    }
     try {
       const payload = { name, code, email, phone, job_position: jobPosition, responsible_person: responsiblePerson };
 
@@ -116,14 +120,13 @@ function CreateClient() {
       </div>
 
       <Table
-        columns={["name", "code", "email", "phone", "job_position"]}
+        columns={["name", "code", "email", "phone"]}
         rows={clients}
         columnLabels={{
           name: "Nombre",
           code: "Código",
           email: "Correo",
           phone: "Teléfono",
-          job_position: "Puesto"
         }}
         onDelete={handleDelete}
         onEdit={handleEdit}

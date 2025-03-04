@@ -68,7 +68,7 @@ function Products() {
   const handleCreate = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!name) {
-      setError("El nombre es requerido");
+      showError("El nombre es requerido");
       return;
     }
     try {
