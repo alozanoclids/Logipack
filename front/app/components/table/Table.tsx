@@ -46,6 +46,7 @@ export const Table: React.FC<TableProps> = ({ rows, columns, columnLabels = {}, 
     const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
     const [searchTerm, setSearchTerm] = useState<string>("");
     const [currentPage, setCurrentPage] = useState<number>(1);
+    const booleanColumns = ["binding", "status"];
     const itemsPerPage = 5;
     const maxButtons = 4;
 
@@ -121,36 +122,32 @@ export const Table: React.FC<TableProps> = ({ rows, columns, columnLabels = {}, 
                             <tr key={index} className="border-b border-gray-700 odd:bg-gray-800 even:bg-gray-850 hover:bg-gray-700 transition-all duration-300">
                                 {columns.map((column) => {
                                     const value = row[column];
-
-                                    // Verificar si el valor es booleano o numérico (0/1)
-                                    const isBoolean = typeof value === "boolean";
-                                    const isNumericBoolean = typeof value === "number" && (value === 0 || value === 1);
-
-                                    return (
-                                        <td
-                                            key={column}
-                                            className="px-4 py-2 text-gray-300"
-                                        >
-                                            {isBoolean || isNumericBoolean ? (
+                                    if (booleanColumns.includes(column)) {
+                                        // Verificar si el valor es booleano o numérico (0/1)
+                                        const isBoolean = typeof value === "boolean";
+                                        const isNumericBoolean = typeof value === "number" && (value === 0 || value === 1);
+                                        return (
+                                            <td key={column} className="px-4 py-2 text-gray-300">
                                                 <span
-                                                    className={`inline-flex items-center px-3 py-1 rounded-full text-white ${value === true || value === 1
-                                                            ? "bg-green-600" // Verde para Activo
-                                                            : "bg-red-600"   // Rojo para Inactivo
+                                                    className={`inline-flex items-center px-3 py-1 rounded-full text-white ${value === true || value === 1 ? "bg-green-600" : "bg-red-600"
                                                         }`}
                                                 >
-                                                    {/* Punto pulsante para Activo */}
                                                     {(value === true || value === 1) && (
                                                         <span className="mr-2 w-2 h-2 bg-white rounded-full animate-pulse"></span>
                                                     )}
-                                                    {/* Texto Activo/Inactivo */}
                                                     {value === true || value === 1 ? "Activo" : "Inactivo"}
                                                 </span>
-                                            ) : (
-                                                value
-                                            )}
-                                        </td>
-                                    );
+                                            </td>
+                                        );
+                                    } else {
+                                        return (
+                                            <td key={column} className="px-4 py-2 text-gray-300">
+                                                {value}
+                                            </td>
+                                        );
+                                    }
                                 })}
+
                                 <td className="px-6 py-3 flex justify-center gap-3">
                                     <Button
                                         onClick={() => { onEdit(row.id) }}

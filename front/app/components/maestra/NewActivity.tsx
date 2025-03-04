@@ -168,37 +168,25 @@ export default function NewActivity() {
         return true;
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!validateForm()) return;
-
+    const handleSubmit = async () => {
+        // Ya no se utiliza e.preventDefault() porque no se recibe evento
         try {
-            // Validar que `config` sea una cadena JSON válida
-            let parsedConfig;
-            try {
-                parsedConfig = JSON.parse(formData.config);
-            } catch (parseError) {
-                console.error("Error al parsear config:", parseError);
-                showError("La configuración de la actividad no es válida.");
-                return;
-            }
-
-            // Transforma los datos antes de enviarlos
-            const payload = {
-                description: formData.description,
-                config: JSON.stringify(parsedConfig), // Convierte `config` a una cadena JSON válida
-                binding: formData.binding,
-            };
-
-            await createActivitie(payload);
-            showSuccess("Actividad creada exitosamente");
-            setIsOpen(false);
+          const payload = {
+            description: formData.description,
+            config: JSON.stringify(parsedConfig),
+            binding: formData.binding,
+          };
+      
+          await createActivitie(payload);
+          showSuccess("Actividad creada exitosamente");
+          setIsOpen(false);
         } catch (error) {
-            const errorMessage = "Error desconocido";
-            console.error("Error al crear la actividad:", errorMessage);
-            showError(`Error: ${errorMessage}`);
+          const errorMessage = "Error desconocido";
+          console.error("Error al crear la actividad:", errorMessage);
+          showError(`Error: ${errorMessage}`);
         }
-    };
+      };
+      
 
     const handleEdit = async (id: number) => {
         try {
@@ -317,7 +305,7 @@ export default function NewActivity() {
                             {/* Botones */}
                             <div className="flex justify-end space-x-4">
                                 <Button onClick={() => setIsOpen(false)} variant="cancel" label="Cancelar" />
-                                <Button onClick={()=> handleSubmit} variant="create" />
+                                <Button onClick={handleSubmit} variant="create" />
                             </div>
                         </motion.div>
                     </motion.div>
