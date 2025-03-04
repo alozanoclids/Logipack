@@ -298,7 +298,7 @@ function NewMaestra() {
                             animate={{ scale: 1 }}
                             exit={{ scale: 0.8 }}
                         >
-                            <div className="flex justify-end space-x-2">
+                            <div className="flex justify-center gap-2">
                                 <Button onClick={cerrarModalFases} variant="cancel" label="Cancelar" />
                                 <Button onClick={handleSave} variant="create" label={loading ? "Guardando..." : "Guardar"} disabled={loading} />
                             </div>

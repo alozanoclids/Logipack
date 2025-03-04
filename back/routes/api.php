@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ActivitiesController;
 use Illuminate\Http\Request;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ClientsController;
@@ -10,6 +11,7 @@ use App\Http\Controllers\ManufacturingController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\RolesController;
+use App\Http\Controllers\StagesController;
 
 Route::controller(AuthController::class)->group(function () {
     Route::post('login', 'login');
@@ -91,4 +93,23 @@ Route::controller(MaestrasController::class)->group(function () {
     Route::get('/MaestraName/{name}', 'MaestraName'); // Obtener una lineas específica
     Route::put('/updateMaestra/{id}', 'updateMaestra'); // Actualizar una lineas
     Route::delete('/deleteMaestra/{id}', 'deleteMaestra'); // Eliminar una lineas
+});
+
+//Rutas Fases
+Route::controller(StagesController::class)->group(function () {
+    Route::get('/getFase', 'getFase'); // Obtener todas las lineas
+    Route::post('/newFase', 'newFase'); // Crear una nueva lineas
+    Route::get('/FaseId/{id}', 'FaseId'); // Obtener una lineas específica
+    Route::get('/FaseName/{name}', 'FaseName'); // Obtener una lineas específica
+    Route::put('/updateFase/{id}', 'updateFase'); // Actualizar una lineas
+    Route::delete('/deleteFase/{id}', 'deleteFase'); // Eliminar una lineas
+});
+
+//Rutas Actividades
+Route::controller(ActivitiesController::class)->group(function () {
+    Route::get('/getActividad', 'getActividad'); // Obtener todas las lineas
+    Route::post('/newActividad', 'newActividad'); // Crear una nueva lineas
+    Route::get('/ActividadId/{id}', 'ActividadId'); // Obtener una lineas específica 
+    Route::put('/updateActividad/{id}', 'updateActividad'); // Actualizar una lineas
+    Route::delete('/deleteActividad/{id}', 'deleteActividad'); // Eliminar una lineas
 });

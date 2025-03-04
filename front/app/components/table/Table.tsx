@@ -119,19 +119,46 @@ export const Table: React.FC<TableProps> = ({ rows, columns, columnLabels = {}, 
                     <tbody>
                         {paginatedRows.map((row, index) => (
                             <tr key={index} className="border-b border-gray-700 odd:bg-gray-800 even:bg-gray-850 hover:bg-gray-700 transition-all duration-300">
-                                {columns.map((column) => (
-                                    <td key={column} className="px-6 py-3 text-sm transition-all duration-300 hover:text-white">
-                                        {row[column]}
-                                    </td>
-                                ))}
+                                {columns.map((column) => {
+                                    const value = row[column];
+
+                                    // Verificar si el valor es booleano o numérico (0/1)
+                                    const isBoolean = typeof value === "boolean";
+                                    const isNumericBoolean = typeof value === "number" && (value === 0 || value === 1);
+
+                                    return (
+                                        <td
+                                            key={column}
+                                            className="px-4 py-2 text-gray-300"
+                                        >
+                                            {isBoolean || isNumericBoolean ? (
+                                                <span
+                                                    className={`inline-flex items-center px-3 py-1 rounded-full text-white ${value === true || value === 1
+                                                            ? "bg-green-600" // Verde para Activo
+                                                            : "bg-red-600"   // Rojo para Inactivo
+                                                        }`}
+                                                >
+                                                    {/* Punto pulsante para Activo */}
+                                                    {(value === true || value === 1) && (
+                                                        <span className="mr-2 w-2 h-2 bg-white rounded-full animate-pulse"></span>
+                                                    )}
+                                                    {/* Texto Activo/Inactivo */}
+                                                    {value === true || value === 1 ? "Activo" : "Inactivo"}
+                                                </span>
+                                            ) : (
+                                                value
+                                            )}
+                                        </td>
+                                    );
+                                })}
                                 <td className="px-6 py-3 flex justify-center gap-3">
                                     <Button
                                         onClick={() => { onEdit(row.id) }}
-                                        variant="edit" 
+                                        variant="edit"
                                     />
                                     <Button
                                         onClick={() => { onDelete(row.id) }}
-                                        variant="delete" 
+                                        variant="delete"
                                     />
                                 </td>
                             </tr>
@@ -154,11 +181,11 @@ export const Table: React.FC<TableProps> = ({ rows, columns, columnLabels = {}, 
                             <div className="flex justify-end gap-3 mt-3">
                                 <Button
                                     onClick={() => { onEdit(row.id); }}
-                                    variant="edit" 
+                                    variant="edit"
                                 />
                                 <Button
                                     onClick={() => { onDelete(row.id) }}
-                                    variant="delete" 
+                                    variant="delete"
                                 />
                             </div>
                         </PermissionInputs>
@@ -196,8 +223,8 @@ export const Table: React.FC<TableProps> = ({ rows, columns, columnLabels = {}, 
                             key={page}
                             onClick={() => setCurrentPage(page)}
                             className={`px-2 py-1 rounded-md transition-all duration-300 ${page === currentPage
-                                    ? "bg-blue-600 text-white shadow-md transform scale-105"
-                                    : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                                ? "bg-blue-600 text-white shadow-md transform scale-105"
+                                : "bg-gray-700 text-gray-300 hover:bg-gray-600"
                                 }`}
                         >
                             {page}

@@ -25,11 +25,12 @@ function CreateFactory() {
     const [status, setStatus] = useState<boolean>(false);
     const [factories, setFactories] = useState<Factory[]>([]);
     const [editingFactory, setFactory] = useState<Factory | null>(null);
-    const columns = ["name", "location", "manager"];
+    const columns = ["name", "location", "manager", "status"];
     const columnLabels: { [key: string]: string } = {
         name: "Nombre de Planta",
         location: "Ubicación",
         manager: "Persona a Cargo", 
+        status: "Estado"
     };
 
     const handleSave = async () => {
