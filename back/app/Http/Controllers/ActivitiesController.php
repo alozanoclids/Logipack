@@ -72,12 +72,16 @@ class ActivitiesController extends Controller
             'code' => 'integer|unique:activities,code,' . $id,
             'description' => 'string',
             'config' => 'json',
+            'binding' => 'boolean',
+
         ]);
 
         $Activitie->update([
             'code' => $request->code ?? $Activitie->code,
             'description' => $request->description ?? $Activitie->description,
             'config' => $request->config ? json_decode($request->config, true) : $Activitie->config,
+            'binding' => $request->binding ? 1 : 0, // Convertir a 0 o 1
+
         ]);
 
         return response()->json(['message' => 'Actividad actualizada', 'data' => $Activitie], 200);

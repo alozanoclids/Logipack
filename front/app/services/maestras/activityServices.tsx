@@ -93,6 +93,7 @@ export const getActivitieName = async (name: string) => {
 // Función para actualizar un Activitie existente.
 // Envía una solicitud PUT a la ruta `/updateActivitie/${id}` con los nuevos datos del Activitie. 
 export const updateActivitie = async (id: number, data: Data) => {
+    
     try {
         const response = await Activitie.put(`/updateActividad/${id}`, data);
         return response.data;

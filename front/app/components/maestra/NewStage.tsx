@@ -28,15 +28,9 @@ interface Data {
 
 function NewStage() {
     const [isOpen, setIsOpen] = useState(false);
+    const [isEditOpen, setIsEditOpen] = useState(false); // Estado para el modal de edición
     const [stage, setStage] = useState<Stage[]>([]);
-    const [editingStage, setEditingStage] = useState<Data | null>(null);
-    const [editForm, setEditForm] = useState({
-        descripcion: "",
-        phase_type: false,
-        repeat_minutes: "",
-        repeat: false,
-        can_pause: false,
-    });
+    const [editingStage, setEditingStage] = useState<Stage | null>(null); // Estado para la fase en edición
     const [description, setDescription] = useState("");
     const [phaseType, setPhaseType] = useState<"Planeacion" | "Conciliación" | "Actividades">("Planeacion");
     const [repeat, setRepeat] = useState(false);
@@ -95,6 +89,9 @@ function NewStage() {
             if (response.status === 201) {
                 showSuccess("Fase creada con éxito");
                 setIsOpen(false);
+                resetForm();
+                const data = await getStage();
+                setStage(data);
             } else {
                 showError("Error al crear la fase");
             }
@@ -107,27 +104,37 @@ function NewStage() {
     const handleEdit = async (id: number) => {
         try {
             const data = await getStageId(id);
-            const newFormData = {
-                descripcion: data.description,
-                phase_type: data.phase_type,
-                repeat_minutes: data.repeat_minutes?.toString(),
-                alert: Boolean(data.alert),
-                repeat: Boolean(data.repeat),
-                can_pause: Boolean(data.can_pause),
-            };
-
             setEditingStage(data);
-            setEditForm(newFormData);
-            setDescription(data.description);
-            setPhaseType(data.phase_type);
-            setRepeat(data.repeat);
-            setRepeatMinutes(data.repeat_minutes?.toString() || "");
-            setAlert(data.alert);
-            setCanPause(data.can);
-            setIsOpen(true);
+            setIsEditOpen(true);
         } catch (error) {
             console.error("Error obteniendo datos de la fase:", error);
             showError("Error obteniendo datos de la fase");
+        }
+    };
+
+    const handleUpdate = async () => {
+        if (!editingStage) return;
+
+        try {
+            const updatedData = {
+                description: editingStage.description,
+                phase_type: editingStage.phase_type,
+                repeat: editingStage.repeat,
+                repeat_minutes: editingStage.repeat ? editingStage.repeat_minutes : undefined,
+                alert: editingStage.alert,
+                can_pause: editingStage.can_pause,
+            };
+
+            await updateStage(editingStage.id, updatedData);
+            showSuccess("Fase actualizada correctamente");
+            setIsEditOpen(false);
+
+            // Actualizar la lista de fases
+            const data = await getStage();
+            setStage(data);
+        } catch (error) {
+            console.error("Error al actualizar la fase:", error);
+            showError("Error al actualizar la fase");
         }
     };
 
@@ -154,25 +161,22 @@ function NewStage() {
     };
 
     return (
-        <div>
-            <button
-                onClick={() => setIsOpen(true)}
-                className="px-4 py-2 bg-blue-500 text-white rounded-md"
-            >
-                Crear Fase
-            </button>
-
+        <div className="flex flex-col justify-center items-center">
+            <div className="flex justify-center space-x-2 mb-2">
+                <Button onClick={() => setIsOpen(true)} variant="create" label="Crear Fase" />
+            </div>
 
             <Table columns={columns} rows={stage} columnLabels={columnLabels} onDelete={handleDelete} onEdit={handleEdit} />
 
+            {/* Modal de creación */}
             {isOpen && (
                 <motion.div
                     initial={{ opacity: 0, y: -50 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -50 }}
-                    className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50"
+                    className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm z-50"
                 >
-                    <motion.div className="bg-white w-full max-w-md p-6 rounded-lg shadow-lg">
+                    <motion.div className="bg-white p-6 rounded-lg shadow-lg w-96 animate-fadeIn z-50">
                         <h2 className="text-center text-xl font-bold text-black mb-4">
                             Crear Fase
                         </h2>
@@ -238,50 +242,103 @@ function NewStage() {
                             <span>Se puede pausar?</span>
                         </div>
 
-                        <div className="flex justify-end gap-2 mt-4">
-                            <button
-                                onClick={() => { setIsOpen(false); resetForm() }}
-                                className="px-4 py-2 border rounded-md text-black"
+                        <div className="flex justify-center gap-2">
+                            <Button onClick={() => { setIsOpen(false); resetForm() }} variant="cancel" />
+                            <Button onClick={handleSave} variant="save" />
+                        </div>
+                    </motion.div>
+                </motion.div>
+            )}
+
+            {/* Modal de edición */}
+            {isEditOpen && editingStage && (
+                <motion.div
+                    initial={{ opacity: 0, y: -50 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -50 }}
+                    className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm z-50"
+                >
+                    <motion.div className="bg-white p-6 rounded-lg shadow-lg w-96 animate-fadeIn z-50">
+                        <h2 className="text-center text-xl font-bold text-black mb-4">
+                            Editar Fase
+                        </h2>
+
+                        <div className="mb-3">
+                            <label className="block text-sm font-medium text-black">Descripción</label>
+                            <input
+                                type="text"
+                                value={editingStage.description}
+                                onChange={(e) =>
+                                    setEditingStage({ ...editingStage, description: e.target.value })
+                                }
+                                className="w-full p-2 border rounded text-black"
+                            />
+                        </div>
+
+                        <div className="mb-3">
+                            <label className="block text-sm font-medium text-black">Tipo de Fase</label>
+                            <select
+                                value={editingStage.phase_type}
+                                onChange={(e) =>
+                                    setEditingStage({ ...editingStage, phase_type: e.target.value as "Planeacion" | "Conciliación" | "Actividades" })
+                                }
+                                className="w-full p-2 border rounded text-black"
                             >
-                                Cancelar
-                            </button>
-                            <button
-                                onClick={async () => {
-                                    if (editingStage) {
-                                        // Lógica para actualizar la fase existente
-                                        const updatedStage: Stage = {
-                                            id,
-                                            description,
-                                            phase_type: phaseType,
-                                            repeat,
-                                            repeat_minutes: repeat ? Number(repeatMinutes) : undefined,
-                                            alert,
-                                            can_pause: canPause,
-                                        };
-                                        try {
-                                            await updateStage(editingStage.id, updatedStage);
-                                            showSuccess("Fase actualizada con éxito");
-                                            setIsOpen(false);
-                                            resetForm();
-                                        } catch (error) {
-                                            console.error("Error al actualizar la fase:", error);
-                                            showError("Ocurrió un error al actualizar la fase");
-                                        }
-                                    } else {
-                                        await handleSave();
+                                {phases.map((phase) => (
+                                    <option key={phase} value={phase}>
+                                        {phase}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div className="mb-3 flex items-center gap-2 text-black">
+                            <input
+                                type="checkbox"
+                                checked={editingStage.repeat}
+                                onChange={(e) =>
+                                    setEditingStage({ ...editingStage, repeat: e.target.checked })
+                                }
+                            />
+                            <span>Repetir</span>
+                            {editingStage.repeat && (
+                                <input
+                                    type="number"
+                                    placeholder="Cada (min)"
+                                    value={editingStage.repeat_minutes || ""}
+                                    onChange={(e) =>
+                                        setEditingStage({ ...editingStage, repeat_minutes: Number(e.target.value) })
                                     }
-                                }}
-                                className="px-4 py-2 bg-green-500 text-white rounded-md"
-                            ></button>
-                            <button
-                                disabled={phaseType !== "Actividades"}
-                                className={`px-4 py-2 rounded-md ${phaseType === "Actividades"
-                                    ? "bg-blue-500 text-white"
-                                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                                    }`}
-                            >
-                                Asociar Actividad
-                            </button>
+                                    className="w-20 p-2 border rounded text-black"
+                                />
+                            )}
+                        </div>
+
+                        <div className="mb-3 flex items-center gap-2 text-black">
+                            <input
+                                type="checkbox"
+                                checked={editingStage.alert}
+                                onChange={(e) =>
+                                    setEditingStage({ ...editingStage, alert: e.target.checked })
+                                }
+                            />
+                            <span>Activar Alerta</span>
+                        </div>
+
+                        <div className="mb-3 flex items-center gap-2 text-black">
+                            <input
+                                type="checkbox"
+                                checked={editingStage.can_pause}
+                                onChange={(e) =>
+                                    setEditingStage({ ...editingStage, can_pause: e.target.checked })
+                                }
+                            />
+                            <span>Se puede pausar?</span>
+                        </div>
+
+                        <div className="flex justify-center gap-2">
+                            <Button onClick={() => setIsEditOpen(false)} variant="cancel" label="Cancelar" />
+                            <Button onClick={handleUpdate} variant="save" label="Guardar" />
                         </div>
                     </motion.div>
                 </motion.div>
