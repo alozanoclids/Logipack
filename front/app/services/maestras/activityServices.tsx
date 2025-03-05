@@ -17,9 +17,7 @@ export interface Data {
 
 // Función para crear un nuevo Activitie.
 // Envía una solicitud POST a la ruta '/newActivitie' con los datos proporcionados.
-export const createActivitie = async (data: Data): Promise<{ status: number; message?: string }> => {
-    console.log("Datos enviados:", data);
-
+export const createActivitie = async (data: Data): Promise<{ status: number; message?: string }> => { 
     try {
         const response = await Activitie.post('/newActividad', data);
         return {

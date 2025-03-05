@@ -27,6 +27,7 @@ interface Activities {
     binding: boolean;
 }
 
+
 const activityTypes: Record<string, ActivityType> = {
     "Texto corto": { type: "text" },
     "Texto largo": { type: "textarea" },
@@ -38,6 +39,8 @@ const activityTypes: Record<string, ActivityType> = {
     Firma: { type: "signature" },
     Informativo: { type: "text", placeholder: "Escribe aquí..." },
 };
+
+const initialSelectedType = "Texto corto";
 
 // Componente reutilizable para manejar opciones
 function OptionsInput({
@@ -82,11 +85,17 @@ function OptionsInput({
 
 export default function NewActivity() {
     const [isOpen, setIsOpen] = useState(false);
+    const [selectedType, setSelectedType] = useState("Texto corto");
     const [formData, setFormData] = useState({
         description: "",
         config: JSON.stringify(activityTypes["Texto corto"], null, 2),
         binding: false,
     });
+    const initialFormData = {
+        description: "",
+        config: JSON.stringify(activityTypes["Texto corto"], null, 2),
+        binding: false,
+    };
     const [activities, setActivities] = useState<Activities[]>([]);
     const [options, setOptions] = useState<string[]>([]);
     const [parsedConfig, setParsedConfig] = useState<ActivityType | null>(null);
@@ -109,15 +118,17 @@ export default function NewActivity() {
         }
     }, [formData.config]);
 
+    // Función para obtener las actividades
+    const fetchActivities = async () => {
+        try {
+            const data = await getActivitie();
+            setActivities(data);
+        } catch (error) {
+            console.error("Error fetching activities:", error);
+        }
+    };
+
     useEffect(() => {
-        const fetchActivities = async () => {
-            try {
-                const data = await getActivitie();
-                setActivities(data);
-            } catch (error) {
-                console.error("Error fetching activities:", error);
-            }
-        };
         fetchActivities();
     }, []);
 
@@ -126,6 +137,7 @@ export default function NewActivity() {
     };
 
     const handleTypeChange = (selectedType: string) => {
+        setSelectedType(selectedType); // Actualizamos el tipo seleccionado
         const selectedConfig =
             activityTypes[selectedType] || activityTypes["Texto corto"];
         const newConfig = JSON.stringify(selectedConfig, null, 2);
@@ -169,24 +181,33 @@ export default function NewActivity() {
     };
 
     const handleSubmit = async () => {
-        // Ya no se utiliza e.preventDefault() porque no se recibe evento
+        if (!validateForm()) return;
         try {
-          const payload = {
-            description: formData.description,
-            config: JSON.stringify(parsedConfig),
-            binding: formData.binding,
-          };
-      
-          await createActivitie(payload);
-          showSuccess("Actividad creada exitosamente");
-          setIsOpen(false);
+            const payload = {
+                description: formData.description,
+                config: JSON.stringify(parsedConfig),
+                binding: formData.binding,
+            };
+
+            await createActivitie(payload);
+            showSuccess("Actividad creada exitosamente");
+            setIsOpen(false);
+            fetchActivities();
+            resetModalData();
         } catch (error) {
-          const errorMessage = "Error desconocido";
-          console.error("Error al crear la actividad:", errorMessage);
-          showError(`Error: ${errorMessage}`);
+            const errorMessage = "Error desconocido";
+            console.error("Error al crear la actividad:", errorMessage);
+            showError(`Error: ${errorMessage}`);
         }
-      };
-      
+    };
+
+    const resetModalData = () => {
+        setFormData(initialFormData);
+        setSelectedType(initialSelectedType);
+        setOptions([]);
+    };
+
+
 
     const handleEdit = async (id: number) => {
         try {
@@ -216,8 +237,9 @@ export default function NewActivity() {
     return (
         <div>
             {/* Botón para abrir el modal */}
-            <Button onClick={() => setIsOpen(true)} variant="create" label="Crear Actividad" />
-
+            <div className="flex justify-center space-x-2 mb-2">
+                <Button onClick={() => setIsOpen(true)} variant="create" label="Crear Actividad" />
+            </div>
             {/* Modal */}
             <AnimatePresence>
                 {isOpen && (
@@ -260,7 +282,7 @@ export default function NewActivity() {
 
                             {/* Selector de tipo de actividad */}
                             <select
-                                value={formData.config}
+                                value={selectedType}
                                 onChange={(e) => handleTypeChange(e.target.value)}
                                 className="w-full border p-2 rounded-md text-black mb-4"
                             >
