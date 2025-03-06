@@ -16,6 +16,8 @@ export interface Data {
     repeat_minutes?: number;
     alert: boolean;
     can_pause: boolean;
+    status: boolean;
+    activities: string;
 }
 
 
