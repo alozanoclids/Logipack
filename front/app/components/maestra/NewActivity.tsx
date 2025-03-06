@@ -11,6 +11,9 @@ import {
 import { showError, showSuccess, showConfirm } from "../toastr/Toaster";
 import Button from "../buttons/buttons";
 import Table from "../table/Table";
+import { useAuth } from '../../hooks/useAuth'
+import { getUserByEmail } from '../../services/userDash/authservices';
+import nookies from "nookies";
 
 // Tipos
 type ActivityType = {
@@ -93,7 +96,7 @@ function OptionsInput({
 
 export default function NewActivity() {
     const [isOpen, setIsOpen] = useState(false);
-    const [isEditOpen, setIsEditOpen] = useState(false); // Estado para el modal de edición
+    const [isEditOpen, setIsEditOpen] = useState(false);
     const [selectedType, setSelectedType] = useState("Texto corto");
     const [formData, setFormData] = useState({
         description: "",
@@ -103,13 +106,21 @@ export default function NewActivity() {
     const [activities, setActivities] = useState<Activities[]>([]);
     const [options, setOptions] = useState<string[]>([]);
     const [parsedConfig, setParsedConfig] = useState<ActivityType | null>(null);
-    const [editingActivity, setEditingActivity] = useState<EditFormData | null>(null); // Movido aquí
+    const [editingActivity, setEditingActivity] = useState<EditFormData | null>(null);
+    const [originalConfig, setOriginalConfig] = useState<ActivityType | null>(null); // Estado para la configuración original
 
     const columns = ["code", "description", "binding"];
     const columnLabels: { [key: string]: string } = {
         code: "Código",
         description: "Descripción",
         binding: "Obligatorio",
+    };
+
+    // Función para reiniciar los datos del modal de edición
+    const resetEditModalData = () => {
+        setEditingActivity(null); // Reiniciar la actividad en edición
+        setOriginalConfig(null); // Reiniciar la configuración original
+        setSelectedType(initialSelectedType); // Reiniciar el tipo seleccionado
     };
 
     // Parsear el JSON de formData.config cuando cambia
@@ -137,6 +148,29 @@ export default function NewActivity() {
         fetchActivities();
     }, []);
 
+    //UseEffect para actualizacion del token
+  const { isAuthenticated } = useAuth();
+  const [userName, setUserName] = useState("");
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const cookies = nookies.get(null);
+        const email = cookies.email;
+        if (email) {
+          const decodedEmail = decodeURIComponent(email);
+          const user = await getUserByEmail(decodedEmail);
+          if (user.usuario) {
+            setUserName(user.usuario.name);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching user:", error);
+      }
+    };
+    if (isAuthenticated) fetchUserData();
+  }, [isAuthenticated]);
+  // Fin useEffect
+  
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
@@ -182,28 +216,71 @@ export default function NewActivity() {
         return true;
     };
 
-    const handleSubmit = async () => {
-        if (!validateForm()) return;
-        try {
-            const payload = {
-                description: formData.description,
-                config: JSON.stringify(parsedConfig),
-                binding: formData.binding,
-            };
 
-            console.log("Datos enviados al crear actividad:", payload); // 🚀 LOG DE DATOS ENVIADOS
+    const handleTypeChangeEdit = (selectedType: string) => {
+    if (!editingActivity || !originalConfig) return;
 
-    
-            await createActivitie(payload);
-            showSuccess("Actividad creada exitosamente");
-            setIsOpen(false);
-            fetchActivities();
-            resetModalData();
-        } catch (error) {
-            console.error("Error al crear la actividad:", error);
-            showError("Error al crear la actividad");
-        }
-    };
+    // Obtener el tipo original de la actividad
+    const originalType = Object.keys(activityTypes).find(
+        (key) => activityTypes[key].type === originalConfig.type
+    ) || "Texto corto";
+
+    // Si el tipo seleccionado es el mismo que el tipo original, restaurar la configuración original
+    if (selectedType === originalType) {
+        const restoredConfig = JSON.stringify(originalConfig, null, 2);
+
+        setEditingActivity({
+            ...editingActivity,
+            config: restoredConfig,
+            options: originalConfig.options || [], // Restaurar las opciones originales
+        });
+
+        setSelectedType(originalType);
+        return;
+    }
+
+    // Si el tipo seleccionado es diferente, cargar la configuración del nuevo tipo
+    const selectedConfig = activityTypes[selectedType] || activityTypes["Texto corto"];
+    const newConfig = JSON.stringify({
+        ...selectedConfig,
+        options: ["select", "radio", "checkbox"].includes(selectedConfig.type || "")
+            ? editingActivity.options || [] // Mantener las opciones existentes
+            : [], // Reiniciar opciones si el tipo no las requiere
+    }, null, 2);
+
+    // Actualizar el estado editingActivity
+    setEditingActivity({
+        ...editingActivity,
+        config: newConfig,
+        options: ["select", "radio", "checkbox"].includes(selectedConfig.type || "")
+            ? editingActivity.options || [] // Mantener las opciones existentes
+            : [], // Reiniciar opciones si el tipo no las requiere
+    });
+
+    // Actualizar el tipo seleccionado
+    setSelectedType(selectedType);
+};
+const handleSubmit = async () => {
+    if (!validateForm()) return;
+    try {
+        const payload = {
+            description: formData.description,
+            config: formData.config, // Aquí ya deberían estar las opciones personalizadas
+            binding: formData.binding,
+        };
+
+        console.log("Datos enviados al crear actividad:", payload); // 🚀 LOG DE DATOS ENVIADOS
+
+        await createActivitie(payload);
+        showSuccess("Actividad creada exitosamente");
+        setIsOpen(false);
+        fetchActivities();
+        resetModalData();
+    } catch (error) {
+        console.error("Error al crear la actividad:", error);
+        showError("Error al crear la actividad");
+    }
+};
 
     const resetModalData = () => {
         setFormData({
@@ -218,7 +295,7 @@ export default function NewActivity() {
     const handleEdit = async (id: number) => {
         try {
             const data = await getActivitieId(id);
-    
+
             // Parsear el config
             let parsedConfig;
             try {
@@ -229,10 +306,18 @@ export default function NewActivity() {
                 console.error("Error parsing config:", error);
                 parsedConfig = {};
             }
-    
+
             // Convertir binding a booleano
             const binding = data.binding === 1 ? true : false;
-    
+
+            // Obtener el tipo de actividad
+            const activityType = Object.keys(activityTypes).find(
+                (key) => activityTypes[key].type === parsedConfig.type
+            ) || "Texto corto"; // Si no se encuentra, usar "Texto corto" como valor predeterminado
+
+            // Guardar la configuración original
+            setOriginalConfig(parsedConfig);
+
             // Preparar datos para edición
             setEditingActivity({
                 id: data.id,
@@ -241,7 +326,10 @@ export default function NewActivity() {
                 binding: binding, // Asegúrate de que esto sea un booleano
                 options: parsedConfig.options || [], // Cargar opciones si existen
             });
-    
+
+            // Establecer el tipo de actividad seleccionado
+            setSelectedType(activityType);
+
             // Abrir modal de edición
             setIsEditOpen(true);
         } catch (error) {
@@ -249,50 +337,39 @@ export default function NewActivity() {
             showError("Error obteniendo datos de la actividad");
         }
     };
+
     const handleUpdate = async () => {
         if (!editingActivity) return;
-    
+
         try {
+            // Parsear la configuración actual
+            const currentConfig = JSON.parse(editingActivity.config);
+
+            // Crear la nueva configuración manteniendo el tipo y las opciones
             const config = JSON.stringify({
-                type: parsedConfig?.type || "",
-                options: editingActivity.options || []
+                type: currentConfig.type || "text", // Mantener el tipo actual
+                options: editingActivity.options || [] // Mantener las opciones actuales
             });
-    
+
             // Enviar binding como booleano (true o false)
             const updatedData = {
                 description: editingActivity.description,
                 config: config,
                 binding: editingActivity.binding, // Enviar como booleano
             };
-    
+
             console.log("Datos enviados al actualizar actividad:", updatedData);
-    
+
             await updateActivitie(editingActivity.id, updatedData);
             await fetchActivities();
             setIsEditOpen(false);
+            resetEditModalData(); // Reiniciar los datos del modal de edición
             showSuccess("Actividad actualizada correctamente");
         } catch (error) {
             console.error("Error al actualizar actividad:", error);
             showError("Error al actualizar actividad");
         }
     };
-    
-    const handleTypeChangeEdit = (selectedType: string) => {
-        if (!editingActivity) return;
-    
-        // Obtener la configuración del tipo seleccionado
-        const selectedConfig = activityTypes[selectedType] || activityTypes["Texto corto"];
-        const newConfig = JSON.stringify(selectedConfig, null, 2);
-    
-        // Actualizar el estado editingActivity
-        setEditingActivity({
-            ...editingActivity,
-            config: newConfig,
-            options: selectedConfig.options || [], // Reiniciar opciones si el tipo cambia
-        });
-    };
-    
-
 
     const handleDelete = async (id: number) => {
         showConfirm("¿Seguro que quieres eliminar esta Actividad?", async () => {
@@ -308,7 +385,17 @@ export default function NewActivity() {
             }
         });
     };
+    const handleOptionChange = (index: number, value: string) => {
+        const newOptions = [...options];
+        newOptions[index] = value;
+        setOptions(newOptions);
+    
+        // Actualizar formData.config con las nuevas opciones
+        const updatedConfig = { ...parsedConfig, options: newOptions };
+        setFormData({ ...formData, config: JSON.stringify(updatedConfig, null, 2) });
+    };
 
+    
     return (
         <div>
             {/* Botón para abrir el modal de creación */}
@@ -318,101 +405,7 @@ export default function NewActivity() {
 
             {/* Modal de creación */}
             <AnimatePresence>
-                {isOpen && (
-                    <motion.div
-                        className="fixed inset-0 flex items-center justify-center z-50"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.3 }}
-                    >
-                        {/* Overlay del modal */}
-                        <motion.div
-                            className="absolute inset-0 bg-black bg-opacity-50"
-                            onClick={() => setIsOpen(false)}
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 0.5 }}
-                            exit={{ opacity: 0 }}
-                            transition={{ duration: 0.3 }}
-                        />
-
-                        {/* Contenido del modal de creación */}
-                        <motion.div
-                            className="relative bg-white rounded-lg p-6 max-w-md w-full mx-4 z-10"
-                            initial={{ scale: 0.8, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.8, opacity: 0 }}
-                            transition={{ duration: 0.3 }}
-                        >
-                            <h2 className="text-xl font-semibold mb-4 text-black text-center">Crear Actividad</h2>
-
-                            {/* Campo de descripción */}
-                            <input
-                                type="text"
-                                name="description"
-                                value={formData.description}
-                                onChange={handleInputChange}
-                                placeholder="Descripción"
-                                className="w-full border p-2 rounded-md text-black mb-4"
-                            />
-
-                            {/* Selector de tipo de actividad */}
-                            <select
-                                value={selectedType}
-                                onChange={(e) => handleTypeChange(e.target.value)}
-                                className="w-full border p-2 rounded-md text-black mb-4"
-                            >
-                                {Object.keys(activityTypes).map((type) => (
-                                    <option key={type} value={type}>
-                                        {type}
-                                    </option>
-                                ))}
-                            </select>
-
-                            {/* Checkbox para "Requerido" */}
-                            <label className="flex items-center space-x-2 mb-4">
-                                <input
-                                    type="checkbox"
-                                    checked={formData.binding}
-                                    onChange={(e) =>
-                                        setFormData({ ...formData, binding: e.target.checked })
-                                    }
-                                    className="h-5 w-5 text-blue-500 rounded-md"
-                                />
-                                <span className="text-black">Requerido</span>
-                            </label>
-
-                            {/* Opciones dinámicas */}
-                            {parsedConfig &&
-                                ["select", "radio", "checkbox"].includes(parsedConfig.type || "") && (
-                                    <div className="mb-4">
-                                        <h3 className="font-medium mb-2">Opciones:</h3>
-                                        <OptionsInput
-                                            options={options}
-                                            onChange={(index, value) => {
-                                                const newOptions = [...options];
-                                                newOptions[index] = value;
-                                                setOptions(newOptions);
-                                            }}
-                                            onAdd={addOption}
-                                            onRemove={removeOption}
-                                        />
-                                    </div>
-                                )}
-
-                            {/* Botones */}
-                            <div className="flex justify-end space-x-4">
-                                <Button onClick={() => setIsOpen(false)} variant="cancel" label="Cancelar" />
-                                <Button onClick={handleSubmit} variant="create" />
-                            </div>
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-
-            {/* Modal de edición */}
-            <AnimatePresence>
-    {isEditOpen && editingActivity && (
+    {isOpen && (
         <motion.div
             className="fixed inset-0 flex items-center justify-center z-50"
             initial={{ opacity: 0 }}
@@ -423,14 +416,14 @@ export default function NewActivity() {
             {/* Overlay del modal */}
             <motion.div
                 className="absolute inset-0 bg-black bg-opacity-50"
-                onClick={() => setIsEditOpen(false)}
+                onClick={() => setIsOpen(false)}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 0.5 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.3 }}
             />
 
-            {/* Contenido del modal de edición */}
+            {/* Contenido del modal de creación */}
             <motion.div
                 className="relative bg-white rounded-lg p-6 max-w-md w-full mx-4 z-10"
                 initial={{ scale: 0.8, opacity: 0 }}
@@ -438,24 +431,22 @@ export default function NewActivity() {
                 exit={{ scale: 0.8, opacity: 0 }}
                 transition={{ duration: 0.3 }}
             >
-                <h2 className="text-xl font-semibold mb-4 text-black text-center">Editar Actividad</h2>
+                <h2 className="text-xl font-semibold mb-4 text-black text-center">Crear Actividad</h2>
 
                 {/* Campo de descripción */}
                 <input
                     type="text"
                     name="description"
-                    value={editingActivity.description}
-                    onChange={(e) =>
-                        setEditingActivity({ ...editingActivity, description: e.target.value })
-                    }
+                    value={formData.description}
+                    onChange={handleInputChange}
                     placeholder="Descripción"
                     className="w-full border p-2 rounded-md text-black mb-4"
                 />
 
                 {/* Selector de tipo de actividad */}
                 <select
-                    value={editingActivity ? JSON.parse(editingActivity.config).type : ""}
-                    onChange={(e) => handleTypeChangeEdit(e.target.value)}
+                    value={selectedType}
+                    onChange={(e) => handleTypeChange(e.target.value)}
                     className="w-full border p-2 rounded-md text-black mb-4"
                 >
                     {Object.keys(activityTypes).map((type) => (
@@ -469,9 +460,9 @@ export default function NewActivity() {
                 <label className="flex items-center space-x-2 mb-4">
                     <input
                         type="checkbox"
-                        checked={editingActivity.binding}
+                        checked={formData.binding}
                         onChange={(e) =>
-                            setEditingActivity({ ...editingActivity, binding: e.target.checked })
+                            setFormData({ ...formData, binding: e.target.checked })
                         }
                         className="h-5 w-5 text-blue-500 rounded-md"
                     />
@@ -479,31 +470,133 @@ export default function NewActivity() {
                 </label>
 
                 {/* Opciones dinámicas */}
-                {editingActivity && ["select", "radio", "checkbox"].includes(JSON.parse(editingActivity.config).type) && (
-                    <div className="mb-4">
-                        <h3 className="font-medium mb-2">Opciones:</h3>
-                        <OptionsInput
-                            options={editingActivity.options || []}
-                            onChange={(index, value) => {
-                                const newOptions = [...editingActivity.options!];
-                                newOptions[index] = value;
-                                setEditingActivity({ ...editingActivity, options: newOptions });
-                            }}
-                            onAdd={() => setEditingActivity({ ...editingActivity, options: [...editingActivity.options!, "Nueva opción"] })}
-                            onRemove={(index) => setEditingActivity({ ...editingActivity, options: editingActivity.options!.filter((_, i) => i !== index) })}
-                        />
-                    </div>
-                )}
+                {parsedConfig &&
+                    ["select", "radio", "checkbox"].includes(parsedConfig.type || "") && (
+                        <div className="mb-4">
+                            <h3 className="font-medium mb-2">Opciones:</h3>
+                            <OptionsInput
+                                options={options}
+                                onChange={handleOptionChange}
+                                onAdd={addOption}
+                                onRemove={removeOption}
+                            />
+                        </div>
+                    )}
 
                 {/* Botones */}
                 <div className="flex justify-end space-x-4">
-                    <Button onClick={() => setIsEditOpen(false)} variant="cancel" label="Cancelar" />
-                    <Button onClick={handleUpdate} variant="create" label="Guardar" />
+                    <Button onClick={() => setIsOpen(false)} variant="cancel" label="Cancelar" />
+                    <Button onClick={handleSubmit} variant="create" />
                 </div>
             </motion.div>
         </motion.div>
     )}
 </AnimatePresence>
+
+            {/* Modal de edición */}
+            <AnimatePresence>
+                {isEditOpen && editingActivity && (
+                    <motion.div
+                        className="fixed inset-0 flex items-center justify-center z-50"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                    >
+                        {/* Overlay del modal */}
+                        <motion.div
+                            className="absolute inset-0 bg-black bg-opacity-50"
+                            onClick={() => {
+                                setIsEditOpen(false);
+                                resetEditModalData(); // Reiniciar los datos del modal
+                            }}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 0.5 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.3 }}
+                        />
+
+                        {/* Contenido del modal de edición */}
+                        <motion.div
+                            className="relative bg-white rounded-lg p-6 max-w-md w-full mx-4 z-10"
+                            initial={{ scale: 0.8, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.8, opacity: 0 }}
+                            transition={{ duration: 0.3 }}
+                        >
+                            <h2 className="text-xl font-semibold mb-4 text-black text-center">Editar Actividad</h2>
+
+                            {/* Campo de descripción */}
+                            <input
+                                type="text"
+                                name="description"
+                                value={editingActivity.description}
+                                onChange={(e) =>
+                                    setEditingActivity({ ...editingActivity, description: e.target.value })
+                                }
+                                placeholder="Descripción"
+                                className="w-full border p-2 rounded-md text-black mb-4"
+                            />
+
+                            {/* Selector de tipo de actividad */}
+                            <select
+                                value={selectedType} // Usar el estado selectedType
+                                onChange={(e) => handleTypeChangeEdit(e.target.value)}
+                                className="w-full border p-2 rounded-md text-black mb-4"
+                            >
+                                {Object.keys(activityTypes).map((type) => (
+                                    <option key={type} value={type}>
+                                        {type}
+                                    </option>
+                                ))}
+                            </select>
+
+                            {/* Checkbox para "Requerido" */}
+                            <label className="flex items-center space-x-2 mb-4">
+                                <input
+                                    type="checkbox"
+                                    checked={editingActivity.binding}
+                                    onChange={(e) =>
+                                        setEditingActivity({ ...editingActivity, binding: e.target.checked })
+                                    }
+                                    className="h-5 w-5 text-blue-500 rounded-md"
+                                />
+                                <span className="text-black">Requerido</span>
+                            </label>
+
+                            {/* Opciones dinámicas */}
+                            {editingActivity && ["select", "radio", "checkbox"].includes(JSON.parse(editingActivity.config).type) && (
+                                <div className="mb-4">
+                                    <h3 className="font-medium mb-2">Opciones:</h3>
+                                    <OptionsInput
+                                        options={editingActivity.options || []}
+                                        onChange={(index, value) => {
+                                            const newOptions = [...editingActivity.options!];
+                                            newOptions[index] = value;
+                                            setEditingActivity({ ...editingActivity, options: newOptions });
+                                        }}
+                                        onAdd={() => setEditingActivity({ ...editingActivity, options: [...editingActivity.options!, "Nueva opción"] })}
+                                        onRemove={(index) => setEditingActivity({ ...editingActivity, options: editingActivity.options!.filter((_, i) => i !== index) })}
+                                    />
+                                </div>
+                            )}
+
+                            {/* Botones */}
+                            <div className="flex justify-end space-x-4">
+                                <Button
+                                    onClick={() => {
+                                        setIsEditOpen(false);
+                                        resetEditModalData(); // Reiniciar los datos del modal
+                                    }}
+                                    variant="cancel"
+                                    label="Cancelar"
+                                />
+                                <Button onClick={handleUpdate} variant="create" label="Guardar" />
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Tabla de actividades */}
             <Table columns={columns} rows={activities} columnLabels={columnLabels} onDelete={handleDelete} onEdit={handleEdit} />

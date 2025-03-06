@@ -6,6 +6,9 @@ import Table from "../table/Table";
 import { showError, showSuccess, showConfirm } from "../toastr/Toaster";
 import Button from "../buttons/buttons";
 import CreateUser from "./CreateUser"; // Importa el componente CreateUser
+import { useAuth } from '../../hooks/useAuth'
+import { getUserByEmail } from '../../services/userDash/authservices';
+import nookies from "nookies";
 
 interface Role {
     id: number;
@@ -82,6 +85,30 @@ function DataUsers() {
         };
         fetchRoles();
     }, []);
+
+       //UseEffect para actualizacion del token
+   const { isAuthenticated } = useAuth();
+   const [userName, setUserName] = useState("");
+   useEffect(() => {
+     const fetchUserData = async () => {
+       try {
+         const cookies = nookies.get(null);
+         const email = cookies.email;
+         if (email) {
+           const decodedEmail = decodeURIComponent(email);
+           const user = await getUserByEmail(decodedEmail);
+           if (user.usuario) {
+             setUserName(user.usuario.name);
+           }
+         }
+       } catch (error) {
+         console.error("Error fetching user:", error);
+       }
+     };
+     if (isAuthenticated) fetchUserData();
+   }, [isAuthenticated]);
+   // Fin useEffect
+ 
 
     const handleDelete = async (id: number) => {
         showConfirm("¿Seguro que quieres eliminar este usuario?", async () => {

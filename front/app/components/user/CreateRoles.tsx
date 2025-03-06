@@ -14,6 +14,9 @@ import { showSuccess, showError, showConfirm } from "../toastr/Toaster";
 import PermissionCheck from "..//permissionCheck/PermissionCheck";
 import PermissionInputs from "../permissionCheck/PermissionInputs";
 import Button from "../buttons/buttons"
+import { useAuth } from '../../hooks/useAuth'
+import { getUserByEmail } from '../../services/userDash/authservices';
+import nookies from "nookies";
 
 // 🛠️ Definición de Interfaces
 interface Permission {
@@ -78,6 +81,29 @@ const Roles = () => {
     }
   };
 
+  //UseEffect para actualizacion del token
+  const { isAuthenticated } = useAuth();
+  const [userName, setUserName] = useState("");
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const cookies = nookies.get(null);
+        const email = cookies.email;
+        if (email) {
+          const decodedEmail = decodeURIComponent(email);
+          const user = await getUserByEmail(decodedEmail);
+          if (user.usuario) {
+            setUserName(user.usuario.name);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching user:", error);
+      }
+    };
+    if (isAuthenticated) fetchUserData();
+  }, [isAuthenticated]);
+  // Fin useEffect
+  
   const fetcRole = async () => {
     try {
       const role = await getRole();

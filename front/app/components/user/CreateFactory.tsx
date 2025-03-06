@@ -4,6 +4,9 @@ import { createFactory, getFactory, deleteFactory, getFactoryId, updateFactory }
 import Table from "../table/Table";
 import { showSuccess, showError, showConfirm } from "../toastr/Toaster";
 import Button from "../buttons/buttons"
+import { useAuth } from '../../hooks/useAuth'
+import { getUserByEmail } from '../../services/userDash/authservices';
+import nookies from "nookies";
 
 interface Factory {
     id: number;
@@ -55,6 +58,31 @@ function CreateFactory() {
         setStatus(false);
         setEditingFactory(null);
     };
+
+
+      //UseEffect para actualizacion del token
+  const { isAuthenticated } = useAuth();
+  const [userName, setUserName] = useState("");
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const cookies = nookies.get(null);
+        const email = cookies.email;
+        if (email) {
+          const decodedEmail = decodeURIComponent(email);
+          const user = await getUserByEmail(decodedEmail);
+          if (user.usuario) {
+            setUserName(user.usuario.name);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching user:", error);
+      }
+    };
+    if (isAuthenticated) fetchUserData();
+  }, [isAuthenticated]);
+  // Fin useEffect
+
 
     const handleSave = async () => {
         if (!name || !location || !capacity || !manager || !employees) {
