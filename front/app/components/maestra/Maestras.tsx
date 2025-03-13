@@ -3,10 +3,11 @@ import WindowManager from "../windowManager/WindowManager";
 import NewMaestra from "./NewMaestra";
 import NewStage from "./NewStage";
 import NewActivity from "./NewActivity";
+import PermissionCheck from "..//permissionCheck/PermissionCheck";
 
 function Maestras() {
     return (
-        <div>
+        <div >
             <WindowManager
                 windowsData={[
                     { id: 1, title: "Maestras", component:<NewMaestra />, isProtected: true },

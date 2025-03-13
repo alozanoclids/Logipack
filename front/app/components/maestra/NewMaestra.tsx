@@ -1,162 +1,154 @@
 "use client";
-import React, { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { createMaestra, getMaestra, deleteMaestra, getMaestraId, updateMaestra } from "../../services/maestras/maestraServices";
+import React, { useState, useEffect, useCallback } from "react";
+import { motion } from "framer-motion";
+import {
+    createMaestra,
+    getMaestra,
+    deleteMaestra,
+    getMaestraId,
+    updateMaestra,
+} from "../../services/maestras/maestraServices";
+import { getStage, getStageId } from "../../services/maestras/stageServices";
 import Button from "../buttons/buttons";
+import { showSuccess, showError, showConfirm } from "../toastr/Toaster";
+import Text from "../text/Text";
 import Table from "../table/Table";
-import { showError, showSuccess, showConfirm } from "../toastr/Toaster";
+import PermissionCheck from "..//permissionCheck/PermissionCheck";
 
-const estados = ["En creación", "Revisión", "Aprobada", "Obsoleta"];
+// Definiciones de interfaces
+const estados = ["", "En creación", "Revisión", "Aprobada", "Obsoleta"];
 const tiposProducto = ["Tipo A", "Tipo B", "Tipo C"];
 
-interface Maestra {
+interface Stage {
     id: number;
-    code: string;
+    description: string;
+}
+
+interface Data {
+    id: number;
+    code: number;
     descripcion: string;
     requiere_bom: boolean;
-    type_product: any[];
+    type_product: string;
+    type_stage: string;
     status: string;
     aprobado: boolean;
 }
 
-interface TypeProduct {
-    id: number;
-    name: string;
+interface Maestra {
+    descripcion: string;
+    requiere_bom: boolean;
+    type_product: string;
+    type_stage: string;
+    status: string;
+    aprobado: boolean;
 }
 
-function NewMaestra() {
-    const [maestra, setMaestra] = useState<Maestra[]>([]);
-    const [editingMaestra, setEditingMaestra] = useState<Maestra | null>(null);
-    const [editForm, setEditForm] = useState({
-        code: "",
-        descripcion: "",
-        requiere_bom: false,
-        type_product: [],
-        status: "",
-        aprobado: false
-    });
-    const [codigo, setCodigo] = useState("");
+const Maestra = () => {
+    // Estados del componente
+    const [isOpen, setIsOpen] = useState(false);
+    const [maestra, setMaestra] = useState<Data[]>([]);
+    const [editingMaestra, setEditingMaestra] = useState<Data | null>(null);
     const [descripcion, setDescripcion] = useState("");
     const [requiereBOM, setRequiereBOM] = useState(false);
-    const [tipoSeleccionado, setTipoSeleccionado] = useState<string[]>([]);
-    const [estado, setEstado] = useState("En creación");
+    const [tipoSeleccionado, setTipoSeleccionado] = useState<number[]>([]);
+    const [estado, setEstado] = useState("");
     const [aprobado, setAprobado] = useState(false);
-    const [isOpen, setIsOpen] = useState(false);
-    const [isOpenFases, setIsOpenFases] = useState(false);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState("");
-    const [success, setSuccess] = useState("");
-    const columns = ["code", "requiere_bom", "status"];
-    const columnLabels: { [key: string]: string } = {
-        code: "Código",
-        requiere_bom: "BOM",
-        status: "Estado",
-    };
+    const [stages, setStages] = useState<Stage[]>([]);
+    const [selectedStages, setSelectedStages] = useState<Stage[]>([]);
 
     useEffect(() => {
-        const fetchMaestra = async () => {
+        const fetchStages = async () => {
             try {
-                const data = await getMaestra();
-                setMaestra(data);
+                const stages = await getStage(); // Cargar todas las fases
+                setStages(stages);
             } catch (error) {
-                console.error("Error fetching maestras:", error);
+                console.error("Error fetching stages:", error);
             }
         };
-        fetchMaestra();
+        fetchStages();
+    }, []);
+    // Fetch de fases al cargar el componente
+    useEffect(() => {
+        const fetchStages = async () => {
+            try {
+                const data: Stage[] = await getStage();
+                setStages(data);
+            } catch (error) {
+                showError("Error al cargar las fases");
+            }
+        };
+        fetchStages();
+    }, []);
+
+    // Fetch de maestras al cargar el componente
+    const fetchMaestra = useCallback(async () => {
+        try {
+            const datas = await getMaestra();
+            setMaestra(datas);
+        } catch (error) {
+            console.error("Error fetching maestras:", error);
+        }
     }, []);
 
     useEffect(() => {
-        if (editForm) {
-            setCodigo(editForm.code);
-            setDescripcion(editForm.descripcion);
-            setRequiereBOM(editForm.requiere_bom);
-            setTipoSeleccionado(editForm.type_product.map((tp: TypeProduct) => tp.name));
-            setEstado(editForm.status);
-            setAprobado(editForm.aprobado);
+        fetchMaestra();
+    }, [fetchMaestra]);
+
+    // Manejo de selección/deselección de fases
+    // Funciones para seleccionar y deseleccionar
+    const handleSelectStage = (stage: Stage) => {
+        // Si la etapa ya está seleccionada, no hacemos nada
+        if (selectedStages.some(s => s.id === stage.id)) return;
+        setSelectedStages(prev => [...prev, stage]);
+    };
+
+    const handleRemoveStage = (stage: Stage) => {
+        setSelectedStages(prev => prev.filter(s => s.id !== stage.id));
+    };
+
+
+    // Validación y envío del formulario
+    const handleSubmit = async () => {
+        if (!descripcion.trim()) {
+            showError("La descripción es obligatoria");
+            return;
         }
-    }, [editForm]);
-
-
-    const generarCodigoAutomatico = () => {
-        setCodigo(`MA-${Date.now()}`);
-    };
-
-    const toggleAprobado = () => {
-        setAprobado(!aprobado);
-    };
-
-    const cerrarModal = () => {
-        setCodigo("");
-        setDescripcion("");
-        setRequiereBOM(false);
-        setTipoSeleccionado([]);
-        setEstado("En creación");
-        setAprobado(false);
-        setIsOpen(false);
-        setError("");
-        setSuccess("");
-    };
-
-    const cerrarModalFases = () => { 
-        setIsOpenFases(false); 
-    };
-
-    const handleSave = async () => {
-        setLoading(true);
-        setError("");
-        setSuccess("");
+        if (tipoSeleccionado.length === 0) {
+            showError("Debes seleccionar al menos un tipo de producto");
+            return;
+        }
+        if (selectedStages.length === 0) {
+            showError("Debes seleccionar al menos una fase");
+            return;
+        }
 
         try {
-            const newMaestra = {
-                code: codigo,
+            await createMaestra({
                 descripcion,
                 requiere_bom: requiereBOM,
-                type_product: tipoSeleccionado,
+                type_product: JSON.stringify(tipoSeleccionado),
+                type_stage: JSON.stringify(selectedStages.map((s) => s.id)),
                 status: estado,
                 aprobado,
-            };
-
-            await createMaestra(newMaestra);
-            setSuccess("Maestra creada exitosamente");
-            cerrarModal();
-            const updatedData = await getMaestra();
-            setMaestra(updatedData);
-        } catch (err) {
-            setError("Error al crear la Maestra");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleEdit = async (id: number) => {
-        try {
-            const maestraData = await getMaestraId(id);
-
-            setEditingMaestra(maestraData);
-            setEditForm({
-                code: maestraData.code,
-                descripcion: maestraData.descripcion,
-                requiere_bom: Boolean(maestraData.requiere_bom),
-                type_product: typeof maestraData.type_product === "string"
-                    ? JSON.parse(maestraData.type_product)
-                    : maestraData.type_product,
-                status: maestraData.status,
-                aprobado: Boolean(maestraData.aprobado),
             });
-
-            setIsOpen(true); // Asegurar que el modal se abra después de cargar los datos
+            showSuccess("Maestra creada con éxito");
+            setIsOpen(false);
+            resetForm();
+            fetchMaestra(); // Refrescar la lista
         } catch (error) {
-            console.error("Error obteniendo datos de la maestra:", error);
-            showError("Error obteniendo datos de la maestra");
+            showError("Error al crear la maestra");
         }
     };
 
+    // Eliminar una maestra
     const handleDelete = async (id: number) => {
-        showConfirm("¿Seguro que quieres eliminar esta maestra?", async () => {
+        showConfirm("¿Estás seguro de eliminar este maestra?", async () => {
             try {
                 await deleteMaestra(id);
                 setMaestra((prevMaestra) => prevMaestra.filter((maestra) => maestra.id !== id));
-                showSuccess("Maestra eliminado con éxito");
+                showSuccess("Maestra eliminada exitosamente");
+                fetchMaestra(); // Refrescar la lista
             } catch (error) {
                 console.error("Error al eliminar maestra:", error);
                 showError("Error al eliminar maestra");
@@ -164,150 +156,241 @@ function NewMaestra() {
         });
     };
 
-    const handleSubmit = async (id: number) => {
-        try {
-            await updateMaestra(id, {
-                code: editForm.code,
-                descripcion: editForm.descripcion,
-                requiere_bom: editForm.requiere_bom,
-                type_product: JSON.stringify(editForm.type_product), // Si es un array de objetos, se convierte a string
-                status: editForm.status,
-                aprobado: editForm.aprobado,
-            });
+    // Abrir modal de creación
+    const openCreateModal = () => {
+        setEditingMaestra(null);
+        resetForm();
+        setIsOpen(true);
+    };
 
-            showSuccess("Maestra actualizada correctamente");
-            cerrarModal(); // Si tienes una función para cerrar el modal
+    // Abrir modal de edición
+    const handleEdit = async (id: number) => {
+        try {
+            const data = await getMaestraId(id);
+            setEditingMaestra(data);
+            setDescripcion(data.descripcion);
+            setRequiereBOM(data.requiere_bom);
+
+            // Convertir los IDs de los tipos de producto a números
+            setTipoSeleccionado(JSON.parse(data.type_product));
+
+            // Convertir los IDs de las fases en objetos Stage completos
+            const selectedStageIds = JSON.parse(data.type_stage); // Array de IDs
+            const selectedStagesData = stages.filter((stage) =>
+                selectedStageIds.includes(stage.id)
+            ); // Filtrar los stages por ID
+            setSelectedStages(selectedStagesData);
+
+            setEstado(data.status);
+            setAprobado(data.aprobado);
+            setIsOpen(true);
         } catch (error) {
-            console.error("Error actualizando la maestra:", error);
+            console.error("Error obteniendo datos de la Maestra:", error);
+            showError("Error obteniendo datos de la Maestra");
+        }
+    };
+
+    // Actualizar una maestra
+    const handleUpdate = async () => {
+        if (!editingMaestra) return;
+
+        if (!descripcion.trim()) {
+            showError("La descripción es obligatoria");
+            return;
+        }
+        if (tipoSeleccionado.length === 0) {
+            showError("Debes seleccionar al menos un tipo de producto");
+            return;
+        }
+        if (selectedStages.length === 0) {
+            showError("Debes seleccionar al menos una fase");
+            return;
+        }
+
+        try {
+            await updateMaestra(editingMaestra.id, {
+                descripcion,
+                requiere_bom: requiereBOM,
+                type_product: JSON.stringify(tipoSeleccionado),
+                type_stage: JSON.stringify(selectedStages.map((s) => s.id)),
+                status: estado,
+                aprobado,
+            });
+            showSuccess("Maestra actualizada con éxito");
+            setIsOpen(false);
+            resetForm();
+            fetchMaestra(); // Refrescar la lista
+        } catch (error) {
             showError("Error al actualizar la maestra");
         }
     };
 
 
+    // Resetear el formulario
+    const resetForm = () => {
+        setDescripcion("");
+        setRequiereBOM(false);
+        setTipoSeleccionado([]);
+        setEstado("");
+        setAprobado(false);
+        setSelectedStages([]);
+    };
+
     return (
         <div>
+            {/* Botón para abrir el modal de creación */}
             <div className="flex justify-center space-x-2 mb-2">
-                <Button onClick={() => setIsOpen(true)} variant="create" label="Crear Maestra" />
-                <Button onClick={() => setIsOpenFases(true)} variant="create" label="Agregar Fase" />
+                <PermissionCheck requiredPermission="crear_maestras">
+                    <Button onClick={openCreateModal} variant="create" label="Crear Maestra" />
+                </PermissionCheck>
             </div>
 
-            <Table columns={columns} rows={maestra} columnLabels={columnLabels} onDelete={handleDelete} onEdit={handleEdit} />
-
-            <AnimatePresence>
-                {isOpen && (
+            {/* Modal de creación/edición */}
+            {isOpen && (
+                <motion.div
+                    className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center p-4 z-50"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                >
                     <motion.div
-                        className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
+                        className="bg-white p-6 rounded-lg shadow-lg w-full max-w-[100%] md:max-w-[600px] max-h-[90vh] overflow-y-auto z-50"
+                        initial={{ y: -50, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        exit={{ y: -50, opacity: 0 }}
                     >
-                        <motion.div
-                            className="bg-white p-6 rounded-lg shadow-lg max-w-lg w-full text-black"
-                            initial={{ scale: 0.8 }}
-                            animate={{ scale: 1 }}
-                            exit={{ scale: 0.8 }}
+                        <Text type="title">{editingMaestra ? "Editar Maestra" : "Crear Maestra"}</Text>
+                        <Text type="subtitle">Descripción</Text>
+                        <input
+                            type="text"
+                            placeholder="Descripción"
+                            className="w-full p-2 border text-black mb-2 min-w-0"
+                            value={descripcion}
+                            onChange={(e) => setDescripcion(e.target.value)}
+                        />
+                        <Text type="subtitle">Requiere BOM</Text>
+                        <input
+                            type="checkbox"
+                            checked={requiereBOM}
+                            onChange={() => setRequiereBOM(!requiereBOM)}
+                        />{" "}
+                        <span>Requiere BOM</span>
+                        <Text type="subtitle">Seleccione Estado</Text>
+                        <select
+                            className="w-full p-2 border mb-2 min-w-0 text-black"
+                            value={estado}
+                            onChange={(e) => setEstado(e.target.value)}
                         >
-                            <h1 className="text-2xl font-bold text-center mb-4">Crear Maestra</h1>
-
-                            {error && <p className="text-red-500">{error}</p>}
-                            {success && <p className="text-green-500">{success}</p>}
-
-                            <label className="block font-medium">Código:</label>
-                            <div className="flex gap-2 mb-4">
-                                <input
-                                    type="text"
-                                    value={codigo}
-                                    onChange={(e) => setCodigo(e.target.value)}
-                                    placeholder="Ingrese código..."
-                                    className="border p-2 rounded w-full"
-                                />
-                                <button onClick={generarCodigoAutomatico} className="bg-blue-500 text-white px-4 py-2 rounded">
-                                    Generar
-                                </button>
-                            </div>
-
-                            <label className="block font-medium">Descripción:</label>
-                            <input
-                                type="text"
-                                value={descripcion}
-                                onChange={(e) => setDescripcion(e.target.value)}
-                                placeholder="Ingrese descripción..."
-                                className="border p-2 rounded w-full mb-4"
-                            />
-
-                            <label className="block font-medium">Requiere BOM:</label>
-                            <input
-                                type="checkbox"
-                                checked={requiereBOM}
-                                onChange={(e) => setRequiereBOM(e.target.checked)}
-                                className="mb-4"
-                            />
-
-                            <label className="block font-medium">Tipo de Producto:</label>
-                            <select
-                                multiple
-                                value={tipoSeleccionado}
-                                onChange={(e) =>
-                                    setTipoSeleccionado(Array.from(e.target.selectedOptions, (option) => option.value))
-                                }
-                                className="border p-2 rounded w-full mb-4"
-                            >
-                                {tiposProducto.map((tipo) => (
-                                    <option key={tipo} value={tipo}>
-                                        {tipo}
-                                    </option>
-                                ))}
-                            </select>
-
-                            <label className="block font-medium">Estado:</label>
-                            <select
-                                value={estado}
-                                onChange={(e) => setEstado(e.target.value)}
-                                className="border p-2 rounded w-full mb-4"
-                            >
-                                {estados.map((estado) => (
-                                    <option key={estado} value={estado}>
-                                        {estado}
-                                    </option>
-                                ))}
-                            </select>
-
-                            <label className="block font-medium">Aprobado:</label>
-                            <input type="checkbox" checked={aprobado} onChange={toggleAprobado} className="mb-4" />
-
-                            <div className="flex justify-end space-x-2">
-                                <Button onClick={cerrarModal} variant="cancel" label="Cancelar" />
-                                <Button onClick={handleSave} variant="create" label={loading ? "Guardando..." : "Guardar"} disabled={loading} />
-                            </div>
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-
-            <AnimatePresence>
-                {isOpenFases && (
-                    <motion.div
-                        className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                    >
-                        <motion.div
-                            className="bg-white p-6 rounded-lg shadow-lg max-w-lg w-full text-black"
-                            initial={{ scale: 0.8 }}
-                            animate={{ scale: 1 }}
-                            exit={{ scale: 0.8 }}
+                            {estados.map((estado) => (
+                                <option key={estado} value={estado}>
+                                    {estado}
+                                </option>
+                            ))}
+                        </select>
+                        <Text type="subtitle">Aprobado</Text>
+                        <input
+                            type="checkbox"
+                            checked={aprobado}
+                            onChange={() => setAprobado(!aprobado)}
+                        />{" "}
+                        <span>Aprobado</span>
+                        <Text type="subtitle">Seleccione Tipo de Producto</Text>
+                        <select
+                            multiple
+                            className="w-full p-2 border mb-2 min-w-0 text-black"
+                            value={tipoSeleccionado.map(String)}
+                            onChange={(e) => {
+                                const selectedIds = Array.from(
+                                    e.target.selectedOptions,
+                                    (option) => Number(option.value)
+                                );
+                                setTipoSeleccionado(selectedIds);
+                            }}
                         >
-                            <div className="flex justify-center gap-2">
-                                <Button onClick={cerrarModalFases} variant="cancel" label="Cancelar" />
-                                <Button onClick={handleSave} variant="create" label={loading ? "Guardando..." : "Guardar"} disabled={loading} />
+                            {tiposProducto.map((tipo, index) => (
+                                <option key={index} value={index}>
+                                    {tipo}
+                                </option>
+                            ))}
+                        </select>
+                        <Text type="subtitle">Seleccione las Fases</Text>
+                        <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
+                            {/* Lista de fases disponibles */}
+                            <div className="w-full md:w-1/2 border p-2 max-h-40 overflow-y-auto">
+                                <Text type="subtitle">Disponibles</Text>
+                                {stages.length > 0 ? (
+                                    stages.map((stage) => {
+                                        const isSelected = selectedStages.some(s => s.id === stage.id);
+                                        return (
+                                            <div key={stage.id} className="p-2 border-b">
+                                                <span
+                                                    className={`block w-full text-center p-2 ${isSelected
+                                                        ? 'text-gray-500 cursor-not-allowed opacity-50'
+                                                        : 'text-black cursor-pointer hover:bg-blue-500 hover:text-white'
+                                                        }`}
+                                                    onClick={() => {
+                                                        if (!isSelected) handleSelectStage(stage);
+                                                    }}
+                                                >
+                                                    {stage.description}
+                                                </span>
+                                            </div>
+                                        );
+                                    })
+                                ) : (
+                                    <p className="text-gray-500 text-center">No hay fases disponibles</p>
+                                )}
                             </div>
-                        </motion.div>
+
+
+                            {/* Lista de fases seleccionadas */}
+                            <div className="w-full md:w-1/2 border p-2 max-h-40 overflow-y-auto">
+                                <Text type="subtitle">Seleccionadas</Text>
+                                {selectedStages.length > 0 ? (
+                                    selectedStages.map((stage) => (
+                                        <div key={stage.id} className="p-2 border-b">
+                                            <span
+                                                className="block w-full text-black cursor-pointer hover:bg-red-500 hover:text-white text-center p-2"
+                                                onClick={() => handleRemoveStage(stage)}
+                                            >
+                                                {stage.description}
+                                            </span>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <p className="text-gray-500 text-center">No hay fases seleccionadas</p>
+                                )}
+                            </div>
+
+                        </div>
+
+
+                        <div className="flex justify-end space-x-4 mt-4">
+                            <Button onClick={() => setIsOpen(false)} variant="cancel" label="Cancelar" />
+                            <Button
+                                onClick={editingMaestra ? handleUpdate : handleSubmit}
+                                variant="create"
+                                label={editingMaestra ? "Actualizar" : "Crear"}
+                            />
+                        </div>
                     </motion.div>
-                )}
-            </AnimatePresence>
+                </motion.div>
+            )}
+
+            {/* Tabla de maestras */}
+            <Table
+                columns={["descripcion", "status", "aprobado"]}
+                rows={maestra}
+                columnLabels={{
+                    descripcion: "Descripción",
+                    status: "Estado",
+                    aprobado: "Aprobado",
+                }}
+                onDelete={handleDelete}
+                onEdit={handleEdit}
+            />
         </div>
     );
-}
+};
 
-export default NewMaestra;
+export default Maestra;

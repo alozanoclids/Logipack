@@ -1,22 +1,22 @@
 "use client";
+
 import React, { useState, useEffect } from "react";
 import {
   FaHome,
-  FaUserAlt,
   FaVials,
   FaCog,
   FaCapsules,
   FaAngleDown,
   FaSignOutAlt,
   FaArrowLeft,
-  FaBars
+  FaBars,
 } from "react-icons/fa";
 import nookies from "nookies";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { getUserByEmail } from '../../services/userDash/authservices';
+import { getUserByEmail } from "../../services/userDash/authservices";
 import { useAuth } from "../../hooks/useAuth";
-import PermissionOnClick from "..//permissionCheck/PermissionOnclick";
+import PermissionOnClick from "../permissionCheck/PermissionOnclick";
 
 interface SidebarProps {
   sidebarOpen: boolean;
@@ -41,11 +41,10 @@ const menuItems: MenuItem[] = [
     icon: <FaCapsules />,
     children: [
       {
-        label: "Informacion de Maestras",
+        label: "Información de Maestras",
         icon: <FaVials />,
-        link: "/pages/maestra"
+        link: "/pages/maestra",
       },
-
     ],
   },
   {
@@ -58,15 +57,23 @@ const menuItems: MenuItem[] = [
   },
 ];
 
-
 const Sidebar: React.FC<SidebarProps> = ({ sidebarOpen, setSidebarOpen }) => {
   const [openSubMenus, setOpenSubMenus] = useState<{ [key: number]: boolean }>({});
   const [isMobile, setIsMobile] = useState(false);
   const [userName, setUserName] = useState("");
   const router = useRouter();
+  const pathname = usePathname();
   const { isAuthenticated } = useAuth();
 
+  // Detecta tamaño de pantalla para comportamiento mobile
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
+  // Carga datos de usuario si está autenticado
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -84,8 +91,9 @@ const Sidebar: React.FC<SidebarProps> = ({ sidebarOpen, setSidebarOpen }) => {
       }
     };
 
-
-    if (isAuthenticated) fetchUserData();
+    if (isAuthenticated) {
+      fetchUserData();
+    }
   }, [isAuthenticated]);
 
   const handleLogout = () => {
@@ -96,16 +104,27 @@ const Sidebar: React.FC<SidebarProps> = ({ sidebarOpen, setSidebarOpen }) => {
     router.push("/");
   };
 
+  // Funciones para determinar el estado activo
+  const isMenuItemActive = (item: MenuItem) => {
+    if (item.link && pathname === item.link) return true;
+    if (item.children && item.children.some(child => child.link === pathname)) return true;
+    return false;
+  };
+
+  const isSubMenuItemActive = (subItem: MenuItem) => subItem.link === pathname;
+
   return (
-    <aside
-      className={`transition-all duration-500 ease-in-out h-screen sticky top-0 bg-[#242424] ${sidebarOpen ? "w-64" : "w-16"
-        }`}
+    <motion.aside
+      animate={{ width: sidebarOpen ? 256 : 64 }}
+      transition={{ duration: 0.5, ease: "easeInOut" }}
+      className="h-screen sticky top-0 bg-[#242424]"
     >
-      <div className="h-full w-full bg-white/10 backdrop-blur-lg border border-white/20 rounded-xl shadow-lg flex flex-col">
+      <div className="h-full w-full bg-[#242424] backdrop-blur-lg rounded-xl shadow-lg flex flex-col">
         {/* Header */}
         <div
-          className={`flex items-center ${sidebarOpen ? "justify-between" : "justify-center"
-            } p-4`}
+          className={`flex items-center ${
+            sidebarOpen ? "justify-between" : "justify-center"
+          } p-4 border-b border-white/20`}
         >
           {sidebarOpen && (
             <img src="/logipack_2.png" alt="Logipack" className="h-10 w-auto" />
@@ -119,8 +138,8 @@ const Sidebar: React.FC<SidebarProps> = ({ sidebarOpen, setSidebarOpen }) => {
           </button>
         </div>
 
-        {/* Navigation con flex-1 para que ocupe el espacio disponible */}
-        <nav className="flex-1 overflow-y-auto mt-4">
+        {/* Menú de navegación */}
+        <nav className="flex-1 overflow-y-auto">
           {menuItems.map((item, index) =>
             item.children ? (
               <div
@@ -145,19 +164,25 @@ const Sidebar: React.FC<SidebarProps> = ({ sidebarOpen, setSidebarOpen }) => {
                       }));
                     }
                   }}
-                  className={`cursor-pointer p-2 hover:bg-white/20 rounded transition-colors ${sidebarOpen ? "flex items-center" : "flex justify-center"
-                    }`}
+                  className={`cursor-pointer p-2 hover:bg-white/20 rounded transition-colors ${
+                    sidebarOpen ? "flex items-center" : "flex justify-center"
+                  }`}
                 >
-                  <span className="text-lg text-white">{item.icon}</span>
+                  <span className="text-lg text-white mr-2">{item.icon}</span>
                   {sidebarOpen && (
-                    <>
-                      <span className="ml-4 text-white">{item.label}</span>
+                    <div className="flex items-center w-full">
+                      <span className="text-white mr-2">{item.label}</span>
+                      {isMenuItemActive(item) && (
+                        <motion.span
+                          className="w-2 h-2 rounded-full"
+                        />
+                      )}
                       <span className="ml-auto text-white transition-transform duration-300 transform">
                         <FaAngleDown
                           className={`${openSubMenus[index] ? "rotate-180" : ""}`}
                         />
                       </span>
-                    </>
+                    </div>
                   )}
                 </div>
                 <AnimatePresence initial={false}>
@@ -173,12 +198,23 @@ const Sidebar: React.FC<SidebarProps> = ({ sidebarOpen, setSidebarOpen }) => {
                         <div
                           key={subIndex}
                           className="flex items-center cursor-pointer p-2 hover:bg-white/20 rounded transition-colors"
-                          onClick={() => subItem.link && router.push(subItem.link)}
+                          onClick={() =>
+                            subItem.link && router.push(subItem.link)
+                          }
                         >
-                          <span className="text-lg text-white">
+                          <span className="text-lg text-white mr-2">
                             {subItem.icon}
                           </span>
-                          <span className="ml-4 text-white">{subItem.label}</span>
+                          {sidebarOpen && (
+                            <div className="flex items-center">
+                              <span className="text-white">{subItem.label}</span>
+                              {isSubMenuItemActive(subItem) && (
+                                <motion.span
+                                  className="w-2 h-2 rounded-full ml-2"
+                                />
+                              )}
+                            </div>
+                          )}
                         </div>
                       ))}
                     </motion.div>
@@ -189,12 +225,20 @@ const Sidebar: React.FC<SidebarProps> = ({ sidebarOpen, setSidebarOpen }) => {
               <div key={index}>
                 <div
                   onClick={() => item.link && router.push(item.link)}
-                  className={`cursor-pointer p-2 hover:bg-white/20 rounded transition-colors ${sidebarOpen ? "flex items-center" : "flex justify-center"
-                    }`}
+                  className={`cursor-pointer p-2 hover:bg-white/20 rounded transition-colors ${
+                    sidebarOpen ? "flex items-center" : "flex justify-center"
+                  }`}
                 >
-                  <span className="text-lg text-white">{item.icon}</span>
+                  <span className="text-lg text-white mr-2">{item.icon}</span>
                   {sidebarOpen && (
-                    <span className="ml-4 text-white">{item.label}</span>
+                    <div className="flex items-center">
+                      <span className="text-white">{item.label}</span>
+                      {isMenuItemActive(item) && (
+                        <motion.span
+                          className="w-2 h-2 rounded-full ml-2"
+                        />
+                      )}
+                    </div>
                   )}
                 </div>
               </div>
@@ -202,11 +246,10 @@ const Sidebar: React.FC<SidebarProps> = ({ sidebarOpen, setSidebarOpen }) => {
           )}
         </nav>
 
-        {/* Footer section */}
-        <div className="mt-auto p-3 border-t border-white/10">
-          {/* User profile */}
+        {/* Footer */}
+        <div className="mt-auto p-3 border-t border-white/20">
           <PermissionOnClick requiredPermission="crear_usuarios">
-            <div className="mb-2">
+            <div className="mb-2 flex items-center">
               <img
                 src="/user.jpg"
                 alt={userName}
@@ -214,26 +257,24 @@ const Sidebar: React.FC<SidebarProps> = ({ sidebarOpen, setSidebarOpen }) => {
                 onClick={() => router.push("/pages/perfil")}
               />
               {sidebarOpen && (
-                <span className="ml-2 text-white font-medium">{userName}</span>
+                <span className="ml-2 text-white font-medium">
+                  {userName}
+                </span>
               )}
             </div>
           </PermissionOnClick>
-          
-          {/* Logout button */}
           <button
             onClick={handleLogout}
             className="w-full bg-red-600 hover:bg-red-500 text-white rounded-md transition-colors flex items-center justify-center p-2"
           >
             <FaSignOutAlt className="text-xl" />
-            <span
-              className={`${!sidebarOpen ? "hidden" : "inline"} text-sm ml-2`}
-            >
-              Cerrar Sesión
-            </span>
+            {sidebarOpen && (
+              <span className="text-sm ml-2">Cerrar Sesión</span>
+            )}
           </button>
         </div>
       </div>
-    </aside>
+    </motion.aside>
   );
 };
 

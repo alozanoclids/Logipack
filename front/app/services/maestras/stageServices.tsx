@@ -20,7 +20,7 @@ export interface Data {
     activities: string;
 }
 
-
+ 
 // Función para crear un nuevo Stage.
 // Envía una solicitud POST a la ruta '/newStage' con los datos proporcionados.
 export const createStage = async (data: Data): Promise<{ status: number; message?: string }> => {

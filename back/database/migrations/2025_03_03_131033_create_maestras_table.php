@@ -16,7 +16,8 @@ return new class extends Migration
             $table->string('code')->unique();
             $table->text('descripcion');
             $table->boolean('requiere_bom')->default(false);
-            $table->json('type_product');
+            $table->json('type_product')->nullable();
+            $table->json('type_stage')->nullable();
             $table->enum('status', ['En creación', 'Revisión', 'Aprobada', 'Obsoleta'])->default('En creación');
             $table->boolean('aprobado')->default(false);
             $table->timestamps();

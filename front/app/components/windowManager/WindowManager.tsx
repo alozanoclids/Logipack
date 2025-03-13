@@ -47,20 +47,20 @@ const WindowManager: React.FC<WindowManagerProps> = ({ windowsData = [] }) => {
     };
 
     return (
-        <div className="relative max-h-[94vh] h-screen flex flex-col bg-gray-900 rounded-xl border border-gray-500 text-white overflow-hidden shadow-lg">
+        <div className="relative max-h-[94vh] h-screen flex flex-col bg-gray-900 rounded-xl border border-gray-500 text-white overflow-hidden shadow-lg mt-2 mr-2 ml-2">
             {/* Barra de pestañas estilo navegador */}
-            <div className="relative flex items-center gap-1 px-3 py-2 bg-gray-850 rounded-t-xl shadow-md border-b border-gray-700">
+            <div className="relative flex flex-wrap items-center gap-1 px-3 py-2 bg-gray-850 rounded-t-xl shadow-md border-b border-gray-700">
                 {windows.map(win => (
                     <div key={win.id} className="relative">
                         <button
-                            className={`px-4 py-2 text-sm font-semibold rounded-t-md transition-all flex items-center gap-2 border border-gray-700 shadow-sm
-                        ${activeWindow === win.id
+                            className={`px-4 py-2 text-xs sm:text-sm font-semibold rounded-t-md transition-all flex items-center gap-2 border border-gray-700 shadow-sm
+                ${activeWindow === win.id
                                     ? "bg-gray-950 text-white shadow-md border-blue-500"
                                     : "bg-gray-800 text-gray-300 hover:bg-gray-700 transition-colors"
                                 }`}
                             onClick={() => setActiveWindow(win.id)}
                         >
-                            {win.title}
+                            <span className="truncate max-w-[80px] sm:max-w-none">{win.title}</span>
                             {!win.isProtected && (
                                 <span
                                     className="text-red-400 hover:text-red-300 transition-opacity cursor-pointer text-xs hover:scale-110"
@@ -71,7 +71,6 @@ const WindowManager: React.FC<WindowManagerProps> = ({ windowsData = [] }) => {
                                 </span>
                             )}
                         </button>
-                        {/* Indicador de pestaña activa */}
                         {activeWindow === win.id && (
                             <motion.div
                                 layoutId="active-tab"
@@ -115,7 +114,6 @@ const WindowManager: React.FC<WindowManagerProps> = ({ windowsData = [] }) => {
                 </AnimatePresence>
             </div>
         </div>
-
     );
 };
 

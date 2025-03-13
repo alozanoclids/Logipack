@@ -19,6 +19,9 @@ class PermissionSeeder extends Seeder
             ['name' => 'ver_reportes', 'description' => 'Ver Reportes'],
             ['name' => 'crear_permiso', 'description' => 'Crear Permisos'],
             ['name' => 'crear_roles', 'description' => 'Crear Roles'],
+            ['name' => 'crear_maestras', 'description' => 'Crear Maestras'],
+            ['name' => 'crear_fases', 'description' => 'Crear Fases'],
+            ['name' => 'crear_actividades', 'description' => 'Crear Actividades'],
         ];
 
         foreach ($permissions as $perm) {
@@ -30,7 +33,8 @@ class PermissionSeeder extends Seeder
 
         // Asignar permisos a los roles
         $roles = [
-            'admin' => ['crear_usuarios', 'gestionar_roles', 'ver_reportes', 'crear_permiso', 'gestionar_permisos', 'crear_roles','gestionar_usuarios'],
+            'admin' => ['crear_usuarios', 'gestionar_roles', 'ver_reportes', 'crear_permiso', 'gestionar_permisos', 'crear_roles','gestionar_usuarios'
+            , 'crear_maestras', 'crear_fases', 'crear_actividades'],
             'gerente' => ['gestionar_roles', 'ver_reportes'],
         ];
 

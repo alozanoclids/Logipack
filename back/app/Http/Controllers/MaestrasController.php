@@ -19,23 +19,20 @@ class MaestrasController extends Controller
     public function newMaestra(Request $request): JsonResponse
     {
         $validatedData = $request->validate([
-            'code' => 'required|string|unique:maestras',
             'descripcion' => 'required|string',
-            'requiere_bom' => 'boolean',
-            'type_product' => 'array',
-            'status' => 'required|in:En creación,Revisión,Aprobada,Obsoleta',
-            'aprobado' => 'boolean',
+            'requiere_bom' => 'required|boolean',
+            'type_product' => 'required|json',
+            'type_stage' => 'required|json',
+            'status' => 'required|string',
+            'aprobado' => 'required|boolean',
         ]);
 
-        // Creating the new Maestra record
-        $Maestra = Maestra::create([
-            'code' => $validatedData['code'],
-            'descripcion' => $validatedData['descripcion'],
-            'requiere_bom' => $validatedData['requiere_bom'],
-            'type_product' => json_encode($validatedData['type_product']),
-            'status' => $validatedData['status'],
-            'aprobado' => $validatedData['aprobado'],
-        ]);
+        // Generar código autoincremental manualmente
+        $lastCode = Maestra::max('code') ?? 0;
+        $validatedData['code'] = $lastCode + 1;
+
+        // Crear la nueva Fase
+        $Maestra = Maestra::create($validatedData);
 
         return response()->json([
             'message' => 'Línea creada exitosamente',
@@ -61,13 +58,13 @@ class MaestrasController extends Controller
             return response()->json(['message' => 'Maestrafactura no encontrada'], 404);
         }
 
-        $request->validate([
-            'code' => 'required|string|unique:maestras',
+        $request->validate([ 
             'descripcion' => 'required|string',
-            'requiere_bom' => 'boolean',
-            'type_product' => 'array',
-            'status' => 'required|in:En creación,Revisión,Aprobada,Obsoleta',
-            'aprobado' => 'boolean',
+            'requiere_bom' => 'required|boolean',
+            'type_product' => 'required|json',
+            'type_stage' => 'required|json',
+            'status' => 'required|string',
+            'aprobado' => 'required|boolean',
         ]);
 
         $Maestra->update($request->all());

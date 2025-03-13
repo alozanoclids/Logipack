@@ -7,12 +7,10 @@ import {
   createRole,
   updateRole,
   deleteRole
-} from "../../services/userDash/rolesServices";
-import { FaEdit, FaTrash } from "react-icons/fa";
+} from "../../services/userDash/rolesServices"; 
 import { motion } from "framer-motion";
 import { showSuccess, showError, showConfirm } from "../toastr/Toaster";
-import PermissionCheck from "..//permissionCheck/PermissionCheck";
-import PermissionInputs from "../permissionCheck/PermissionInputs";
+import PermissionCheck from "..//permissionCheck/PermissionCheck"; 
 import Button from "../buttons/buttons"
 import { useAuth } from '../../hooks/useAuth'
 import { getUserByEmail } from '../../services/userDash/authservices';
@@ -103,7 +101,7 @@ const Roles = () => {
     if (isAuthenticated) fetchUserData();
   }, [isAuthenticated]);
   // Fin useEffect
-  
+
   const fetcRole = async () => {
     try {
       const role = await getRole();
@@ -292,6 +290,7 @@ const Roles = () => {
 
   return (
     <div className="overflow-x-auto">
+
       <div className="flex justify-center space-x-2 mb-2">
         <PermissionCheck requiredPermission="crear_permiso">
           <Button onClick={() => {
@@ -383,84 +382,116 @@ const Roles = () => {
         </div>
       )}
 
-      <table className="w-full bg-gray-700 shadow-md rounded-lg border border-gray-200 table-auto">
-        <thead>
-          <tr className="bg-gray-900 text-white">
-            <th className="p-2 text-left text-sm text-gray-300">Permiso</th>
-            {roles.map((role) => (
-              <th key={role.id} className="p-2 text-center text-sm capitalize relative">
-                <div
-                  className="flex flex-col items-center"
-                  onMouseEnter={() => {
-                    clearTimeout(hideTimeout);
-                    setHoveredRole(role.id);
-                  }}
-                  onMouseLeave={() => {
-                    hideTimeout = setTimeout(() => setHoveredRole(null), 300); // ⏳ Pequeño delay
-                  }}
-                >
-                  <span className="cursor-pointer">{role.name}</span>
-                </div>
+      {/* Contenedor de la tabla con scroll vertical */}
+      <div
+        className="w-full overflow-auto custom-scroll"
+        style={{ maxHeight: '400px' }}
+      >
+        {/* Estilos para el scroll */}
+        <style jsx>{`
+          .custom-scroll::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+          }
+          .custom-scroll::-webkit-scrollbar-track {
+            background: #242424; /* Fondo similar al de tu contenedor */
+            border-radius: 4px;
+          }
+          .custom-scroll::-webkit-scrollbar-thumb {
+            background-color: #555; /* Color del thumb */
+            border-radius: 4px;
+            border: 2px solid #242424; /* Crea un efecto de separación */
+          }
+          .custom-scroll::-webkit-scrollbar-thumb:hover {
+            background-color: #777;
+          }
+          /* Firefox */
+          .custom-scroll {
+            scrollbar-width: thin;
+            scrollbar-color: #555 #242424;
+          }
+        `}</style>
 
-                {hoveredRole === role.id && (
-                  <div
-                    className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2"
-                    onMouseEnter={() => clearTimeout(hideTimeout)}
-                    onMouseLeave={() => setHoveredRole(null)}
-                  >
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.8, y: -10 }}
-                      animate={{ opacity: 1, scale: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.8, y: -10 }}
-                      transition={{ duration: 0.3, ease: "easeInOut" }}
-                      className="bg-white shadow-lg rounded-lg p-2 flex space-x-2 border border-gray-200"
-                    >
-                      <Button onClick={() => handleEditRole(role.id)} variant="edit" />
-                      <Button onClick={() => handleDeleteRole(role.id)} variant="delete" />
-                    </motion.div>
-                  </div>
-                )}
+        <table className="w-full bg-gray-700 shadow-md rounded-lg border border-gray-200 table-auto">
+          <thead className="sticky top-0 z-10">
+            <tr className="bg-gray-900 text-white">
+              <th className="p-2 text-left text-xs sm:text-sm text-gray-300">
+                Permiso
               </th>
-            ))}
-            <th className="p-2 text-center text-sm text-gray-300">Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {permissions.map((permission, index) => (
-            <tr
-              key={permission.id}
-              className={`${index % 2 === 0 ? "bg-gray-600" : "bg-gray-800"
-                } text-gray-300 border-b`}
-            >
-              <td className="p-2 text-sm">{permission.description}</td>
               {roles.map((role) => (
-                <td key={`${role.id}-${permission.id}`} className="text-center">
-                  {/* <PermissionInputs requiredPermission="gestionar_permisos"> */}
-                  <input
-                    type="checkbox"
-                    className="w-5 h-5 accent-blue-500 cursor-pointer"
-                    checked={role.permissions.some(
-                      (p) => p.id === permission.id
-                    )}
-                    onChange={(e) =>
-                      handlePermissionToggle(
-                        role.id,
-                        permission.id,
-                        e.target.checked
-                      )
-                    }
-                  />
-                  {/* </PermissionInputs> */}
-                </td>
+                <th
+                  key={role.id}
+                  className="p-2 text-center text-xs sm:text-sm capitalize relative"
+                >
+                  <div
+                    className="flex flex-col items-center"
+                    onMouseEnter={() => {
+                      clearTimeout(hideTimeout);
+                      setHoveredRole(role.id);
+                    }}
+                    onMouseLeave={() => {
+                      hideTimeout = setTimeout(() => setHoveredRole(null), 300);
+                    }}
+                  >
+                    <span className="cursor-pointer truncate max-w-[80px] sm:max-w-none">
+                      {role.name}
+                    </span>
+                  </div>
+                  {hoveredRole === role.id && (
+                    <div
+                      className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2"
+                      onMouseEnter={() => clearTimeout(hideTimeout)}
+                      onMouseLeave={() => setHoveredRole(null)}
+                    >
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.8, y: -10 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.8, y: -10 }}
+                        transition={{ duration: 0.3, ease: "easeInOut" }}
+                        className="bg-white shadow-lg rounded-lg p-2 flex space-x-2 border border-gray-200"
+                      >
+                        <Button onClick={() => handleEditRole(role.id)} variant="edit" />
+                        <Button onClick={() => handleDeleteRole(role.id)} variant="delete" />
+                      </motion.div>
+                    </div>
+                  )}
+                </th>
               ))}
-              <td className="px-6 py-3 flex justify-center gap-3">
-                <Button onClick={() => { handleEdit(permission.id) }} variant="edit" />
-                <Button onClick={() => { handleDelete(permission.id) }} variant="delete" />
-              </td>
+              <th className="p-2 text-center text-xs sm:text-sm text-gray-300">
+                Acciones
+              </th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {permissions.map((permission, index) => (
+              <tr
+                key={permission.id}
+                className={`${index % 2 === 0 ? "bg-gray-600" : "bg-gray-800"
+                  } text-gray-300 border-b`}
+              >
+                <td className="p-2 text-xs sm:text-sm">{permission.description}</td>
+                {roles.map((role) => (
+                  <td key={`${role.id}-${permission.id}`} className="text-center">
+                    <input
+                      type="checkbox"
+                      className="w-4 h-4 sm:w-5 sm:h-5 accent-blue-500 cursor-pointer"
+                      checked={role.permissions.some((p) => p.id === permission.id)}
+                      onChange={(e) =>
+                        handlePermissionToggle(role.id, permission.id, e.target.checked)
+                      }
+                    />
+                  </td>
+                ))}
+                <td className="px-4 py-2 sm:px-6 sm:py-3 flex justify-center gap-2 sm:gap-3">
+                  <Button onClick={() => handleEdit(permission.id)} variant="edit" />
+                  <Button onClick={() => handleDelete(permission.id)} variant="delete" />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
     </div>
   );
 };
