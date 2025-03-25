@@ -2,7 +2,9 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
@@ -22,13 +24,24 @@ return new class extends Migration
             $table->string('phone')->nullable();
             $table->string('cargo')->nullable();
             $table->string('signature_bpm')->nullable();
-            $table->json('factory')->nullable(); 
+            $table->json('factory')->nullable();
             $table->string('role')->default('user');
             $table->timestamp('last_login_at')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });
-        
+
+        // DB::table('users')->insert([
+        //     'name' => 'Admin Logismart',
+        //     'email' => 'admin@logismart.com',
+        //     'email_verified_at' => now(),
+        //     'password' => Hash::make('Logismart25*'),
+        //     'remember_token' => null,
+        //     'role' => 'admin',
+        //     'created_at' => now(),
+        //     'updated_at' => now(),
+        // ]);
+
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
             $table->string('email')->primary();

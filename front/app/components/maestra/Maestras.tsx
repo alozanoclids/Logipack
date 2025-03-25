@@ -2,8 +2,7 @@ import React, { useState, useEffect } from "react";
 import WindowManager from "../windowManager/WindowManager";
 import NewMaestra from "./NewMaestra";
 import NewStage from "./NewStage";
-import NewActivity from "./NewActivity";
-import PermissionCheck from "..//permissionCheck/PermissionCheck";
+import NewActivity from "./NewActivity"; 
 
 function Maestras() {
     return (

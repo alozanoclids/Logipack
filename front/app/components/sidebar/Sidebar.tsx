@@ -1,16 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import {
-  FaHome,
-  FaVials,
-  FaCog,
-  FaCapsules,
-  FaAngleDown,
-  FaSignOutAlt,
-  FaArrowLeft,
-  FaBars,
-} from "react-icons/fa";
+import { FaHome, FaVials, FaCog, FaCapsules, FaAngleDown, FaSignOutAlt, FaArrowLeft, FaBars, FaIndent, FaIoxhost } from "react-icons/fa";
 import nookies from "nookies";
 import { useRouter, usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -44,6 +35,17 @@ const menuItems: MenuItem[] = [
         label: "Información de Maestras",
         icon: <FaVials />,
         link: "/pages/maestra",
+      },
+    ],
+  },
+  {
+    label: "BOM",
+    icon: <FaIndent />,
+    children: [
+      {
+        label: "Información de BOM",
+        icon: <FaIoxhost />,
+        link: "/pages/bom",
       },
     ],
   },
@@ -122,9 +124,8 @@ const Sidebar: React.FC<SidebarProps> = ({ sidebarOpen, setSidebarOpen }) => {
       <div className="h-full w-full bg-[#242424] backdrop-blur-lg rounded-xl shadow-lg flex flex-col">
         {/* Header */}
         <div
-          className={`flex items-center ${
-            sidebarOpen ? "justify-between" : "justify-center"
-          } p-4 border-b border-white/20`}
+          className={`flex items-center ${sidebarOpen ? "justify-between" : "justify-center"
+            } p-4 border-b border-white/20`}
         >
           {sidebarOpen && (
             <img src="/logipack_2.png" alt="Logipack" className="h-10 w-auto" />
@@ -164,9 +165,8 @@ const Sidebar: React.FC<SidebarProps> = ({ sidebarOpen, setSidebarOpen }) => {
                       }));
                     }
                   }}
-                  className={`cursor-pointer p-2 hover:bg-white/20 rounded transition-colors ${
-                    sidebarOpen ? "flex items-center" : "flex justify-center"
-                  }`}
+                  className={`cursor-pointer p-2 hover:bg-white/20 rounded transition-colors ${sidebarOpen ? "flex items-center" : "flex justify-center"
+                    }`}
                 >
                   <span className="text-lg text-white mr-2">{item.icon}</span>
                   {sidebarOpen && (
@@ -225,9 +225,8 @@ const Sidebar: React.FC<SidebarProps> = ({ sidebarOpen, setSidebarOpen }) => {
               <div key={index}>
                 <div
                   onClick={() => item.link && router.push(item.link)}
-                  className={`cursor-pointer p-2 hover:bg-white/20 rounded transition-colors ${
-                    sidebarOpen ? "flex items-center" : "flex justify-center"
-                  }`}
+                  className={`cursor-pointer p-2 hover:bg-white/20 rounded transition-colors ${sidebarOpen ? "flex items-center" : "flex justify-center"
+                    }`}
                 >
                   <span className="text-lg text-white mr-2">{item.icon}</span>
                   {sidebarOpen && (

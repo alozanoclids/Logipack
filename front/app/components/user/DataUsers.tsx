@@ -86,29 +86,29 @@ function DataUsers() {
         fetchRoles();
     }, []);
 
-       //UseEffect para actualizacion del token
-   const { isAuthenticated } = useAuth();
-   const [userName, setUserName] = useState("");
-   useEffect(() => {
-     const fetchUserData = async () => {
-       try {
-         const cookies = nookies.get(null);
-         const email = cookies.email;
-         if (email) {
-           const decodedEmail = decodeURIComponent(email);
-           const user = await getUserByEmail(decodedEmail);
-           if (user.usuario) {
-             setUserName(user.usuario.name);
-           }
-         }
-       } catch (error) {
-         console.error("Error fetching user:", error);
-       }
-     };
-     if (isAuthenticated) fetchUserData();
-   }, [isAuthenticated]);
-   // Fin useEffect
- 
+    //UseEffect para actualizacion del token
+    const { isAuthenticated } = useAuth();
+    const [userName, setUserName] = useState("");
+    useEffect(() => {
+        const fetchUserData = async () => {
+            try {
+                const cookies = nookies.get(null);
+                const email = cookies.email;
+                if (email) {
+                    const decodedEmail = decodeURIComponent(email);
+                    const user = await getUserByEmail(decodedEmail);
+                    if (user.usuario) {
+                        setUserName(user.usuario.name);
+                    }
+                }
+            } catch (error) {
+                console.error("Error fetching user:", error);
+            }
+        };
+        if (isAuthenticated) fetchUserData();
+    }, [isAuthenticated]);
+    // Fin useEffect
+
 
     const handleDelete = async (id: number) => {
         showConfirm("¿Seguro que quieres eliminar este usuario?", async () => {
@@ -129,13 +129,13 @@ function DataUsers() {
             const userData = response.usuario;
             let factories = [];
             try {
-                factories = typeof userData.factory === "string" 
+                factories = typeof userData.factory === "string"
                     ? JSON.parse(userData.factory.replace(/\\/g, ""))
-                    : Array.isArray(userData.factory) 
-                    ? userData.factory 
-                    : userData.factory 
-                    ? [userData.factory] 
-                    : [];
+                    : Array.isArray(userData.factory)
+                        ? userData.factory
+                        : userData.factory
+                            ? [userData.factory]
+                            : [];
             } catch (parseError) {
                 console.error("Error al parsear fábricas:", parseError);
             }

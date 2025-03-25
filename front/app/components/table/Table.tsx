@@ -84,9 +84,9 @@ export const Table: React.FC<TableProps> = ({ rows, columns, columnLabels = {}, 
 
 
     return (
-        <div className="w-full overflow-hidden rounded-xl shadow-lg p-4 bg-gray-900 transition-all duration-300">
+        <div className="w-full overflow-hidden rounded-xl shadow-lg p-3 sm:p-4 bg-gray-900 transition-all duration-300">
             {filteredRows.length === 0 ? (
-                <div className="text-center text-gray-400 py-6 flex flex-col sm:flex-row items-center justify-center gap-2 text-sm sm:text-base">
+                <div className="text-center text-gray-400 py-4 flex flex-col sm:flex-row items-center justify-center gap-2 text-xs sm:text-sm">
                     <span>No hay datos disponibles para mostrar.</span>
                     <Mini />
                 </div>

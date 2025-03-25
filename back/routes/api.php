@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ActivitiesController;
+use App\Http\Controllers\ArticlesController;
 use Illuminate\Http\Request;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ClientsController;
@@ -114,4 +115,15 @@ Route::controller(ActivitiesController::class)->group(function () {
     Route::get('/ActividadId/{id}', 'ActividadId'); // Obtener una lineas específica 
     Route::put('/updateActividad/{id}', 'updateActividad'); // Actualizar una lineas
     Route::delete('/deleteActividad/{id}', 'deleteActividad'); // Eliminar una lineas
+});
+
+//Rutas Articulos
+Route::controller(ArticlesController::class)->group(function () {
+    Route::get('/getArticle', 'getArticle'); // Obtener todas las lineas
+    Route::get('/getBom', 'getAllBoms'); // Obtener todas las lineas
+    Route::post('/newArticle', 'newArticle'); // Crear una nueva lineas
+    Route::get('/getCode/{code}', 'getArticlesByCoddiv'); // Obtener una lineas específica 
+    Route::get('/getArticleId/{id}', 'getArticleById'); // Obtener una lineas específica 
+    Route::put('/updateArticle/{id}', 'updateArticle'); // Actualizar una lineas
+    Route::delete('/deleteArticle/{id}', 'deleteArticle'); // Eliminar una lineas
 });

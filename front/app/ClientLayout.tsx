@@ -29,7 +29,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
     <div className="min-h-screen flex">
       <AuthProvider>
         <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
-        <main className="flex-1           bg-[#242424]">
+        <main className="flex-1 bg-[#242424]">
           {children}
           <Toaster />
         </main>

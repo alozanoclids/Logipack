@@ -14,6 +14,9 @@ import { showSuccess, showError, showConfirm } from "../toastr/Toaster";
 import Text from "../text/Text";
 import Table from "../table/Table";
 import PermissionCheck from "..//permissionCheck/PermissionCheck";
+import { useAuth } from '../../hooks/useAuth'
+import nookies from "nookies";
+import { getUserByEmail } from '../../services/userDash/authservices';
 
 // Definiciones de interfaces
 const estados = ["", "En creación", "Revisión", "Aprobada", "Obsoleta"];
@@ -56,6 +59,30 @@ const Maestra = () => {
     const [aprobado, setAprobado] = useState(false);
     const [stages, setStages] = useState<Stage[]>([]);
     const [selectedStages, setSelectedStages] = useState<Stage[]>([]);
+
+
+    //UseEffect para actualizacion del token
+    const { isAuthenticated } = useAuth();
+    const [userName, setUserName] = useState("");
+    useEffect(() => {
+        const fetchUserData = async () => {
+            try {
+                const cookies = nookies.get(null);
+                const email = cookies.email;
+                if (email) {
+                    const decodedEmail = decodeURIComponent(email);
+                    const user = await getUserByEmail(decodedEmail);
+                    if (user.usuario) {
+                        setUserName(user.usuario.name);
+                    }
+                }
+            } catch (error) {
+                console.error("Error fetching user:", error);
+            }
+        };
+        if (isAuthenticated) fetchUserData();
+    }, [isAuthenticated]);
+    // Fin useEffect
 
     useEffect(() => {
         const fetchStages = async () => {
