@@ -15,7 +15,11 @@ return new class extends Migration
             $table->id(); 
             $table->unsignedBigInteger('client_id');
             $table->string('base_quantity')->nullable();
-            $table->json('details')->nullable(); 
+            $table->string('details')->nullable(); 
+            $table->string('code_details')->nullable(); 
+            $table->boolean('status')->default(false);
+            $table->json('ingredients')->nullable();
+            $table->json('code_ingredients')->nullable(); 
             $table->foreign('client_id')->references('id')->on('clients')->onDelete('cascade');
             $table->timestamps();
         });

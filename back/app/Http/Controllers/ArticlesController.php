@@ -9,7 +9,6 @@ use Illuminate\Http\Request;
 
 class ArticlesController extends Controller
 {
-
     public function getArticlesByCoddiv($code)
     {
         try {
@@ -60,85 +59,91 @@ class ArticlesController extends Controller
             return response()->json(['error' => 'Error al obtener los BOMs', 'details' => $e->getMessage()], 500);
         }
     }
-
+    
     public function newArticle(Request $request)
     {
         try {
-            // Validamos la entrada
             $validatedData = $request->validate([
                 'client_id' => 'required|exists:clients,id',
                 'base_quantity' => 'nullable|numeric',
-                'details' => 'required|json',
+                'details' => 'nullable|string',
+                'status' => 'required|boolean',
+                'ingredients' => 'required|json',
+                'code_details' => '',
+                'code_ingredients' => 'required|json'
             ]);
 
-            // Creamos el BOM
-            $bom = Bom::create([
-                'client_id' => $validatedData['client_id'],
-                'base_quantity' => $validatedData['base_quantity'] ?? 0,
-                'details' => $validatedData['details'],
-            ]);
+            $bom = Bom::create($validatedData);
 
-            return response()->json(['message' => 'BOM guardado exitosamente', 'bom' => $bom], 201);
+            return response()->json([
+                'message' => 'BOM guardado exitosamente',
+                'bom' => $bom
+            ], 201);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Error al guardar el BOM', 'details' => $e->getMessage()], 500);
+            return response()->json([
+                'error' => 'Error al guardar el BOM',
+                'details' => $e->getMessage()
+            ], 500);
         }
     }
 
     public function getArticleById($id)
     {
         try {
-            $bom = Bom::find($id);
+            $bom = Bom::findOrFail($id);
 
-            if (!$bom) {
-                return response()->json(['message' => 'BOM no encontrado'], 404);
-            }
-
-            return response()->json(['bom' => $bom], 200);
+            return response()->json([
+                'bom' => $bom
+            ], 200);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Error al obtener el BOM', 'details' => $e->getMessage()], 500);
+            return response()->json([
+                'error' => 'BOM no encontrado'
+            ], 404);
         }
     }
 
     public function updateArticle(Request $request, $id)
     {
         try {
-            $bom = Bom::find($id);
-
-            if (!$bom) {
-                return response()->json(['message' => 'BOM no encontrado'], 404);
-            }
+            $bom = Bom::findOrFail($id);
 
             $validatedData = $request->validate([
                 'client_id' => 'required|exists:clients,id',
                 'base_quantity' => 'nullable|numeric',
-                'details' => 'required|json',
+                'details' => 'nullable|string',
+                'status' => 'required|boolean',
+                'ingredients' => 'required|json',
+                'code_details' => '',
+                'code_ingredients' => 'required|json'
             ]);
 
-            $bom->client_id = $validatedData['client_id'];
-            $bom->base_quantity = $validatedData['base_quantity'] ?? 0;
-            $bom->details = $validatedData['details'];
-            $bom->save();
+            $bom->update($validatedData);
 
-            return response()->json(['message' => 'BOM actualizado exitosamente', 'bom' => $bom], 200);
+            return response()->json([
+                'message' => 'BOM actualizado exitosamente',
+                'bom' => $bom
+            ], 200);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Error al actualizar el BOM', 'details' => $e->getMessage()], 500);
+            return response()->json([
+                'error' => 'Error al actualizar el BOM',
+                'details' => $e->getMessage()
+            ], 500);
         }
     }
 
     public function deleteArticle($id)
     {
         try {
-            $bom = Bom::find($id);
-
-            if (!$bom) {
-                return response()->json(['message' => 'BOM no encontrado'], 404);
-            }
-
+            $bom = Bom::findOrFail($id);
             $bom->delete();
 
-            return response()->json(['message' => 'BOM eliminado exitosamente'], 200);
+            return response()->json([
+                'message' => 'BOM eliminado exitosamente'
+            ], 200);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Error al eliminar el BOM', 'details' => $e->getMessage()], 500);
+            return response()->json([
+                'error' => 'BOM no encontrado'
+            ], 404);
         }
     }
 }

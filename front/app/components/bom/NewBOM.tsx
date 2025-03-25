@@ -30,18 +30,27 @@ interface Article {
     coddiv: string;
 }
 
-interface BomDetail {
-    article_code: string;
+interface Ingredient {
+    codart: string; // código del artículo (ingrediente)
+    desart: string; // descripción del artículo (nombre del ingrediente)
     quantity: string;
     merma: string;
 }
 
 interface Bom {
     id: number;
-    client_id: string;
+    client_id: number;
     base_quantity: string;
     details: string;
+    status: boolean;
 }
+
+interface BomView extends Bom {
+    client_name: string;
+    article_codart: string;
+    article_desart: string;
+}
+
 
 function BOMManager() {
     // Estados
@@ -50,13 +59,14 @@ function BOMManager() {
     const [clients, setClients] = useState<Client[]>([]);
     const [articles, setArticles] = useState<Article[]>([]);
     const [selectedClient, setSelectedClient] = useState<string>("");
-    const [selectedArticles, setSelectedArticles] = useState<Article[]>([]);
+    const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
     const [loadingArticles, setLoadingArticles] = useState(false);
-    const [selectedArticleDetails, setSelectedArticleDetails] = useState<{ [key: string]: { quantity: string; merma: string } }>({});
     const [baseQuantity, setBaseQuantity] = useState(0);
-    const [editingDetails, setEditingDetails] = useState<BomDetail[] | null>(null);
-    const [boms, setBoms] = useState<Bom[]>([]);
-    const [isSaving, setIsSaving] = useState(false); // Nuevo estado
+    const [ingredients, setIngredients] = useState<Ingredient[]>([]);
+    const [bomStatus, setBomStatus] = useState(false); // false = inactivo, true = activo
+    const [isSaving, setIsSaving] = useState(false);
+    const [allArticles, setAllArticles] = useState<Article[]>([]);
+
 
     const { isAuthenticated } = useAuth();
     const [userName, setUserName] = useState("");
@@ -96,10 +106,39 @@ function BOMManager() {
     }, []);
 
     // Cargar BOMs
+    const [boms, setBoms] = useState<Bom[]>([]);
+    // Cargar BOMs y reemplazar client_id por el nombre del cliente
     const fetchBOMs = async () => {
         try {
             const data = await getBoms();
-            setBoms(data.boms);
+            const bomsData: Bom[] = data.boms;
+            const bomsWithExtra: BomView[] = await Promise.all(
+                bomsData.map(async (bom) => {
+                    // Obtenemos el nombre del cliente
+                    const clientData = await getClientsId(bom.client_id);
+                    // Variables por defecto en caso de que details esté vacío o mal formado
+                    let article_codart = "";
+                    let article_desart = "";
+                    if (bom.details) {
+                        try {
+                            const detailsObj = JSON.parse(bom.details);
+                            if (detailsObj.article) {
+                                article_codart = detailsObj.article.codart || "";
+                                article_desart = detailsObj.article.desart || "";
+                            }
+                        } catch (error) {
+                            console.error("Error parseando details:", error);
+                        }
+                    }
+                    return {
+                        ...bom,
+                        client_name: clientData.name,
+                        article_codart,
+                        article_desart,
+                    };
+                })
+            );
+            setBoms(bomsWithExtra);
         } catch (error) {
             showError("Error al cargar los BOMs.");
             console.error(error);
@@ -119,11 +158,20 @@ function BOMManager() {
                     const bom = data.bom;
                     const clientData = await getClientsId(bom.client_id);
                     setSelectedClient(clientData.id.toString());
-                    setBaseQuantity(bom.base_quantity);
-                    const details = bom.details && bom.details !== "undefined" && bom.details !== null
-                        ? JSON.parse(bom.details)
+                    setBaseQuantity(Number(bom.base_quantity));
+                    setBomStatus(bom.status);
+
+                    // Se asume que en details se guardó el artículo seleccionado
+                    const articleData = bom.details && bom.details !== "undefined" && bom.details !== null
+                        ? JSON.parse(bom.details).article
+                        : null;
+                    setSelectedArticle(articleData);
+
+                    // Cargar ingredientes desde el campo ingredients
+                    const ingr = bom.ingredients && bom.ingredients !== "undefined" && bom.ingredients !== null
+                        ? JSON.parse(bom.ingredients)
                         : [];
-                    setEditingDetails(details);
+                    setIngredients(ingr);
                 } catch (error) {
                     showError("Error al cargar el BOM para edición.");
                     console.error("Error en getArticlesId:", error);
@@ -135,7 +183,6 @@ function BOMManager() {
     // Cargar artículos según cliente
     useEffect(() => {
         if (!selectedClient) return;
-
         const client = clients.find(c => c.id.toString() === selectedClient);
         if (!client) return;
 
@@ -143,32 +190,14 @@ function BOMManager() {
             setLoadingArticles(true);
             try {
                 const articlesData = await getArticleByCode(client.code);
-                let allArticles: Article[] = articlesData?.data || [];
-
-                if (currentBomId && editingDetails) {
-                    const selected = allArticles.filter(article =>
-                        editingDetails.some(detail => detail.article_code === article.codart)
-                    );
-                    const available = allArticles.filter(article =>
-                        !editingDetails.some(detail => detail.article_code === article.codart)
-                    );
-
-                    setArticles(available);
-                    setSelectedArticles(selected);
-
-                    const detailsMap = selected.reduce((acc, art) => {
-                        const found = editingDetails.find(d => d.article_code === art.codart);
-                        acc[art.codart] = {
-                            quantity: found?.quantity || "",
-                            merma: found?.merma || ""
-                        };
-                        return acc;
-                    }, {} as { [key: string]: { quantity: string, merma: string } });
-
-                    setSelectedArticleDetails(detailsMap);
-                } else {
-                    setArticles(allArticles);
+                let fetchedArticles: Article[] = articlesData?.data || [];
+                // Guardamos todos los artículos para usarlos en los ingredientes
+                setAllArticles(fetchedArticles);
+                // Para la selección principal filtramos el artículo seleccionado, si hay
+                if (selectedArticle) {
+                    fetchedArticles = fetchedArticles.filter(a => a.codart !== selectedArticle.codart);
                 }
+                setArticles(fetchedArticles);
             } catch (error) {
                 showError("Error al cargar artículos.");
                 console.error(error);
@@ -178,66 +207,85 @@ function BOMManager() {
         };
 
         loadData();
-    }, [selectedClient, editingDetails, clients, currentBomId]);
+    }, [selectedClient, clients, selectedArticle]);
+
 
     // Reiniciar selección al cambiar cliente (modo creación)
     useEffect(() => {
         if (!currentBomId) {
-            setSelectedArticles([]);
-            setSelectedArticleDetails({});
+            setSelectedArticle(null);
+            setIngredients([]);
+            setBomStatus(false);
         }
     }, [selectedClient, currentBomId]);
 
-    // Handlers para selección/deselección
+    // Handler para seleccionar un artículo (sólo uno, sin acumular)
     const handleSelectArticle = (article: Article) => {
-        setSelectedArticles(prev => [...prev, article]);
-        setSelectedArticleDetails(prev => ({
-            ...prev,
-            [article.codart]: { quantity: "", merma: "" },
-        }));
+        if (selectedArticle) {
+            showError("Ya has seleccionado un artículo. Elimina el actual para seleccionar otro.");
+            return;
+        }
+        setSelectedArticle(article);
         setArticles(prev => prev.filter(a => a.codart !== article.codart));
     };
 
-    const handleDeselectArticle = (article: Article) => {
-        setArticles(prev => [...prev, article]);
-        setSelectedArticles(prev => prev.filter(a => a.codart !== article.codart));
-        setSelectedArticleDetails(prev => {
-            const newDetails = { ...prev };
-            delete newDetails[article.codart];
-            return newDetails;
-        });
+    // Deseleccionar el artículo
+    const handleDeselectArticle = () => {
+        if (selectedArticle) {
+            setArticles(prev => [...prev, selectedArticle]);
+            setSelectedArticle(null);
+        }
     };
 
-    const handleDetailChange = (codart: string, field: "quantity" | "merma", value: string) => {
-        setSelectedArticleDetails(prev => ({
+    // Handlers para ingredientes
+    const handleIngredientChange = (index: number, field: keyof Ingredient, value: string) => {
+        const newIngredients = [...ingredients];
+        newIngredients[index] = { ...newIngredients[index], [field]: value };
+        setIngredients(newIngredients);
+    };
+
+    const addIngredientRow = () => {
+        setIngredients(prev => [
             ...prev,
-            [codart]: {
-                ...prev[codart],
-                [field]: value,
-            },
-        }));
+            { codart: "", desart: "", quantity: "", merma: "" }
+        ]);
+    };
+
+    const removeIngredientRow = (index: number) => {
+        setIngredients(prev => prev.filter((_, i) => i !== index));
     };
 
     // Guardar/Actualizar BOM
     const handleSaveBOM = async () => {
-        if (!selectedClient || selectedArticles.length === 0) {
-            showError("Debes seleccionar un cliente y al menos un artículo.");
+        if (!selectedClient || !selectedArticle) {
+            showError("Debes seleccionar un cliente y un artículo.");
             return;
         }
 
         setIsSaving(true);
         try {
-            const details = selectedArticles.map(article => ({
-                article_code: article.codart,
-                quantity: selectedArticleDetails[article.codart]?.quantity || "0",
-                merma: selectedArticleDetails[article.codart]?.merma || "0",
-            }));
+            // Creamos el objeto de código para el artículo principal (code_details)
+            const code_details = JSON.stringify({
+                codart: selectedArticle.codart, 
+            });
 
+            // Para los ingredientes, extraemos codart y desart en un arreglo (code_ingredients)
+            const code_ingredients = JSON.stringify(
+                ingredients.map((ing) => ({
+                    codart: ing.codart,
+                }))
+            );
+
+            // Armamos el payload a enviar (haciendo conversiones si es necesario)
             const bomData = {
-                client_id: selectedClient,
+                client_id: Number(selectedClient),
                 base_quantity: baseQuantity.toString(),
-                details: JSON.stringify(details),
-            };
+                details: JSON.stringify({ article: selectedArticle }),
+                code_details,
+                ingredients: JSON.stringify(ingredients),
+                code_ingredients,
+                status: bomStatus,
+            }; 
 
             if (currentBomId) {
                 await updateArticle(currentBomId, bomData);
@@ -260,10 +308,11 @@ function BOMManager() {
 
     const resetForm = () => {
         setSelectedClient("");
-        setSelectedArticles([]);
-        setSelectedArticleDetails({});
+        setSelectedArticle(null);
+        setIngredients([]);
         setBaseQuantity(0);
-        setEditingDetails(null);
+        setBomStatus(false);
+        setCurrentBomId(null);
     };
 
     // Handlers de edición/eliminación
@@ -272,16 +321,21 @@ function BOMManager() {
             const data = await getArticlesId(id);
             const bom = data.bom;
             const clientData = await getClientsId(bom.client_id);
-            
+
             setSelectedClient(clientData.id.toString());
             setCurrentBomId(bom.id);
-            setBaseQuantity(bom.base_quantity);
-            
-            const details = bom.details && bom.details !== "undefined" && bom.details !== null
-                ? JSON.parse(bom.details)
+            setBaseQuantity(Number(bom.base_quantity));
+            setBomStatus(bom.status);
+
+            const articleData = bom.details && bom.details !== "undefined" && bom.details !== null
+                ? JSON.parse(bom.details).article
+                : null;
+            setSelectedArticle(articleData);
+
+            const ingr = bom.ingredients && bom.ingredients !== "undefined" && bom.ingredients !== null
+                ? JSON.parse(bom.ingredients)
                 : [];
-                
-            setEditingDetails(details);
+            setIngredients(ingr);
             setIsModalOpen(true);
         } catch (error) {
             console.error("Error obteniendo datos de la BOM:", error);
@@ -290,17 +344,31 @@ function BOMManager() {
     };
 
     const handleDelete = async (id: number) => {
-        showConfirm("¿Estás seguro de eliminar este maestra?", async () => {
+        showConfirm("¿Estás seguro de eliminar este BOM?", async () => {
             try {
                 await deleteArticle(id);
                 showSuccess("BOM eliminado exitosamente");
                 fetchBOMs();
             } catch (error) {
-                console.error("Error al eliminar maestra:", error);
-                showError("Error al eliminar maestra");
+                console.error("Error al eliminar BOM:", error);
+                showError("Error al eliminar BOM");
             }
         });
     };
+
+    const handleIngredientSelect = (index: number, selectedCodart: string) => {
+        const selectedArticleForIngredient = allArticles.find(article => article.codart === selectedCodart);
+        if (selectedArticleForIngredient) {
+            const newIngredients = [...ingredients];
+            newIngredients[index] = {
+                ...newIngredients[index],
+                codart: selectedArticleForIngredient.codart,
+                desart: selectedArticleForIngredient.desart,
+            };
+            setIngredients(newIngredients);
+        }
+    };
+    
 
     return (
         <div>
@@ -308,7 +376,6 @@ function BOMManager() {
                 <Button
                     onClick={() => {
                         resetForm();
-                        setCurrentBomId(null);
                         setIsModalOpen(true);
                     }}
                     variant="create"
@@ -373,76 +440,107 @@ function BOMManager() {
                                 </div>
 
                                 <div>
-                                    <Text type="subtitle">Artículos Seleccionados:</Text>
-                                    {selectedArticles.length > 0 ? (
-                                        <ul className="border p-2 rounded bg-gray-100 h-40 overflow-y-auto">
-                                            {selectedArticles.map(article => (
-                                                <li
-                                                    key={article.codart}
-                                                    className="border-b py-1 px-2 text-black cursor-pointer hover:bg-red-100"
-                                                    onClick={() => handleDeselectArticle(article)}
-                                                >
-                                                    {article.desart} ({article.codart})
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    ) : (
-                                        <Text type="alert">No hay artículos seleccionados.</Text>
-                                    )}
-                                </div>
-                            </div>
-                        )}
-
-                        <div className="mt-4">
-                            <Text type="subtitle">Cantidad Base:</Text>
-                            <input
-                                type="number"
-                                className="w-full border p-2 rounded text-black"
-                                value={baseQuantity}
-                                onChange={e => setBaseQuantity(Number(e.target.value))}
-                            />
-                        </div>
-
-                        {selectedArticles.length > 0 && (
-                            <div className="mt-4">
-                                <Text type="subtitle">
-                                    Detalles de Artículos Seleccionados:
-                                </Text>
-                                <div className="border p-4 rounded bg-gray-50">
-                                    {selectedArticles.map(article => (
-                                        <div
-                                            key={article.codart}
-                                            className="flex items-center space-x-2 mb-2"
-                                        >
-                                            <span className="flex-1 text-black">
-                                                {article.desart} ({article.codart})
+                                    <Text type="subtitle">Artículo Seleccionado:</Text>
+                                    {selectedArticle ? (
+                                        <div className="border p-2 rounded bg-gray-100 flex justify-between items-center">
+                                            <span className="text-black">
+                                                {selectedArticle.desart} ({selectedArticle.codart})
                                             </span>
-                                            <input
-                                                type="number"
-                                                className="border p-1 rounded w-20 text-black"
-                                                placeholder="Cantidad"
-                                                value={selectedArticleDetails[article.codart]?.quantity || ""}
-                                                onChange={e =>
-                                                    handleDetailChange(article.codart, "quantity", e.target.value)
-                                                }
-                                            />
-                                            <input
-                                                type="number"
-                                                className="border p-1 rounded w-20 text-black"
-                                                placeholder="% Merma"
-                                                value={selectedArticleDetails[article.codart]?.merma || ""}
-                                                onChange={e =>
-                                                    handleDetailChange(article.codart, "merma", e.target.value)
-                                                }
-                                            />
                                             <button
-                                                onClick={() => handleDeselectArticle(article)}
+                                                onClick={handleDeselectArticle}
                                                 className="bg-red-500 text-white px-2 py-1 rounded"
                                             >
                                                 X
                                             </button>
                                         </div>
-                                    ))}
+                                    ) : (
+                                        <Text type="alert">No se ha seleccionado ningún artículo.</Text>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                        <div className="flex justify-center space-x-2">
+                            <div className="mt-4">
+                                <Text type="subtitle">Cantidad Base:</Text>
+                                <input
+                                    type="number"
+                                    className="w-full border p-2 rounded text-black"
+                                    value={baseQuantity}
+                                    onChange={e => setBaseQuantity(Number(e.target.value))}
+                                />
+                            </div>
+
+                            <div className="mt-4">
+                                <Text type="subtitle">Estado:</Text>
+                                <select
+                                    className="w-full border p-2 rounded text-black text-center"
+                                    value={bomStatus ? "activo" : "inactivo"}
+                                    onChange={e => setBomStatus(e.target.value === "activo")}
+                                >
+                                    <option value="activo">Activo</option>
+                                    <option value="inactivo">Inactivo</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        {selectedArticle && (
+                            <div className="mt-4">
+                                <Text type="subtitle">Ingredientes:</Text>
+                                <div className="border p-4 rounded bg-gray-50 space-y-4">
+                                    {ingredients.length > 0 ? (
+                                        ingredients.map((ing, index) => (
+                                            <div key={index} className="flex flex-col space-y-2 border p-2 rounded bg-white">
+                                                <div className="flex justify-center space-x-2">
+                                                    <select
+                                                        className="border p-1 rounded text-black"
+                                                        value={ing.codart} // Mostramos el codart seleccionado
+                                                        onChange={e =>
+                                                            handleIngredientSelect(index, e.target.value)
+                                                        }
+                                                    >
+                                                        <option value="">Seleccione un artículo</option>
+                                                        {allArticles.map(article => (
+                                                            <option key={article.codart} value={article.codart}>
+                                                                {article.desart} ({article.codart})
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                    <input
+                                                        type="number"
+                                                        className="border p-1 rounded w-20 text-black"
+                                                        placeholder="Cantidad"
+                                                        value={ing.quantity}
+                                                        onChange={e =>
+                                                            handleIngredientChange(index, "quantity", e.target.value)
+                                                        }
+                                                    />
+                                                    <input
+                                                        type="number"
+                                                        className="border p-1 rounded w-20 text-black"
+                                                        placeholder="% Merma"
+                                                        value={ing.merma}
+                                                        onChange={e =>
+                                                            handleIngredientChange(index, "merma", e.target.value)
+                                                        }
+                                                    />
+                                                    <button
+                                                        onClick={() => removeIngredientRow(index)}
+                                                        className="bg-red-500 text-white px-2 py-1 rounded"
+                                                    >
+                                                        X
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <Text type="alert">No hay ingredientes agregados.</Text>
+                                    )}
+
+                                    <Button
+                                        onClick={addIngredientRow}
+                                        variant="create"
+                                        label="Agregar Ingrediente"
+                                    />
                                 </div>
                             </div>
                         )}
@@ -461,14 +559,18 @@ function BOMManager() {
             )}
 
             <Table
-                columns={["client_id"]}
+                columns={["client_name", "article_codart", "article_desart", "status"]}
                 rows={boms}
                 columnLabels={{
-                    client_id: "Cliente",
+                    client_name: "Cliente",
+                    article_codart: "Código Artículo",
+                    article_desart: "Descripción Artículo",
+                    status: "Estado",
                 }}
                 onDelete={handleDelete}
                 onEdit={handleEdit}
             />
+
         </div>
     );
 }
