@@ -23,7 +23,7 @@ class MaestrasController extends Controller
             'requiere_bom' => 'required|boolean',
             'type_product' => 'required|json',
             'type_stage' => 'required|json',
-            'status' => 'required|string',
+            'status_type' => 'required|string',
             'aprobado' => 'required|boolean',
         ]);
 
@@ -63,7 +63,7 @@ class MaestrasController extends Controller
             'requiere_bom' => 'required|boolean',
             'type_product' => 'required|json',
             'type_stage' => 'required|json',
-            'status' => 'required|string',
+            'status_type' => 'required|string',
             'aprobado' => 'required|boolean',
         ]);
 

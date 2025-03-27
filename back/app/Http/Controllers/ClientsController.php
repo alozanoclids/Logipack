@@ -57,12 +57,21 @@ class ClientsController extends Controller
         return response()->json(['error' => 'Failed to fetch data'], 500);
     }
 
-    // Obtener todas las Clientes
+    // Obtener todos los Clientes
     public function getClients(): JsonResponse
     {
-        $Clients = Clients::all();
-        return response()->json($Clients);
+        $clients = Clients::all();
+
+        if ($clients->isEmpty()) {
+            // Llamar a la API para obtener datos y guardarlos
+            $this->getClientDataApi();
+            // Volver a obtener los clientes después de la inserción
+            $clients = Clients::all();
+        }
+
+        return response()->json($clients);
     }
+
 
     public function newClients(Request $request): JsonResponse
     {

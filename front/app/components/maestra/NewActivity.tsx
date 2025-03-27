@@ -14,30 +14,7 @@ import Table from "../table/Table";
 import { useAuth } from '../../hooks/useAuth'
 import { getUserByEmail } from '../../services/userDash/authservices';
 import nookies from "nookies";
-
-// Tipos
-type ActivityType = {
-    type?: string;
-    placeholder?: string;
-    accept?: string;
-    options?: string[];
-};
-
-interface Activities {
-    id: number;
-    code: number;
-    description: string;
-    config: string;
-    binding: boolean;
-}
-
-interface EditFormData {
-    id: number;
-    description: string;
-    config: string;
-    binding: boolean;
-    options?: string[]; // Opciones dinámicas
-}
+import {ActivityType, Activities, EditFormData} from "../../interfaces/NewActivity";
 
 const activityTypes: Record<string, ActivityType> = {
     "Texto corto": { type: "text" },

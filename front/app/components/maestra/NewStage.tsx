@@ -9,32 +9,8 @@ import { getActivitie } from "../../services/maestras/activityServices";
 import { showError, showSuccess, showConfirm } from "../toastr/Toaster";
 import Table from "../table/Table";
 import Button from "../buttons/buttons"; 
-
+import { Stage, Data } from "../../interfaces/NewStage";
 const phases = ["Planeacion", "Conciliación", "Actividades"];
-
-interface Stage {
-    id: number;
-    code: number;
-    description: string;
-    phase_type: "Planeacion" | "Conciliación" | "Actividades";
-    repeat: boolean;
-    repeat_minutes?: number;
-    alert: boolean;
-    can_pause: boolean;
-    status: boolean;
-    activities: string;
-}
-
-interface Data {
-    description: string;
-    phase_type: "Planeacion" | "Conciliación" | "Actividades";
-    repeat: boolean;
-    repeat_minutes?: number;
-    alert: boolean;
-    can_pause: boolean;
-    status: boolean;
-    activities: string;
-}
 
 function NewStage() {
     const [isOpen, setIsOpen] = useState(false);
@@ -467,6 +443,7 @@ function NewStage() {
                                 onClick={() => (editingStage ? handleUpdate() : handleSave())}
                                 variant="create"
                                 disabled={!description.trim() || (phaseType === "Actividades" && selectedActivities.length === 0)}
+                                label={editingStage ? "Actualizar" : "Crear"}
                             />
                         </div>
                     </motion.div>

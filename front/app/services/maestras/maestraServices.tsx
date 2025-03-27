@@ -13,7 +13,7 @@ interface Data {
     requiere_bom: boolean;
     type_product: string; // Se envía como JSON.stringify, por eso es string
     type_stage: string; // Se envía como JSON.stringify, por eso es string
-    status: string;
+    status_type: string;
     aprobado: boolean;
 }
 

@@ -17,33 +17,17 @@ import PermissionCheck from "..//permissionCheck/PermissionCheck";
 import { useAuth } from '../../hooks/useAuth'
 import nookies from "nookies";
 import { getUserByEmail } from '../../services/userDash/authservices';
-
+import { Stage, Data } from "../../interfaces/NewMaestra";
 // Definiciones de interfaces
-const estados = ["", "En creación", "Revisión", "Aprobada", "Obsoleta"];
+const estados = ["Seleccione un estado", "En creación", "Revisión", "Aprobada", "Obsoleta"];
 const tiposProducto = ["Tipo A", "Tipo B", "Tipo C"];
 
-interface Stage {
-    id: number;
-    description: string;
-}
-
-interface Data {
-    id: number;
-    code: number;
+export interface Maestra {
     descripcion: string;
     requiere_bom: boolean;
     type_product: string;
     type_stage: string;
-    status: string;
-    aprobado: boolean;
-}
-
-interface Maestra {
-    descripcion: string;
-    requiere_bom: boolean;
-    type_product: string;
-    type_stage: string;
-    status: string;
+    status_type: string;
     aprobado: boolean;
 }
 
@@ -156,7 +140,7 @@ const Maestra = () => {
                 requiere_bom: requiereBOM,
                 type_product: JSON.stringify(tipoSeleccionado),
                 type_stage: JSON.stringify(selectedStages.map((s) => s.id)),
-                status: estado,
+                status_type: estado,
                 aprobado,
             });
             showSuccess("Maestra creada con éxito");
@@ -208,7 +192,7 @@ const Maestra = () => {
             ); // Filtrar los stages por ID
             setSelectedStages(selectedStagesData);
 
-            setEstado(data.status);
+            setEstado(data.status_type);
             setAprobado(data.aprobado);
             setIsOpen(true);
         } catch (error) {
@@ -240,7 +224,7 @@ const Maestra = () => {
                 requiere_bom: requiereBOM,
                 type_product: JSON.stringify(tipoSeleccionado),
                 type_stage: JSON.stringify(selectedStages.map((s) => s.id)),
-                status: estado,
+                status_type: estado,
                 aprobado,
             });
             showSuccess("Maestra actualizada con éxito");
@@ -295,16 +279,29 @@ const Maestra = () => {
                             value={descripcion}
                             onChange={(e) => setDescripcion(e.target.value)}
                         />
-                        <Text type="subtitle">Requiere BOM</Text>
-                        <input
-                            type="checkbox"
-                            checked={requiereBOM}
-                            onChange={() => setRequiereBOM(!requiereBOM)}
-                        />{" "}
-                        <span>Requiere BOM</span>
+                        <div className="flex justify-center space-x-6 mt-4 mb-2">
+                            <div className="flex flex-col items-center">
+                                <Text type="subtitle">Requiere BOM</Text>
+                                <input
+                                    type="checkbox"
+                                    checked={requiereBOM}
+                                    onChange={() => setRequiereBOM(!requiereBOM)}
+                                    className="mt-2 w-4 h-4"
+                                />
+                            </div>
+                            <div className="flex flex-col items-center">
+                                <Text type="subtitle">Aprobado</Text>
+                                <input
+                                    type="checkbox"
+                                    checked={aprobado}
+                                    onChange={() => setAprobado(!aprobado)}
+                                    className="mt-2 w-4 h-4"
+                                />
+                            </div>
+                        </div>
                         <Text type="subtitle">Seleccione Estado</Text>
                         <select
-                            className="w-full p-2 border mb-2 min-w-0 text-black"
+                            className="w-full p-2 border mb-2 min-w-0 text-black text-center"
                             value={estado}
                             onChange={(e) => setEstado(e.target.value)}
                         >
@@ -314,17 +311,11 @@ const Maestra = () => {
                                 </option>
                             ))}
                         </select>
-                        <Text type="subtitle">Aprobado</Text>
-                        <input
-                            type="checkbox"
-                            checked={aprobado}
-                            onChange={() => setAprobado(!aprobado)}
-                        />{" "}
-                        <span>Aprobado</span>
+
                         <Text type="subtitle">Seleccione Tipo de Producto</Text>
                         <select
                             multiple
-                            className="w-full p-2 border mb-2 min-w-0 text-black"
+                            className="w-full p-2 border mb-2 min-w-0 text-black text-center"
                             value={tipoSeleccionado.map(String)}
                             onChange={(e) => {
                                 const selectedIds = Array.from(
@@ -406,11 +397,11 @@ const Maestra = () => {
 
             {/* Tabla de maestras */}
             <Table
-                columns={["descripcion", "status", "aprobado"]}
+                columns={["descripcion", "status_type", "aprobado"]}
                 rows={maestra}
                 columnLabels={{
                     descripcion: "Descripción",
-                    status: "Estado",
+                    status_type: "Estado",
                     aprobado: "Aprobado",
                 }}
                 onDelete={handleDelete}

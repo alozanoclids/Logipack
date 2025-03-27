@@ -16,41 +16,7 @@ import {
 import { getClients, getClientsId } from "@/app/services/userDash/clientServices";
 import { showSuccess, showError, showConfirm } from "../toastr/Toaster";
 import Table from "../table/Table";
-
-// Tipos
-interface Client {
-    id: string;
-    code: string;
-    name: string;
-}
-
-interface Article {
-    codart: string;
-    desart: string;
-    coddiv: string;
-}
-
-interface Ingredient {
-    codart: string; // código del artículo (ingrediente)
-    desart: string; // descripción del artículo (nombre del ingrediente)
-    quantity: string;
-    merma: string;
-}
-
-interface Bom {
-    id: number;
-    client_id: number;
-    base_quantity: string;
-    details: string;
-    status: boolean;
-}
-
-interface BomView extends Bom {
-    client_name: string;
-    article_codart: string;
-    article_desart: string;
-}
-
+import { Client, Article, Ingredient, Bom, BomView } from "@/app/interfaces/BOM";
 
 function BOMManager() {
     // Estados
@@ -266,7 +232,7 @@ function BOMManager() {
         try {
             // Creamos el objeto de código para el artículo principal (code_details)
             const code_details = JSON.stringify({
-                codart: selectedArticle.codart, 
+                codart: selectedArticle.codart,
             });
 
             // Para los ingredientes, extraemos codart y desart en un arreglo (code_ingredients)
@@ -285,7 +251,7 @@ function BOMManager() {
                 ingredients: JSON.stringify(ingredients),
                 code_ingredients,
                 status: bomStatus,
-            }; 
+            };
 
             if (currentBomId) {
                 await updateArticle(currentBomId, bomData);
@@ -368,7 +334,7 @@ function BOMManager() {
             setIngredients(newIngredients);
         }
     };
-    
+
 
     return (
         <div>
@@ -464,7 +430,8 @@ function BOMManager() {
                                 <Text type="subtitle">Cantidad Base:</Text>
                                 <input
                                     type="number"
-                                    className="w-full border p-2 rounded text-black"
+                                    min="0"
+                                    className="w-full border p-2 rounded text-black text-center"
                                     value={baseQuantity}
                                     onChange={e => setBaseQuantity(Number(e.target.value))}
                                 />
