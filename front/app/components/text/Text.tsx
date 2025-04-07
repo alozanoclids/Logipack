@@ -23,8 +23,8 @@ const Heading: React.FC<HeadingProps> = ({ children, type = "title" }) => {
       underlineStyle = "border-red-500 w-[260px] mx-auto mb-2";
       break;
     case "alert":
-      headingElement = <h3 className="text-sm font-semibold text-yellow-500">{children}</h3>;
-      underlineStyle = "border-yellow-500 w-[260px] mx-auto mb-2";
+      headingElement = <h3 className="text-sm font-semibold text-[#ffb428]">{children}</h3>;
+      underlineStyle = "border-yellow-500 w-[230px] mx-auto mb-2";
       break;
     default:
       headingElement = <h1 className="text-2xl font-bold text-black">{children}</h1>;

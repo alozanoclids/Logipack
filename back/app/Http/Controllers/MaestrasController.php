@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Maestra;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 
 class MaestrasController extends Controller
 {
@@ -86,5 +87,29 @@ class MaestrasController extends Controller
         $Maestra->delete();
 
         return response()->json(['message' => 'Maestra eliminada correctamente']);
+    }
+
+    public function obtenerTipos()
+    {
+        // URL de la API
+        $url = 'http://129.146.161.23/BackEnd_Orion/lista_articulos.php?tipos_art';
+
+        // Realizamos la solicitud GET
+        $response = Http::get($url);
+
+        // Verificamos si la respuesta fue exitosa
+        if ($response->successful()) {
+            // Obtenemos los datos de la respuesta (un array de objetos)
+            $tiposArticulos = $response->json();
+
+            // Extraemos solo el campo 'tipo' de cada elemento
+            $tipos = collect($tiposArticulos)->pluck('tipo');
+
+            // Retornamos los tipos como respuesta JSON
+            return response()->json($tipos);
+        } else {
+            // Si la solicitud falló, retornamos un error
+            return response()->json(['error' => 'No se pudieron obtener los tipos de artículos'], 500);
+        }
     }
 }

@@ -54,6 +54,16 @@ export const getArticlesId = async (id: number) => {
     }
 }
 
+export const getArticleByClient = async (id: number) => {
+    try {
+        const response = await Articles.get(`/getArticleByClientId/${id}`);
+        return response.data;
+    } catch (error: any) {
+        console.error("Error en getArticleByClient:", error);
+        throw error; // Lanza otros errores para depuración
+    }
+}
+
 export const updateArticle = async (id: number, article: any) => {
     try {
         const response = await Articles.put(`/updateArticle/${id}`, article);

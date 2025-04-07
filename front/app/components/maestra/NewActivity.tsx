@@ -245,9 +245,6 @@ export default function NewActivity() {
                 config: formData.config, // Aquí ya deberían estar las opciones personalizadas
                 binding: formData.binding,
             };
-
-            console.log("Datos enviados al crear actividad:", payload); // 🚀 LOG DE DATOS ENVIADOS
-
             await createActivitie(payload);
             showSuccess("Actividad creada exitosamente");
             setIsOpen(false);

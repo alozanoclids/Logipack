@@ -1,21 +1,19 @@
-import React, { useState, useEffect } from "react";
+// React y librerías externas
+import React, { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
+import nookies from "nookies";
+// Hooks personalizados
+import { useAuth } from "../../hooks/useAuth";
+// Componentes locales
 import Button from "../buttons/buttons";
 import Text from "../text/Text";
-import { useAuth } from "../../hooks/useAuth";
-import { getUserByEmail } from "../../services/userDash/authservices";
-import nookies from "nookies";
-import {
-    getArticleByCode,
-    newArticle,
-    getArticlesId,
-    deleteArticle,
-    updateArticle,
-    getBoms
-} from "@/app/services/dom/articleServices";
-import { getClients, getClientsId } from "@/app/services/userDash/clientServices";
-import { showSuccess, showError, showConfirm } from "../toastr/Toaster";
 import Table from "../table/Table";
+import { showSuccess, showError, showConfirm } from "../toastr/Toaster";
+// Servicios
+import { getUserByEmail } from "../../services/userDash/authservices";
+import { getClients, getClientsId } from "@/app/services/userDash/clientServices";
+import { getArticleByCode, newArticle, getArticlesId, deleteArticle, updateArticle, getBoms } from "@/app/services/bom/articleServices";
+// Tipos e interfaces
 import { Client, Article, Ingredient, Bom, BomView } from "@/app/interfaces/BOM";
 
 function BOMManager() {
@@ -29,15 +27,24 @@ function BOMManager() {
     const [loadingArticles, setLoadingArticles] = useState(false);
     const [baseQuantity, setBaseQuantity] = useState(0);
     const [ingredients, setIngredients] = useState<Ingredient[]>([]);
+    const [boms, setBoms] = useState<Bom[]>([]);
     const [bomStatus, setBomStatus] = useState(false); // false = inactivo, true = activo
     const [isSaving, setIsSaving] = useState(false);
     const [allArticles, setAllArticles] = useState<Article[]>([]);
-
+    const [searchTerm, setSearchTerm] = useState("");
+    const filteredArticles = useMemo(() => {
+        if (!searchTerm.trim()) return articles;
+        return articles.filter(
+            article =>
+                article.desart.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                article.codart.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+    }, [articles, searchTerm]);
 
     const { isAuthenticated } = useAuth();
     const [userName, setUserName] = useState("");
-
-    // Cargar usuario
+ 
+    // Cargar usuario 
     useEffect(() => {
         const fetchUserData = async () => {
             try {
@@ -56,8 +63,8 @@ function BOMManager() {
         };
         if (isAuthenticated) fetchUserData();
     }, [isAuthenticated]);
-
-    // Cargar clientes
+ 
+    // Cargar clientes 
     useEffect(() => {
         const fetchClients = async () => {
             try {
@@ -70,21 +77,20 @@ function BOMManager() {
         };
         fetchClients();
     }, []);
-
-    // Cargar BOMs
-    const [boms, setBoms] = useState<Bom[]>([]);
-    // Cargar BOMs y reemplazar client_id por el nombre del cliente
+ 
+    // Cargar BOMs y asociar cliente/artículo 
     const fetchBOMs = async () => {
         try {
             const data = await getBoms();
             const bomsData: Bom[] = data.boms;
+
             const bomsWithExtra: BomView[] = await Promise.all(
                 bomsData.map(async (bom) => {
-                    // Obtenemos el nombre del cliente
                     const clientData = await getClientsId(bom.client_id);
-                    // Variables por defecto en caso de que details esté vacío o mal formado
+
                     let article_codart = "";
                     let article_desart = "";
+
                     if (bom.details) {
                         try {
                             const detailsObj = JSON.parse(bom.details);
@@ -96,6 +102,7 @@ function BOMManager() {
                             console.error("Error parseando details:", error);
                         }
                     }
+
                     return {
                         ...bom,
                         client_name: clientData.name,
@@ -104,6 +111,7 @@ function BOMManager() {
                     };
                 })
             );
+
             setBoms(bomsWithExtra);
         } catch (error) {
             showError("Error al cargar los BOMs.");
@@ -114,8 +122,8 @@ function BOMManager() {
     useEffect(() => {
         fetchBOMs();
     }, []);
-
-    // Cargar datos para edición
+ 
+    // Cargar datos para edición 
     useEffect(() => {
         if (currentBomId && isModalOpen) {
             (async () => {
@@ -123,20 +131,21 @@ function BOMManager() {
                     const data = await getArticlesId(currentBomId);
                     const bom = data.bom;
                     const clientData = await getClientsId(bom.client_id);
+
                     setSelectedClient(clientData.id.toString());
                     setBaseQuantity(Number(bom.base_quantity));
                     setBomStatus(bom.status);
 
-                    // Se asume que en details se guardó el artículo seleccionado
-                    const articleData = bom.details && bom.details !== "undefined" && bom.details !== null
-                        ? JSON.parse(bom.details).article
-                        : null;
+                    const articleData =
+                        bom.details && bom.details !== "undefined" && bom.details !== null
+                            ? JSON.parse(bom.details).article
+                            : null;
                     setSelectedArticle(articleData);
 
-                    // Cargar ingredientes desde el campo ingredients
-                    const ingr = bom.ingredients && bom.ingredients !== "undefined" && bom.ingredients !== null
-                        ? JSON.parse(bom.ingredients)
-                        : [];
+                    const ingr =
+                        bom.ingredients && bom.ingredients !== "undefined" && bom.ingredients !== null
+                            ? JSON.parse(bom.ingredients)
+                            : [];
                     setIngredients(ingr);
                 } catch (error) {
                     showError("Error al cargar el BOM para edición.");
@@ -145,8 +154,8 @@ function BOMManager() {
             })();
         }
     }, [currentBomId, isModalOpen]);
-
-    // Cargar artículos según cliente
+ 
+    // Cargar artículos por cliente 
     useEffect(() => {
         if (!selectedClient) return;
         const client = clients.find(c => c.id.toString() === selectedClient);
@@ -157,12 +166,13 @@ function BOMManager() {
             try {
                 const articlesData = await getArticleByCode(client.code);
                 let fetchedArticles: Article[] = articlesData?.data || [];
-                // Guardamos todos los artículos para usarlos en los ingredientes
+
                 setAllArticles(fetchedArticles);
-                // Para la selección principal filtramos el artículo seleccionado, si hay
+
                 if (selectedArticle) {
                     fetchedArticles = fetchedArticles.filter(a => a.codart !== selectedArticle.codart);
                 }
+
                 setArticles(fetchedArticles);
             } catch (error) {
                 showError("Error al cargar artículos.");
@@ -174,9 +184,8 @@ function BOMManager() {
 
         loadData();
     }, [selectedClient, clients, selectedArticle]);
-
-
-    // Reiniciar selección al cambiar cliente (modo creación)
+ 
+    // Reiniciar formulario si cambia cliente (modo creación) 
     useEffect(() => {
         if (!currentBomId) {
             setSelectedArticle(null);
@@ -184,8 +193,8 @@ function BOMManager() {
             setBomStatus(false);
         }
     }, [selectedClient, currentBomId]);
-
-    // Handler para seleccionar un artículo (sólo uno, sin acumular)
+ 
+    // Handlers: Artículo principal 
     const handleSelectArticle = (article: Article) => {
         if (selectedArticle) {
             showError("Ya has seleccionado un artículo. Elimina el actual para seleccionar otro.");
@@ -195,15 +204,14 @@ function BOMManager() {
         setArticles(prev => prev.filter(a => a.codart !== article.codart));
     };
 
-    // Deseleccionar el artículo
     const handleDeselectArticle = () => {
         if (selectedArticle) {
             setArticles(prev => [...prev, selectedArticle]);
             setSelectedArticle(null);
         }
     };
-
-    // Handlers para ingredientes
+ 
+    // Handlers: Ingredientes 
     const handleIngredientChange = (index: number, field: keyof Ingredient, value: string) => {
         const newIngredients = [...ingredients];
         newIngredients[index] = { ...newIngredients[index], [field]: value };
@@ -211,17 +219,14 @@ function BOMManager() {
     };
 
     const addIngredientRow = () => {
-        setIngredients(prev => [
-            ...prev,
-            { codart: "", desart: "", quantity: "", merma: "" }
-        ]);
+        setIngredients(prev => [...prev, { codart: "", desart: "", quantity: "", merma: "" }]);
     };
 
     const removeIngredientRow = (index: number) => {
         setIngredients(prev => prev.filter((_, i) => i !== index));
     };
-
-    // Guardar/Actualizar BOM
+ 
+    // Guardar/Actualizar BOM 
     const handleSaveBOM = async () => {
         if (!selectedClient || !selectedArticle) {
             showError("Debes seleccionar un cliente y un artículo.");
@@ -229,20 +234,13 @@ function BOMManager() {
         }
 
         setIsSaving(true);
-        try {
-            // Creamos el objeto de código para el artículo principal (code_details)
-            const code_details = JSON.stringify({
-                codart: selectedArticle.codart,
-            });
 
-            // Para los ingredientes, extraemos codart y desart en un arreglo (code_ingredients)
+        try {
+            const code_details = JSON.stringify({ codart: selectedArticle.codart });
             const code_ingredients = JSON.stringify(
-                ingredients.map((ing) => ({
-                    codart: ing.codart,
-                }))
+                ingredients.map((ing) => ({ codart: ing.codart }))
             );
 
-            // Armamos el payload a enviar (haciendo conversiones si es necesario)
             const bomData = {
                 client_id: Number(selectedClient),
                 base_quantity: baseQuantity.toString(),
@@ -272,6 +270,7 @@ function BOMManager() {
         }
     };
 
+    //Retear Formulario
     const resetForm = () => {
         setSelectedClient("");
         setSelectedArticle(null);
@@ -280,8 +279,8 @@ function BOMManager() {
         setBomStatus(false);
         setCurrentBomId(null);
     };
-
-    // Handlers de edición/eliminación
+ 
+    // Handlers: Editar / Eliminar BOM 
     const handleEdit = async (id: number) => {
         try {
             const data = await getArticlesId(id);
@@ -293,14 +292,16 @@ function BOMManager() {
             setBaseQuantity(Number(bom.base_quantity));
             setBomStatus(bom.status);
 
-            const articleData = bom.details && bom.details !== "undefined" && bom.details !== null
-                ? JSON.parse(bom.details).article
-                : null;
+            const articleData =
+                bom.details && bom.details !== "undefined" && bom.details !== null
+                    ? JSON.parse(bom.details).article
+                    : null;
             setSelectedArticle(articleData);
 
-            const ingr = bom.ingredients && bom.ingredients !== "undefined" && bom.ingredients !== null
-                ? JSON.parse(bom.ingredients)
-                : [];
+            const ingr =
+                bom.ingredients && bom.ingredients !== "undefined" && bom.ingredients !== null
+                    ? JSON.parse(bom.ingredients)
+                    : [];
             setIngredients(ingr);
             setIsModalOpen(true);
         } catch (error) {
@@ -309,6 +310,7 @@ function BOMManager() {
         }
     };
 
+    // Handlers: Eliminar BOM 
     const handleDelete = async (id: number) => {
         showConfirm("¿Estás seguro de eliminar este BOM?", async () => {
             try {
@@ -322,6 +324,7 @@ function BOMManager() {
         });
     };
 
+
     const handleIngredientSelect = (index: number, selectedCodart: string) => {
         const selectedArticleForIngredient = allArticles.find(article => article.codart === selectedCodart);
         if (selectedArticleForIngredient) {
@@ -334,7 +337,6 @@ function BOMManager() {
             setIngredients(newIngredients);
         }
     };
-
 
     return (
         <div>
@@ -386,11 +388,20 @@ function BOMManager() {
                             <div className="mt-4 grid grid-cols-2 gap-4">
                                 <div>
                                     <Text type="subtitle">Artículos Disponibles:</Text>
+                                    <div className="mb-2">
+                                        <input
+                                            type="text"
+                                            placeholder="Buscar artículos..."
+                                            value={searchTerm}
+                                            onChange={(e) => setSearchTerm(e.target.value)}
+                                            className="border p-2 rounded w-full text-black"
+                                        />
+                                    </div>
                                     {loadingArticles ? (
                                         <p className="text-blue-500">Cargando artículos...</p>
-                                    ) : articles.length > 0 ? (
+                                    ) : filteredArticles.length > 0 ? (
                                         <ul className="border p-2 rounded bg-gray-100 h-40 overflow-y-auto">
-                                            {articles.map(article => (
+                                            {filteredArticles.map((article) => (
                                                 <li
                                                     key={article.codart}
                                                     className="border-b py-1 px-2 text-black cursor-pointer hover:bg-blue-100"
@@ -401,7 +412,7 @@ function BOMManager() {
                                             ))}
                                         </ul>
                                     ) : (
-                                        <Text type="error">No hay artículos disponibles.</Text>
+                                        <Text type="error">No se encontraron coincidencias.</Text>
                                     )}
                                 </div>
 
@@ -425,6 +436,7 @@ function BOMManager() {
                                 </div>
                             </div>
                         )}
+
                         <div className="flex justify-center space-x-2">
                             <div className="mt-4">
                                 <Text type="subtitle">Cantidad Base:</Text>
@@ -452,18 +464,16 @@ function BOMManager() {
 
                         {selectedArticle && (
                             <div className="mt-4">
-                                <Text type="subtitle">Ingredientes:</Text>
+                                <Text type="subtitle">Materiales:</Text>
                                 <div className="border p-4 rounded bg-gray-50 space-y-4">
                                     {ingredients.length > 0 ? (
                                         ingredients.map((ing, index) => (
                                             <div key={index} className="flex flex-col space-y-2 border p-2 rounded bg-white">
-                                                <div className="flex justify-center space-x-2">
+                                                <div className="flex items-center space-x-2 w-full">
                                                     <select
-                                                        className="border p-1 rounded text-black"
-                                                        value={ing.codart} // Mostramos el codart seleccionado
-                                                        onChange={e =>
-                                                            handleIngredientSelect(index, e.target.value)
-                                                        }
+                                                        className="border p-1 rounded text-black w-[70%]"
+                                                        value={ing.codart}
+                                                        onChange={e => handleIngredientSelect(index, e.target.value)}
                                                     >
                                                         <option value="">Seleccione un artículo</option>
                                                         {allArticles.map(article => (
@@ -474,21 +484,17 @@ function BOMManager() {
                                                     </select>
                                                     <input
                                                         type="number"
-                                                        className="border p-1 rounded w-20 text-black"
+                                                        className="border p-1 rounded text-black w-[15%] text-center"
                                                         placeholder="Cantidad"
                                                         value={ing.quantity}
-                                                        onChange={e =>
-                                                            handleIngredientChange(index, "quantity", e.target.value)
-                                                        }
+                                                        onChange={e => handleIngredientChange(index, "quantity", e.target.value)}
                                                     />
                                                     <input
                                                         type="number"
-                                                        className="border p-1 rounded w-20 text-black"
+                                                        className="border p-1 rounded text-black w-[15%] text-center"
                                                         placeholder="% Merma"
                                                         value={ing.merma}
-                                                        onChange={e =>
-                                                            handleIngredientChange(index, "merma", e.target.value)
-                                                        }
+                                                        onChange={e => handleIngredientChange(index, "merma", e.target.value)}
                                                     />
                                                     <button
                                                         onClick={() => removeIngredientRow(index)}
@@ -503,11 +509,7 @@ function BOMManager() {
                                         <Text type="alert">No hay ingredientes agregados.</Text>
                                     )}
 
-                                    <Button
-                                        onClick={addIngredientRow}
-                                        variant="create"
-                                        label="Agregar Ingrediente"
-                                    />
+                                    <Button onClick={addIngredientRow} variant="create" label="Agregar Ingrediente" />
                                 </div>
                             </div>
                         )}

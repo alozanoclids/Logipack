@@ -59,7 +59,7 @@ class ArticlesController extends Controller
             return response()->json(['error' => 'Error al obtener los BOMs', 'details' => $e->getMessage()], 500);
         }
     }
-    
+
     public function newArticle(Request $request)
     {
         try {
@@ -144,6 +144,22 @@ class ArticlesController extends Controller
             return response()->json([
                 'error' => 'BOM no encontrado'
             ], 404);
+        }
+    }
+
+    public function getArticleByClientId($clientId)
+    {
+        try {
+            $boms = Bom::where('client_id', $clientId)->get();
+
+            return response()->json([
+                'boms' => $boms
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Error al obtener los BOMs',
+                'details' => $e->getMessage()
+            ], 500);
         }
     }
 }

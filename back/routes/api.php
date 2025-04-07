@@ -13,6 +13,7 @@ use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\RolesController;
 use App\Http\Controllers\StagesController;
+use App\Http\Controllers\AdaptationController;
 
 Route::controller(AuthController::class)->group(function () {
     Route::post('login', 'login');
@@ -96,6 +97,7 @@ Route::controller(MaestrasController::class)->group(function () {
     Route::get('/MaestraName/{name}', 'MaestraName'); // Obtener una lineas específica
     Route::put('/updateMaestra/{id}', 'updateMaestra'); // Actualizar una lineas
     Route::delete('/deleteMaestra/{id}', 'deleteMaestra'); // Eliminar una lineas
+    Route::get('/getTipo', 'obtenerTipos');
 });
 
 //Rutas Fases
@@ -124,6 +126,16 @@ Route::controller(ArticlesController::class)->group(function () {
     Route::post('/newArticle', 'newArticle'); // Crear una nueva lineas
     Route::get('/getCode/{code}', 'getArticlesByCoddiv'); // Obtener una lineas específica 
     Route::get('/getArticleId/{id}', 'getArticleById'); // Obtener una lineas específica 
+    Route::get('/getArticleByClientId/{id}', 'getArticleByClientId'); // Obtener una lineas específica 
     Route::put('/updateArticle/{id}', 'updateArticle'); // Actualizar una lineas
     Route::delete('/deleteArticle/{id}', 'deleteArticle'); // Eliminar una lineas
+});
+//Rutas Acondicionamiento
+Route::controller(AdaptationController::class)->group(function () {
+    Route::get('/getAdaptation', 'getAdaptation'); // Obtener todas las lineas 
+    Route::post('/newAdaptation', 'newAdaptation'); // Crear una nueva lineas 
+    Route::post('/newAttachment', 'uploadAttachment'); // Crear una nueva lineas 
+    Route::get('/getAdaptationId/{id}', 'getAdaptationById'); // Obtener una lineas específica 
+    Route::put('/updateAdaptation/{id}', 'updateAdaptation'); // Actualizar una lineas
+    Route::delete('/deleteAdaptation/{id}', 'deleteAdaptation'); // Eliminar una lineas
 });

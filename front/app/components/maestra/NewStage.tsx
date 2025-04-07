@@ -8,7 +8,7 @@ import { createStage, getStageId, updateStage, deleteStage, getStage } from "../
 import { getActivitie } from "../../services/maestras/activityServices";
 import { showError, showSuccess, showConfirm } from "../toastr/Toaster";
 import Table from "../table/Table";
-import Button from "../buttons/buttons"; 
+import Button from "../buttons/buttons";
 import { Stage, Data } from "../../interfaces/NewStage";
 const phases = ["Planeacion", "Conciliación", "Actividades"];
 
@@ -24,15 +24,31 @@ function NewStage() {
     const [alert, setAlert] = useState(false);
     const [status, setStatus] = useState(false);
     const [canPause, setCanPause] = useState(false);
-    const [availableActivities, setAvailableActivities] = useState<{ id: number; description: string }[]>([]);
+    const [availableActivities, setAvailableActivities] = useState<{ id: number; description: string; binding: number }[]>([]);
     const [selectedActivities, setSelectedActivities] = useState<{ id: number; description: string }[]>([]);
+    const { isAuthenticated } = useAuth();
+    const [userName, setUserName] = useState("");
 
-    const columns = ["description", "phase_type", "status"];
-    const columnLabels: { [key: string]: string } = {
-        description: "Descripción",
-        phase_type: "Tipo de Fase",
-        status: "Estado",
-    };
+    //UseEffect para actualizacion del token
+    useEffect(() => {
+        const fetchUserData = async () => {
+            try {
+                const cookies = nookies.get(null);
+                const email = cookies.email;
+                if (email) {
+                    const decodedEmail = decodeURIComponent(email);
+                    const user = await getUserByEmail(decodedEmail);
+                    if (user.usuario) {
+                        setUserName(user.usuario.name);
+                    }
+                }
+            } catch (error) {
+                console.error("Error fetching user:", error);
+            }
+        };
+        if (isAuthenticated) fetchUserData();
+    }, [isAuthenticated]);
+    // Fin useEffect
 
     // Función para obtener las fases
     const fetchStage = async () => {
@@ -106,13 +122,8 @@ function NewStage() {
             const activityIds = selectedActivities.map((activity) => activity.id);
             newStage.activities = JSON.stringify(activityIds);
         }
-
-        console.log("Datos a enviar al crear la fase:", newStage); // 🚀 LOG
-
         try {
             const response = await createStage(newStage);
-            console.log("Respuesta del servidor al crear la fase:", response); // 🚀 LOG
-
             if (response.status === 201) {
                 showSuccess("Fase creada con éxito");
                 setIsOpen(false);
@@ -134,31 +145,9 @@ function NewStage() {
                 activityIds.includes(activity.id)
             );
             setSelectedActivities(selected);
+
         }
     }, [availableActivities, editingStage, phaseType]);
-
-    //UseEffect para actualizacion del token
-    const { isAuthenticated } = useAuth();
-    const [userName, setUserName] = useState("");
-    useEffect(() => {
-        const fetchUserData = async () => {
-            try {
-                const cookies = nookies.get(null);
-                const email = cookies.email;
-                if (email) {
-                    const decodedEmail = decodeURIComponent(email);
-                    const user = await getUserByEmail(decodedEmail);
-                    if (user.usuario) {
-                        setUserName(user.usuario.name);
-                    }
-                }
-            } catch (error) {
-                console.error("Error fetching user:", error);
-            }
-        };
-        if (isAuthenticated) fetchUserData();
-    }, [isAuthenticated]);
-    // Fin useEffect
 
     const handleEdit = async (id: number) => {
         try {
@@ -248,9 +237,6 @@ function NewStage() {
                 <Button onClick={() => setIsOpen(true)} variant="create" label="Crear Fase" />
             </div>
 
-            {/* Tabla de fases */}
-            <Table columns={columns} rows={stage} columnLabels={columnLabels} onDelete={handleDelete} onEdit={handleEdit} />
-
             {(isOpen || isEditOpen && editingStage) && (
                 <motion.div
                     initial={{ opacity: 0, y: -50 }}
@@ -321,19 +307,23 @@ function NewStage() {
                                                     const isAdded = selectedActivities.some(
                                                         (item) => item.id === activity.id
                                                     );
+                                                    const isBindingDisabled = activity.binding === 0;
+                                                    const isDisabled = isAdded || isBindingDisabled;
                                                     return (
                                                         <li
                                                             key={activity.id}
                                                             className="py-1 border-b border-gray-200 last:border-0"
                                                         >
                                                             <button
-                                                                disabled={isAdded}
+                                                                disabled={isDisabled}
                                                                 onClick={() =>
                                                                     setSelectedActivities((prev) => [...prev, activity])
                                                                 }
-                                                                className={`w-full text-left text-sm transition ${isAdded
-                                                                    ? "text-gray-400 cursor-not-allowed"
-                                                                    : "text-blue-500 hover:text-blue-700"
+                                                                className={`w-full text-sm transition text-center ${isBindingDisabled
+                                                                    ? "text-red-500 cursor-not-allowed"
+                                                                    : isAdded
+                                                                        ? "text-gray-400 cursor-not-allowed"
+                                                                        : "text-blue-500 hover:text-blue-700"
                                                                     }`}
                                                             >
                                                                 {activity.description}
@@ -359,7 +349,7 @@ function NewStage() {
                                                             {activity.description}
                                                         </span>
                                                         <button
-                                                            className="text-red-500 hover:text-red-700 text-sm"
+                                                            className="text-red-500 hover:text-red-700 text-sm text-center"
                                                             onClick={() =>
                                                                 setSelectedActivities((prev) =>
                                                                     prev.filter((item) => item.id !== activity.id)
@@ -449,6 +439,13 @@ function NewStage() {
                     </motion.div>
                 </motion.div>
             )}
+
+            {/* Tabla de fases */}
+            <Table columns={["description", "phase_type", "status"]} rows={stage} columnLabels={{
+                description: "Descripción",
+                phase_type: "Tipo de Fase",
+                status: "Estado",
+            }} onDelete={handleDelete} onEdit={handleEdit} />
         </div>
     );
 }

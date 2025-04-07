@@ -39,6 +39,22 @@ export const getMaestra = async (): Promise<any> => {
     }
 };
 
+export const getTipo = async () => {
+    try {
+        const response = await Maestras.get(`/getTipo`); 
+        return response.data;
+    } catch (error: any) {
+        if (error.response && error.response.status === 404) {
+            console.warn(`No se encontraron Tipos`);
+            return [];
+        } else {
+            console.error("Error en getTipo:", error);
+            throw error;
+        }
+    }
+};
+
+
 // Eliminar una Maestra por su ID
 export const deleteMaestra = async (id: number): Promise<any> => {
     try {

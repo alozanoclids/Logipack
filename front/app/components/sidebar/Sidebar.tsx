@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { FaHome, FaVials, FaCog, FaCapsules, FaAngleDown, FaSignOutAlt, FaArrowLeft, FaBars, FaIndent, FaIoxhost } from "react-icons/fa";
+import { FaHome, FaVials, FaCog, FaFileInvoice , FaAngleDown, FaSignOutAlt, FaArrowLeft, FaBars, FaIndent, FaIoxhost, FaBook, FaBorderAll, FaDolly } from "react-icons/fa";
 import nookies from "nookies";
 import { useRouter, usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -28,25 +28,36 @@ const menuItems: MenuItem[] = [
     icon: <FaHome />,
   },
   {
-    label: "Maestras",
-    icon: <FaCapsules />,
+    label: "Seteos",
+    icon: <FaBook />,
     children: [
       {
-        label: "Información de Maestras",
+        label: "Config. de Maestras",
         icon: <FaVials />,
         link: "/pages/maestra",
+      },
+      {
+        label: "Config. de BOM",
+        icon: <FaIoxhost />,
+        link: "/pages/bom",
       },
     ],
   },
   {
-    label: "BOM",
-    icon: <FaIndent />,
+    label: "Datos",
+    icon: <FaBorderAll />,
     children: [
       {
-        label: "Información de BOM",
-        icon: <FaIoxhost />,
-        link: "/pages/bom",
+        label: "Inventario",
+        icon: <FaDolly />,
+        link: "/pages/inventory",
       },
+      {
+        label: "Acondicionamiento",
+        icon: <FaFileInvoice  />,
+        link: "/pages/adaptation",
+      },
+
     ],
   },
   {

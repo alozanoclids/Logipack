@@ -1,35 +1,25 @@
 "use client";
+// ------------------------- 1. Importaciones de dependencias principales -------------------------
 import React, { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
-import {
-    createMaestra,
-    getMaestra,
-    deleteMaestra,
-    getMaestraId,
-    updateMaestra,
-} from "../../services/maestras/maestraServices";
-import { getStage, getStageId } from "../../services/maestras/stageServices";
+// ------------------------- 2. Importaciones de servicios -------------------------
+import { createMaestra, getMaestra, deleteMaestra, getMaestraId, updateMaestra, getTipo } from "../../services/maestras/maestraServices";
+import { getStage } from "../../services/maestras/stageServices";
+import { getUserByEmail } from '../../services/userDash/authservices';
+// ------------------------- 3. Importaciones de componentes de la UI -------------------------
 import Button from "../buttons/buttons";
 import { showSuccess, showError, showConfirm } from "../toastr/Toaster";
 import Text from "../text/Text";
 import Table from "../table/Table";
 import PermissionCheck from "..//permissionCheck/PermissionCheck";
-import { useAuth } from '../../hooks/useAuth'
+// ------------------------- 4. Importaciones de hooks y utilidades -------------------------
+import { useAuth } from '../../hooks/useAuth';
 import nookies from "nookies";
-import { getUserByEmail } from '../../services/userDash/authservices';
+// ------------------------- 5. Tipos de datos e interfaces -------------------------
 import { Stage, Data } from "../../interfaces/NewMaestra";
-// Definiciones de interfaces
+// ------------------------- 6. Definición de constantes -------------------------
 const estados = ["Seleccione un estado", "En creación", "Revisión", "Aprobada", "Obsoleta"];
-const tiposProducto = ["Tipo A", "Tipo B", "Tipo C"];
 
-export interface Maestra {
-    descripcion: string;
-    requiere_bom: boolean;
-    type_product: string;
-    type_stage: string;
-    status_type: string;
-    aprobado: boolean;
-}
 
 const Maestra = () => {
     // Estados del componente
@@ -38,16 +28,16 @@ const Maestra = () => {
     const [editingMaestra, setEditingMaestra] = useState<Data | null>(null);
     const [descripcion, setDescripcion] = useState("");
     const [requiereBOM, setRequiereBOM] = useState(false);
-    const [tipoSeleccionado, setTipoSeleccionado] = useState<number[]>([]);
     const [estado, setEstado] = useState("");
     const [aprobado, setAprobado] = useState(false);
     const [stages, setStages] = useState<Stage[]>([]);
     const [selectedStages, setSelectedStages] = useState<Stage[]>([]);
-
-
-    //UseEffect para actualizacion del token
+    const [tipoSeleccionado, setTipoSeleccionado] = useState<string>('')
+    const [tiposProducto, setTiposProducto] = useState<string[]>([]);
     const { isAuthenticated } = useAuth();
     const [userName, setUserName] = useState("");
+
+    // UseEffect para actualización del token
     useEffect(() => {
         const fetchUserData = async () => {
             try {
@@ -68,6 +58,7 @@ const Maestra = () => {
     }, [isAuthenticated]);
     // Fin useEffect
 
+    // Fetch de fases al cargar el componente
     useEffect(() => {
         const fetchStages = async () => {
             try {
@@ -75,18 +66,6 @@ const Maestra = () => {
                 setStages(stages);
             } catch (error) {
                 console.error("Error fetching stages:", error);
-            }
-        };
-        fetchStages();
-    }, []);
-    // Fetch de fases al cargar el componente
-    useEffect(() => {
-        const fetchStages = async () => {
-            try {
-                const data: Stage[] = await getStage();
-                setStages(data);
-            } catch (error) {
-                showError("Error al cargar las fases");
             }
         };
         fetchStages();
@@ -106,8 +85,21 @@ const Maestra = () => {
         fetchMaestra();
     }, [fetchMaestra]);
 
+    // Cargar los tipos cuando el componente se monte
+    useEffect(() => {
+        const fetchTipos = async () => {
+            try {
+                const tipos = await getTipo(); // Llamamos a la API para obtener los tipos
+                setTiposProducto(tipos); // Guardamos los tipos en el estado
+            } catch (error) {
+                console.error('Error al obtener los tipos', error);
+            }
+        };
+
+        fetchTipos(); // Ejecutamos la función
+    }, []);
+
     // Manejo de selección/deselección de fases
-    // Funciones para seleccionar y deseleccionar
     const handleSelectStage = (stage: Stage) => {
         // Si la etapa ya está seleccionada, no hacemos nada
         if (selectedStages.some(s => s.id === stage.id)) return;
@@ -117,7 +109,6 @@ const Maestra = () => {
     const handleRemoveStage = (stage: Stage) => {
         setSelectedStages(prev => prev.filter(s => s.id !== stage.id));
     };
-
 
     // Validación y envío del formulario
     const handleSubmit = async () => {
@@ -236,12 +227,11 @@ const Maestra = () => {
         }
     };
 
-
     // Resetear el formulario
     const resetForm = () => {
         setDescripcion("");
         setRequiereBOM(false);
-        setTipoSeleccionado([]);
+        setTipoSeleccionado("");
         setEstado("");
         setAprobado(false);
         setSelectedStages([]);
@@ -271,14 +261,20 @@ const Maestra = () => {
                         exit={{ y: -50, opacity: 0 }}
                     >
                         <Text type="title">{editingMaestra ? "Editar Maestra" : "Crear Maestra"}</Text>
-                        <Text type="subtitle">Descripción</Text>
-                        <input
-                            type="text"
-                            placeholder="Descripción"
-                            className="w-full p-2 border text-black mb-2 min-w-0"
-                            value={descripcion}
-                            onChange={(e) => setDescripcion(e.target.value)}
-                        />
+
+                        {/* Descripción */}
+                        <div className="mt-4">
+                            <Text type="subtitle">Descripción</Text>
+                            <input
+                                type="text"
+                                placeholder="Descripción"
+                                className="w-full p-2 border text-black mb-2 min-w-0"
+                                value={descripcion}
+                                onChange={(e) => setDescripcion(e.target.value)}
+                            />
+                        </div>
+
+                        {/* Requiere BOM y Aprobado */}
                         <div className="flex justify-center space-x-6 mt-4 mb-2">
                             <div className="flex flex-col items-center">
                                 <Text type="subtitle">Requiere BOM</Text>
@@ -299,90 +295,97 @@ const Maestra = () => {
                                 />
                             </div>
                         </div>
-                        <Text type="subtitle">Seleccione Estado</Text>
-                        <select
-                            className="w-full p-2 border mb-2 min-w-0 text-black text-center"
-                            value={estado}
-                            onChange={(e) => setEstado(e.target.value)}
-                        >
-                            {estados.map((estado) => (
-                                <option key={estado} value={estado}>
-                                    {estado}
-                                </option>
-                            ))}
-                        </select>
 
-                        <Text type="subtitle">Seleccione Tipo de Producto</Text>
-                        <select
-                            multiple
-                            className="w-full p-2 border mb-2 min-w-0 text-black text-center"
-                            value={tipoSeleccionado.map(String)}
-                            onChange={(e) => {
-                                const selectedIds = Array.from(
-                                    e.target.selectedOptions,
-                                    (option) => Number(option.value)
-                                );
-                                setTipoSeleccionado(selectedIds);
-                            }}
-                        >
-                            {tiposProducto.map((tipo, index) => (
-                                <option key={index} value={index}>
-                                    {tipo}
-                                </option>
-                            ))}
-                        </select>
-                        <Text type="subtitle">Seleccione las Fases</Text>
-                        <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
-                            {/* Lista de fases disponibles */}
-                            <div className="w-full md:w-1/2 border p-2 max-h-40 overflow-y-auto">
-                                <Text type="subtitle">Disponibles</Text>
-                                {stages.length > 0 ? (
-                                    stages.map((stage) => {
-                                        const isSelected = selectedStages.some(s => s.id === stage.id);
-                                        return (
+                        {/* Selección de Estado */}
+                        <div className="mt-4">
+                            <Text type="subtitle">Seleccione Estado</Text>
+                            <select
+                                className="w-full p-2 border mb-2 min-w-0 text-black text-center"
+                                value={estado}
+                                onChange={(e) => setEstado(e.target.value)}
+                            >
+                                {estados.map((estado) => (
+                                    <option key={estado} value={estado}>
+                                        {estado}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        {/* Selección Tipo de Producto */}
+                        <div className="mt-4">
+                            <Text type="subtitle">Seleccione Tipo de Producto</Text>
+                            <select
+                                className="w-full p-2 border mb-2 min-w-0 text-black text-center"
+                                value={tipoSeleccionado} // Ahora es un string, no un array
+                                onChange={(e) => setTipoSeleccionado(e.target.value)} // Cambia el estado con un único valor
+                            >
+                                {tiposProducto.map((tipo, index) => (
+                                    <option key={index} value={tipo}>
+                                        {tipo}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        {/* Selección de Fases */}
+                        <div className="mt-4">
+                            <Text type="subtitle">Seleccione las Fases</Text>
+                            <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
+                                {/* Lista de fases disponibles */}
+                                <div className="w-full md:w-1/2 border p-2 max-h-40 overflow-y-auto">
+                                    <Text type="subtitle">Disponibles</Text>
+                                    {stages.length > 0 ? (
+                                        stages.map((stage) => {
+                                            const isSelected = selectedStages.some(s => s.id === stage.id);
+                                            const isBindingDisabled = stage.status === 0;
+                                            const isDisabled = isSelected || isBindingDisabled;
+                                            return (
+                                                <div key={stage.id} className="p-2 border-b">
+                                                    <button
+                                                        disabled={isDisabled}
+                                                        className={`w-full text-sm transition text-center ${isBindingDisabled
+                                                            ? "text-red-500 cursor-not-allowed"
+                                                            : isDisabled
+                                                                ? "text-gray-400 cursor-not-allowed"
+                                                                : "text-blue-500 hover:text-blue-700"
+                                                            }`}
+                                                        onClick={() => {
+                                                            if (!isSelected) handleSelectStage(stage);
+                                                        }}
+                                                    >
+                                                        {stage.description}
+                                                    </button>
+                                                </div>
+                                            );
+                                        })
+                                    ) : (
+                                        <p className="text-gray-500 text-center">No hay fases disponibles</p>
+                                    )}
+                                </div>
+
+                                {/* Lista de fases seleccionadas */}
+                                <div className="w-full md:w-1/2 border p-2 max-h-40 overflow-y-auto">
+                                    <Text type="subtitle">Seleccionadas</Text>
+                                    {selectedStages.length > 0 ? (
+                                        selectedStages.map((stage) => (
                                             <div key={stage.id} className="p-2 border-b">
                                                 <span
-                                                    className={`block w-full text-center p-2 ${isSelected
-                                                        ? 'text-gray-500 cursor-not-allowed opacity-50'
-                                                        : 'text-black cursor-pointer hover:bg-blue-500 hover:text-white'
-                                                        }`}
-                                                    onClick={() => {
-                                                        if (!isSelected) handleSelectStage(stage);
-                                                    }}
+                                                    className="block w-full text-black cursor-pointer hover:bg-red-500 hover:text-white text-center p-2"
+                                                    onClick={() => handleRemoveStage(stage)}
                                                 >
                                                     {stage.description}
                                                 </span>
                                             </div>
-                                        );
-                                    })
-                                ) : (
-                                    <p className="text-gray-500 text-center">No hay fases disponibles</p>
-                                )}
+                                        ))
+                                    ) : (
+                                        <p className="text-gray-500 text-center">No hay fases seleccionadas</p>
+                                    )}
+                                </div>
                             </div>
-
-
-                            {/* Lista de fases seleccionadas */}
-                            <div className="w-full md:w-1/2 border p-2 max-h-40 overflow-y-auto">
-                                <Text type="subtitle">Seleccionadas</Text>
-                                {selectedStages.length > 0 ? (
-                                    selectedStages.map((stage) => (
-                                        <div key={stage.id} className="p-2 border-b">
-                                            <span
-                                                className="block w-full text-black cursor-pointer hover:bg-red-500 hover:text-white text-center p-2"
-                                                onClick={() => handleRemoveStage(stage)}
-                                            >
-                                                {stage.description}
-                                            </span>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <p className="text-gray-500 text-center">No hay fases seleccionadas</p>
-                                )}
-                            </div>
-
                         </div>
 
-
+                        {/* Botones de acción */}
                         <div className="flex justify-end space-x-4 mt-4">
                             <Button onClick={() => setIsOpen(false)} variant="cancel" label="Cancelar" />
                             <Button
@@ -394,6 +397,7 @@ const Maestra = () => {
                     </motion.div>
                 </motion.div>
             )}
+
 
             {/* Tabla de maestras */}
             <Table

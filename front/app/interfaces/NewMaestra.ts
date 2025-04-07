@@ -1,6 +1,7 @@
 export interface Stage {
     id: number;
     description: string;
+    status: number
 }
 
 export interface Data {
@@ -11,6 +12,15 @@ export interface Data {
     type_product: string;
     type_stage: string;
     status_type: string;
-    aprobado: boolean;
+    aprobado: boolean; 
 }
 
+
+export interface Maestras {
+    descripcion: string;
+    requiere_bom: boolean;
+    type_product: string;
+    type_stage: string;
+    status_type: string;
+    aprobado: boolean;
+}
