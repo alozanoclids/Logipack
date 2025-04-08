@@ -236,62 +236,68 @@ function NewAdaptation() {
     }, []);
 
     const handleSubmit = async () => {
+        // Validación inicial
         if (!selectedClient) {
             showError("Por favor, selecciona un cliente.");
             return;
         }
-
+    
         let articlesData;
-
+    
         if (maestraRequiereBOM) {
             if (!orderNumber) {
                 showError("Por favor, ingresa el número de orden.");
                 return;
             }
-
+    
+            // Se arma la data sin incluir el attachment en el JSON.
             articlesData = [
                 {
-                    codart: selectedArticles[0]?.codart || "", // si solo hay uno
+                    codart: selectedArticles[0]?.codart || "", // En BOM se usa solo el primer artículo
                     orderNumber,
                     deliveryDate,
                     quantityToProduce,
                     lot,
                     healthRegistration,
-                    attachment,
+                    // NO incluyo attachment acá
                 },
             ];
         } else {
-            articlesData = selectedArticles.map((article) => {
-                const fields = articleFields[article.codart] || {};
-                if (!fields.orderNumber) {
-                    showError("Por favor, ingresa el número de orden.");
-                    return;
-                }
-                return {
-                    codart: article.codart,
-                    orderNumber: fields.orderNumber || "",
-                    deliveryDate: fields.deliveryDate || "",
-                    quantityToProduce: fields.quantityToProduce || 0,
-                    lot: fields.lot || "",
-                    healthRegistration: fields.healthRegistration || "",
-                    attachment: fields.attachment || null,
-                };
-            }).filter(Boolean); // filtra los `undefined` si showError cortó alguno
+            articlesData = selectedArticles
+                .map((article) => {
+                    const fields = articleFields[article.codart] || {};
+                    if (!fields.orderNumber) {
+                        showError("Por favor, ingresa el número de orden.");
+                        return;
+                    }
+                    return {
+                        codart: article.codart,
+                        orderNumber: fields.orderNumber || "",
+                        deliveryDate: fields.deliveryDate || "",
+                        quantityToProduce: fields.quantityToProduce || 0,
+                        lot: fields.lot || "",
+                        healthRegistration: fields.healthRegistration || "",
+                        // NO incluyo attachment acá
+                    };
+                })
+                .filter(Boolean); // Evita incluir elementos undefined si falta algún dato
         }
-
+    
+        // Armamos el FormData para enviar al backend
         const formData = new FormData();
         formData.append("client_id", selectedClient.toString());
         formData.append("article_code", JSON.stringify(articlesData));
-
-        // ⚠️ Ya está dentro de articlesData cuando es true, no repitas:
-        if (!maestraRequiereBOM && attachment) {
+    
+        // ¡IMPORTANTE! Agrega el archivo directamente al FormData,
+        // ya que si lo incluyes en el JSON se pierde su contenido.
+        if (attachment) {
             formData.append("attachment", attachment);
         }
-
+    
         formData.append("master", JSON.stringify(selectedMaestras));
         formData.append("bom", JSON.stringify(selectedBom) || "");
         formData.append("ingredients", JSON.stringify(ingredients));
-
+    
         try {
             setIsLoading(true);
             if (isEditMode) {
@@ -313,7 +319,7 @@ function NewAdaptation() {
             setIsLoading(false);
         }
     };
-
+    
     // Handler de edicion
     const handleEdit = async (id: number) => {
         try {
@@ -475,7 +481,7 @@ function NewAdaptation() {
                             <div className="col-span-full">
                                 <Text type="subtitle">Cliente:</Text>
                                 <select
-                                    className="w-full border p-3 rounded-lg text-gray-800 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 text-center text-center"
+                                    className="w-full border p-3 rounded-lg text-gray-800 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 text-center"
                                     value={selectedClient}
                                     onChange={e => {
                                         setSelectedClient(e.target.value);
@@ -499,7 +505,7 @@ function NewAdaptation() {
                                 <div>
                                     <Text type="subtitle">Maestras:</Text>
                                     <select
-                                        className="w-full border p-3 rounded-lg text-gray-800 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 text-center text-center"
+                                        className="w-full border p-3 rounded-lg text-gray-800 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500  text-center"
                                         value={selectedMaestras.length > 0 ? selectedMaestras[0] : ""}
                                         onChange={(e) => setSelectedMaestras([e.target.value])}
                                     >
@@ -521,7 +527,7 @@ function NewAdaptation() {
                                     <div>
                                         <Text type="subtitle">BOM:</Text>
                                         <select
-                                            className="w-full border p-3 rounded-lg text-gray-800 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 text-center text-center"
+                                            className="w-full border p-3 rounded-lg text-gray-800 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500   text-center"
                                             onChange={(e) => setSelectedBom(Number(e.target.value))}
                                             value={selectedBom || ""}
                                         >
@@ -545,7 +551,7 @@ function NewAdaptation() {
                                 <Text type="subtitle">Artículos:</Text>
                                 {maestraRequiereBOM ? (
                                     <select
-                                        className="w-full rounded-md border px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-center text-black text-center"
+                                        className="w-full rounded-md border px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-black text-center"
                                         value={selectedArticles[0]?.codart ?? ""}
                                         onChange={(e) => {
                                             const selected = articles.find(article => article.codart === e.target.value);
