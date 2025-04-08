@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, ChangeEvent } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
 import nookies from "nookies";
 // 🔹 Hooks
@@ -20,7 +20,7 @@ import { showSuccess, showError, showConfirm } from "../toastr/Toaster";
 // 🔹 Interfaces
 import { Client, Article, Ingredient } from "@/app/interfaces/BOM";
 import { Data } from "@/app/interfaces/NewMaestra";
-import { BOMResponse, BOM, Adaptation } from "@/app/interfaces/NewAdaptation";
+import { BOMResponse, BOM, Adaptation, ArticleFormData, ArticleFieldsMap, Articles } from "@/app/interfaces/NewAdaptation";
 
 function NewAdaptation() {
     const [isOpen, setIsOpen] = useState(false);
@@ -46,6 +46,9 @@ function NewAdaptation() {
     const [boms, setBoms] = useState<BOM[]>([]);
     const [selectedBom, setSelectedBom] = useState<number | "">("");
     const [isLoading, setIsLoading] = useState(false);
+    const [articleFields, setArticleFields] = useState<Record<string, ArticleFormData>>({});
+
+
 
     // UseEffect para actualización del token
     const [userName, setUserName] = useState("");
@@ -146,50 +149,66 @@ function NewAdaptation() {
 
     //Cargar Bom
     useEffect(() => {
-        if (!selectedClient || selectedMaestras.length === 0) return;
-
         const fetchBom = async () => {
+            if (!selectedClient || selectedMaestras.length === 0) return;
+            const selectedMaestraObj = maestra.find(
+                (m) => m.id.toString() === selectedMaestras[0]
+            );
+            if (!selectedMaestraObj?.requiere_bom) {
+                setBoms([]); // Limpiar
+                setIngredients([]);
+                return;
+            }
             try {
                 const clientData = await getClientsId(Number(selectedClient));
-                const selectedMaestraObj = maestra.find(m => m.id.toString() === selectedMaestras[0]);
-
-                if (selectedMaestraObj?.requiere_bom) {
-                    const bomData = await getArticleByClient(clientData.id);
-
-                    if (bomData?.boms?.length > 0) {
-                        setBoms(bomData.boms);
-                    }
+                const bomData = await getArticleByClient(clientData.id);
+                if (bomData?.boms?.length > 0) {
+                    setBoms(bomData.boms);
+                    const ingredientsJSON = bomData.boms[0].ingredients;
+                    const parsedIngredients: Ingredient[] = JSON.parse(ingredientsJSON);
+                    const enhancedIngredients = parsedIngredients.map((ing) => ({
+                        ...ing,
+                        teteorica:
+                            ing.teorica === ""
+                                ? (parseFloat(ing.quantity) + parseFloat(ing.quantity) * parseFloat(ing.merma)).toString()
+                                : ing.teorica,
+                        validar: ing.validar,
+                    }));
+                    setIngredients(enhancedIngredients);
+                } else {
+                    setBoms([]); // También vaciar si no hay BOMs
+                    setIngredients([]);
                 }
             } catch (error) {
                 console.error("Error al obtener los BOMs", error);
+                setBoms([]);
+                setIngredients([]);
             }
         };
-
         fetchBom();
-    }, [selectedClient, selectedMaestras]);
+    }, [selectedClient, selectedMaestras, maestra]);
 
-    // Nuevo useEffect para actualizar los ingredientes cuando `boms` cambie
-    useEffect(() => {
-        if (boms.length > 0) {
-            try {
-                const firstBom = boms[0]; // Tomamos el primer BOM
-                const parsedIngredients = JSON.parse(firstBom.ingredients || "[]");
+    const maestraSeleccionada = useMemo(() => {
+        return maestra.find(m => m.id.toString() === selectedMaestras[0]);
+    }, [selectedMaestras, maestra]);
 
-                // Establecemos los ingredientes solo si los datos no están vacíos
-                setIngredients(parsedIngredients.map((ing: any) => ({
-                    codart: ing.codart || "",
-                    desart: ing.desart || "",
-                    quantity: ing.quantity || "",
-                    merma: ing.merma || "",
-                    teoria: ing.teoria || "",
-                    validar: ing.validar || "",
-                })));
-            } catch (error) {
-                console.error("Error al parsear los ingredientes del BOM", error);
+    const maestraRequiereBOM = maestraSeleccionada?.requiere_bom ?? false;
+
+    const handleChange = (index: number, field: keyof Ingredient, value: string): void => {
+        const updated: Ingredient[] = [...ingredients];
+        updated[index][field] = value;
+        setIngredients(updated);
+    };
+
+    const handleFieldChange = (codart: string, field: keyof ArticleFormData, value: any) => {
+        setArticleFields(prev => ({
+            ...prev,
+            [codart]: {
+                ...prev[codart],
+                [field]: value
             }
-        }
-    }, [boms]); // Solo se ejecuta cuando `boms` cambia
-
+        }));
+    };
 
     // Función para cargar adaptaciones
     const fetchAdaptations = async () => {
@@ -216,44 +235,61 @@ function NewAdaptation() {
         fetchAdaptations();
     }, []);
 
-    // Handler de envío
     const handleSubmit = async () => {
         if (!selectedClient) {
             showError("Por favor, selecciona un cliente.");
             return;
         }
-        if (!orderNumber) {
-            showError("Por favor, ingresa el número de orden.");
-            return;
-        }
-        if (!deliveryDate) {
-            showError("Por favor, ingresa la fecha de entrega.");
-            return;
-        }
-        if (quantityToProduce === "") {
-            showError("Por favor, ingresa la cantidad a producir.");
-            return;
+
+        let articlesData;
+
+        if (maestraRequiereBOM) {
+            if (!orderNumber) {
+                showError("Por favor, ingresa el número de orden.");
+                return;
+            }
+
+            articlesData = [
+                {
+                    codart: selectedArticles[0]?.codart || "", // si solo hay uno
+                    orderNumber,
+                    deliveryDate,
+                    quantityToProduce,
+                    lot,
+                    healthRegistration,
+                    attachment,
+                },
+            ];
+        } else {
+            articlesData = selectedArticles.map((article) => {
+                const fields = articleFields[article.codart] || {};
+                if (!fields.orderNumber) {
+                    showError("Por favor, ingresa el número de orden.");
+                    return;
+                }
+                return {
+                    codart: article.codart,
+                    orderNumber: fields.orderNumber || "",
+                    deliveryDate: fields.deliveryDate || "",
+                    quantityToProduce: fields.quantityToProduce || 0,
+                    lot: fields.lot || "",
+                    healthRegistration: fields.healthRegistration || "",
+                    attachment: fields.attachment || null,
+                };
+            }).filter(Boolean); // filtra los `undefined` si showError cortó alguno
         }
 
-        // Crear un FormData para enviar correctamente los datos y archivos
         const formData = new FormData();
         formData.append("client_id", selectedClient.toString());
-        formData.append("order_number", orderNumber);
-        formData.append("delivery_date", deliveryDate);
-        formData.append("article_code", JSON.stringify(selectedArticles));
-        formData.append("lot", lot);
-        formData.append("health_registration", healthRegistration);
-        formData.append("quantity_to_produce", quantityToProduce.toString());
+        formData.append("article_code", JSON.stringify(articlesData));
 
-        // Adjuntar el archivo solo si existe
-        if (attachment) {
+        // ⚠️ Ya está dentro de articlesData cuando es true, no repitas:
+        if (!maestraRequiereBOM && attachment) {
             formData.append("attachment", attachment);
         }
 
         formData.append("master", JSON.stringify(selectedMaestras));
         formData.append("bom", JSON.stringify(selectedBom) || "");
-
-        // 📌 Guardar los ingredientes en el FormData
         formData.append("ingredients", JSON.stringify(ingredients));
 
         try {
@@ -287,23 +323,68 @@ function NewAdaptation() {
                 showError("La adaptación no existe");
                 return;
             }
-
-            setSelectedClient(adaptation.client_id.toString());
-            setOrderNumber(adaptation.order_number);
-            setDeliveryDate(adaptation.delivery_date);
-            setLot(adaptation.lot);
-            setHealthRegistration(adaptation.health_registration);
-            setQuantityToProduce(adaptation.quantity_to_produce);
-            setSelectedMaestras(JSON.parse(adaptation.master));
-            setSelectedBom(JSON.parse(adaptation.bom));
-            setSelectedArticles(JSON.parse(adaptation.article_code));
-
+            setIsEditMode(true);
+            setEditAdaptationId(id);
+            // Cliente
+            setSelectedClient(adaptation.client_id);
+            // Maestra (asegúrate de parsear)
+            const masterParsed =
+                typeof adaptation.master === "string"
+                    ? JSON.parse(adaptation.master)
+                    : adaptation.master;
+            setSelectedMaestras(masterParsed ? masterParsed : []);
+            // BOM: parsear si es necesario
+            let bomParsed = "";
+            if (typeof adaptation.bom === "string") {
+                try {
+                    bomParsed = JSON.parse(adaptation.bom);
+                } catch (error) {
+                    bomParsed = adaptation.bom;
+                }
+            }
+            setSelectedBom(Number(bomParsed));
+            // Artículos: usar el campo correcto y parsearlo
+            const articles = adaptation.article_code ? JSON.parse(adaptation.article_code) : [];
+            setSelectedArticles(
+                articles
+                    .filter((a: Article) => a && a.codart) // Filtra los nulos o sin codart
+                    .map((a: Article) => ({ codart: a.codart }))
+            );
+            if (adaptation.bom != "") {
+                const general = articles[0];
+                if (general) {
+                    setOrderNumber(general.orderNumber || "");
+                    setDeliveryDate(general.deliveryDate || "");
+                    setQuantityToProduce(general.quantityToProduce || 0);
+                    setLot(general.lot || "");
+                    setHealthRegistration(general.healthRegistration || "");
+                    setAttachment(null);
+                    setAttachmentUrl(general.attachment ? `/storage/${general.attachment}` : null);
+                }
+            } else {
+                // Si NO requiere BOM: campos por artículo 
+                const fieldsMap: ArticleFieldsMap = {};
+                articles.forEach((a: Articles) => {
+                    fieldsMap[a.codart] = {
+                        orderNumber: a.orderNumber,
+                        deliveryDate: a.deliveryDate,
+                        quantityToProduce: a.quantityToProduce,
+                        lot: a.lot,
+                        healthRegistration: a.healthRegistration,
+                        attachment: a.attachment,
+                    };
+                });
+                setArticleFields(fieldsMap);
+            }
+            // Ingredientes
             if (adaptation.ingredients) {
                 try {
                     const parsedIngredients = JSON.parse(adaptation.ingredients).map((ing: any) => ({
                         ...ing,
-                        teorica: ing.teorica ?? (parseFloat(ing.quantity || "0") * (1 + parseFloat(ing.merma || "0"))).toFixed(2),
-                        validar: ing.validar ?? "" // Asegurar que siempre tenga un valor
+                        teorica: ing.teorica ?? (
+                            parseFloat(ing.quantity || "0") * (1 + parseFloat(ing.merma || "0"))
+                        ).toFixed(2),
+                        validar: ing.validar ?? "",
                     }));
                     setIngredients(parsedIngredients);
                 } catch (error) {
@@ -313,15 +394,7 @@ function NewAdaptation() {
             } else {
                 setIngredients([]);
             }
-
-            if (adaptation.attachment) {
-                setAttachmentUrl(`/storage/${adaptation.attachment}`);
-            } else {
-                setAttachmentUrl(null);
-            }
-
-            setIsEditMode(true);
-            setEditAdaptationId(id);
+            // Abre el modal y refresca adaptaciones
             setIsOpen(true);
             fetchAdaptations();
         } catch (error) {
@@ -402,7 +475,7 @@ function NewAdaptation() {
                             <div className="col-span-full">
                                 <Text type="subtitle">Cliente:</Text>
                                 <select
-                                    className="w-full border p-3 rounded-lg text-gray-800 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 text-center"
+                                    className="w-full border p-3 rounded-lg text-gray-800 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 text-center text-center"
                                     value={selectedClient}
                                     onChange={e => {
                                         setSelectedClient(e.target.value);
@@ -418,11 +491,15 @@ function NewAdaptation() {
                                 </select>
                             </div>
                             {/* Maestras y BOM*/}
-                            <div className="col-span-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
+                            <div
+                                className={`col-span-full grid grid-cols-1 ${maestraRequiereBOM ? "sm:grid-cols-2" : "lg:grid-cols-1"
+                                    } gap-4`}
+                            >
+                                {/* Select de Maestras */}
                                 <div>
                                     <Text type="subtitle">Maestras:</Text>
                                     <select
-                                        className="w-full border p-3 rounded-lg text-gray-800 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 text-center"
+                                        className="w-full border p-3 rounded-lg text-gray-800 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 text-center text-center"
                                         value={selectedMaestras.length > 0 ? selectedMaestras[0] : ""}
                                         onChange={(e) => setSelectedMaestras([e.target.value])}
                                     >
@@ -437,152 +514,235 @@ function NewAdaptation() {
                                             </option>
                                         ))}
                                     </select>
-
-
                                 </div>
-                                <div>
-                                    <Text type="subtitle">BOM:</Text>
-                                    <select
-                                        className="w-full border p-3 rounded-lg text-gray-800 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 text-center"
-                                        onChange={(e) => setSelectedBom(Number(e.target.value))}  // Convertir a número
-                                        value={selectedBom || ""} // Maneja valores nulos/vacíos 
-                                    >
-                                        <option value="">Seleccione un BOM...</option>
-                                        {Array.isArray(boms) && boms.length > 0 ? (
-                                            boms.map(bom => (
-                                                <option key={bom.id} value={bom.id}>
-                                                    {JSON.parse(bom.code_details)?.codart ?? "Sin código"}  {/* Extraer codart correctamente */}
-                                                </option>
-                                            ))
-                                        ) : (
-                                            <option disabled>No hay BOMs disponibles</option>
-                                        )}
-                                    </select>
 
-                                </div>
+                                {/* Select de BOM solo si se requiere */}
+                                {maestraRequiereBOM && (
+                                    <div>
+                                        <Text type="subtitle">BOM:</Text>
+                                        <select
+                                            className="w-full border p-3 rounded-lg text-gray-800 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 text-center text-center"
+                                            onChange={(e) => setSelectedBom(Number(e.target.value))}
+                                            value={selectedBom || ""}
+                                        >
+                                            <option value="">Seleccione un BOM...</option>
+                                            {Array.isArray(boms) && boms.length > 0 ? (
+                                                boms.map((bom) => (
+                                                    <option key={bom.id} value={bom.id}>
+                                                        {JSON.parse(bom.code_details)?.codart ?? "Sin código"}
+                                                    </option>
+                                                ))
+                                            ) : (
+                                                <option disabled>No hay BOMs disponibles</option>
+                                            )}
+                                        </select>
+                                    </div>
+                                )}
                             </div>
+
                             {/* MultiSelect Articulos*/}
                             <div className="col-span-full">
                                 <Text type="subtitle">Artículos:</Text>
-                                <MultiSelect
-                                    options={articles}
-                                    selected={selectedArticles}
-                                    onChange={setSelectedArticles}
-                                    getLabel={article => article.codart}
-                                    getValue={article => article.codart}
-                                />
+                                {maestraRequiereBOM ? (
+                                    <select
+                                        className="w-full rounded-md border px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-center text-black text-center"
+                                        value={selectedArticles[0]?.codart ?? ""}
+                                        onChange={(e) => {
+                                            const selected = articles.find(article => article.codart === e.target.value);
+                                            if (selected) setSelectedArticles([selected]);
+                                        }}
+                                    >
+                                        <option value="" disabled>Selecciona un artículo</option>
+                                        {articles.map((article) => (
+                                            <option key={article.codart} value={article.codart}>
+                                                {article.codart}
+                                            </option>
+                                        ))}
+                                    </select>
+                                ) : (
+                                    <MultiSelect
+                                        options={articles}
+                                        selected={selectedArticles}
+                                        onChange={setSelectedArticles}
+                                        getLabel={(article) => article.codart}
+                                        getValue={(article) => article.codart}
+                                    />
+                                )}
                             </div>
+
                             {/* Campos en grid responsivo */}
-                            <div className="col-span-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {/* Número de Orden */}
-                                <div>
-                                    <Text type="subtitle">N° Orden:</Text>
-                                    <input
-                                        type="text"
-                                        className="w-full border p-3 rounded-lg text-gray-800 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        value={orderNumber}
-                                        onChange={e => setOrderNumber(e.target.value)}
-                                    />
-                                </div>
+                            {maestraRequiereBOM ? (
+                                <div className="col-span-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    {/* Número de Orden */}
+                                    <div>
+                                        <Text type="subtitle">N° Orden:</Text>
+                                        <input
+                                            type="text"
+                                            className="w-full border p-3 rounded-lg text-gray-800 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 text-center"
+                                            value={orderNumber}
+                                            onChange={e => setOrderNumber(e.target.value)}
+                                        />
+                                    </div>
 
-                                {/* Fecha Entrega */}
-                                <div>
-                                    <Text type="subtitle">Fecha Entrega:</Text>
-                                    <input
-                                        type="date"
-                                        className="w-full border p-3 rounded-lg text-gray-800 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        value={deliveryDate}
-                                        onChange={e => setDeliveryDate(e.target.value)}
-                                    />
-                                </div>
+                                    {/* Fecha Entrega */}
+                                    <div>
+                                        <Text type="subtitle">Fecha Entrega:</Text>
+                                        <input
+                                            type="date"
+                                            className="w-full border p-3 rounded-lg text-gray-800 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 text-center"
+                                            value={deliveryDate}
+                                            onChange={e => setDeliveryDate(e.target.value)}
+                                        />
+                                    </div>
 
-                                {/* Cantidad a producir */}
-                                <div>
-                                    <Text type="subtitle">Cantidad a Producir:</Text>
-                                    <input
-                                        type="number"
-                                        className="w-full border p-3 rounded-lg text-gray-800 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        value={quantityToProduce}
-                                        onChange={e => setQuantityToProduce(Number(e.target.value))}
-                                    />
-                                </div>
-                                {/* Lote */}
-                                <div>
-                                    <Text type="subtitle">Lote:</Text>
-                                    <input
-                                        type="text"
-                                        className="w-full border p-3 rounded-lg text-gray-800 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        value={lot}
-                                        onChange={e => setLot(e.target.value)}
-                                    />
-                                </div>
+                                    {/* Cantidad a producir */}
+                                    <div>
+                                        <Text type="subtitle">Cantidad a Producir:</Text>
+                                        <input
+                                            type="number"
+                                            className="w-full border p-3 rounded-lg text-gray-800 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 text-center"
+                                            value={quantityToProduce}
+                                            onChange={e => setQuantityToProduce(Number(e.target.value))}
+                                        />
+                                    </div>
+                                    {/* Lote */}
+                                    <div>
+                                        <Text type="subtitle">Lote:</Text>
+                                        <input
+                                            type="text"
+                                            className="w-full border p-3 rounded-lg text-gray-800 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 text-center"
+                                            value={lot}
+                                            onChange={e => setLot(e.target.value)}
+                                        />
+                                    </div>
 
-                                {/* Registro Sanitario */}
-                                <div>
-                                    <Text type="subtitle">Registro Sanitario:</Text>
-                                    <input
-                                        type="text"
-                                        className="w-full border p-3 rounded-lg text-gray-800 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        value={healthRegistration}
-                                        onChange={e => setHealthRegistration(e.target.value)}
-                                    />
-                                </div>
+                                    {/* Registro Sanitario */}
+                                    <div>
+                                        <Text type="subtitle">Registro Sanitario:</Text>
+                                        <input
+                                            type="text"
+                                            className="w-full border p-3 rounded-lg text-gray-800 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 text-center"
+                                            value={healthRegistration}
+                                            onChange={e => setHealthRegistration(e.target.value)}
+                                        />
+                                    </div>
 
-                                {/* Adjunto */}
-                                <div className="flex flex-col">
-                                    <Text type="subtitle">Adjuntar:</Text>
-                                    <File onChange={setAttachment} />;
+                                    {/* Adjunto */}
+                                    <div className="flex flex-col">
+                                        <Text type="subtitle">Adjuntar:</Text>
+                                        <File onChange={setAttachment} />;
+                                    </div>
                                 </div>
-                            </div>
-
-                            <div className="col-span-full">
-                                <Text type="subtitle">Materiales:</Text>
-                                <div className="p-4 rounded space-y-4">
-                                    {ingredients.length > 0 ? (
-                                        ingredients.map((ing, index) => (
-                                            <div key={index} className="flex items-center space-x-2 w-full">
-                                                <input
-                                                    type="text"
-                                                    className="border p-1 rounded text-black w-[40%] text-center"
-                                                    placeholder="Codeart"
-                                                    value={ing.desart}
-                                                    disabled // No editable
-                                                />
-                                                <input
-                                                    type="number"
-                                                    className="border p-1 rounded text-black w-[12%] text-center"
-                                                    placeholder="Cantidad"
-                                                    value={ing.quantity ?? ""}
-                                                    disabled // No editable
-                                                />
-                                                <input
-                                                    type="number"
-                                                    className="border p-1 rounded text-black w-[12%] text-center"
-                                                    placeholder="% Merma"
-                                                    value={ing.merma ?? ""}
-                                                    disabled // No editable
-                                                />
-                                                <input
-                                                    type="number"
-                                                    className="border p-1 rounded text-black w-[20%] text-center"
-                                                    placeholder="Cant. Teórica"
-                                                    value={ing.teorica || ""}
-                                                    disabled // No editable
-                                                />
-                                                <input
-                                                    type="number"
-                                                    className="border p-1 rounded text-black w-[20%] text-center"
-                                                    placeholder="Validar"
-                                                    value={ing.validar || ""}
-                                                    disabled // No editable
-                                                />
+                            ) : (
+                                <>
+                                    {selectedArticles.map((article) => (
+                                        <div key={article.codart} className="border border-gray-200 p-4 rounded-lg mb-6 shadow-md bg-gray-50">
+                                            <Text type="title"  >Artículo: {article.codart}</Text>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                                <div className="col-span-1">
+                                                    <Text type="subtitle" >N° Orden:</Text>
+                                                    <input
+                                                        type="text"
+                                                        className="border border-gray-300 rounded-md px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 text-center text-black"
+                                                        value={articleFields[article.codart]?.orderNumber || ""}
+                                                        onChange={(e) => handleFieldChange(article.codart, "orderNumber", e.target.value)}
+                                                    />
+                                                </div>
+                                                <div className="col-span-1">
+                                                    <Text type="subtitle"  >Fecha Entrega:</Text>
+                                                    <input
+                                                        type="date"
+                                                        className="border border-gray-300 rounded-md px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 text-center text-black"
+                                                        value={articleFields[article.codart]?.deliveryDate || ""}
+                                                        onChange={(e) => handleFieldChange(article.codart, "deliveryDate", e.target.value)}
+                                                    />
+                                                </div>
+                                                <div className="col-span-1">
+                                                    <Text type="subtitle"  >Cantidad a Producir:</Text>
+                                                    <input
+                                                        type="number"
+                                                        className="border border-gray-300 rounded-md px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 text-center text-black"
+                                                        value={articleFields[article.codart]?.quantityToProduce || ""}
+                                                        onChange={(e) => handleFieldChange(article.codart, "quantityToProduce", Number(e.target.value))}
+                                                    />
+                                                </div>
+                                                <div className="col-span-1">
+                                                    <Text type="subtitle"  >Lote:</Text>
+                                                    <input
+                                                        type="text"
+                                                        className="border border-gray-300 rounded-md px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 text-center text-black"
+                                                        value={articleFields[article.codart]?.lot || ""}
+                                                        onChange={(e) => handleFieldChange(article.codart, "lot", e.target.value)}
+                                                    />
+                                                </div>
+                                                <div className="col-span-1">
+                                                    <Text type="subtitle" >Registro Sanitario:</Text>
+                                                    <input
+                                                        type="text"
+                                                        className="border border-gray-300 rounded-md px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 text-center text-black"
+                                                        value={articleFields[article.codart]?.healthRegistration || ""}
+                                                        onChange={(e) => handleFieldChange(article.codart, "healthRegistration", e.target.value)}
+                                                    />
+                                                </div>
+                                                <div className="col-span-1 flex flex-col">
+                                                    <Text type="subtitle">Adjuntar:</Text>
+                                                    <File
+                                                        onChange={(file) => handleFieldChange(article.codart, "attachment", file)}
+                                                    />
+                                                </div>
                                             </div>
-                                        ))
-                                    ) : (
-                                        <Text type="alert">No hay ingredientes agregados.</Text>
-                                    )}
+                                        </div>
+                                    ))}
+                                </>
+                            )}
+
+                            {/* Materiales */}
+                            {maestraRequiereBOM ? (
+                                <div className="col-span-full">
+                                    <Text type="subtitle">Materiales:</Text>
+                                    <div>
+                                        <table className="w-full border-collapse border border-black text-black">
+                                            <thead>
+                                                <tr className="bg-gray-200">
+                                                    <th className="border border-black p-2 text-center">Codart</th>
+                                                    <th className="border border-black p-2 text-center">Desart</th>
+                                                    <th className="border border-black p-2 text-center">Quantity</th>
+                                                    <th className="border border-black p-2 text-center">Merma</th>
+                                                    <th className="border border-black p-2 text-center">Cantidad Teorica</th>
+                                                    <th className="border border-black p-2 text-center">Validar </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {ingredients.map((ing, index) => (
+                                                    <tr key={index}>
+                                                        <td className="border border-black p-2 text-center">{ing.codart}</td>
+                                                        <td className="border border-black p-2 text-center">{ing.desart}</td>
+                                                        <td className="border border-black p-2 text-center">{ing.quantity}</td>
+                                                        <td className="border border-black p-2 text-center">{ing.merma}</td>
+                                                        <td className="border border-black p-2 text-center">
+                                                            <input
+                                                                type="number"
+                                                                className="text-black p-1 border border-gray-300 rounded text-center"
+                                                                value={ing.teorica}
+                                                                onChange={(e) => handleChange(index, "teorica", e.target.value)}
+                                                            />
+                                                        </td>
+                                                        <td className="border border-black p-2">
+                                                            <input
+                                                                type="number"
+                                                                className="text-black p-1 border border-gray-300 rounded text-center"
+                                                                value={ing.validar}
+                                                                onChange={(e) => handleChange(index, "validar", e.target.value)}
+                                                            />
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                        <br />
+                                    </div>
                                 </div>
-                            </div>
+                            ) : (null)}
                         </div>
 
                         {/* Botones */}

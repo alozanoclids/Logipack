@@ -14,12 +14,7 @@ return new class extends Migration
         Schema::create('adaptations', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('client_id');
-            $table->string('order_number');
-            $table->date('delivery_date');
             $table->json('article_code');
-            $table->string('lot');
-            $table->string('health_registration');
-            $table->integer('quantity_to_produce');
             $table->string('attachment')->nullable();
             $table->json('master')->nullable();
             $table->json('bom')->nullable();

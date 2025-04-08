@@ -15,12 +15,7 @@ class AdaptationController extends Controller
         try {
             $validatedData = $request->validate([
                 'client_id'           => 'required|exists:clients,id',
-                'order_number'        => 'required|string',
-                'delivery_date'       => 'required|date',
                 'article_code'        => 'required|json',
-                'lot'                 => 'required|string',
-                'health_registration' => 'required|string',
-                'quantity_to_produce' => 'required|integer',
                 'attachment'          => 'nullable|file',
                 'master'              => 'nullable|json',
                 'bom'                 => 'nullable|json',
@@ -96,12 +91,7 @@ class AdaptationController extends Controller
 
             $validatedData = $request->validate([
                 'client_id'           => 'required|exists:clients,id',
-                'order_number'        => 'required|string',
-                'delivery_date'       => 'required|date',
                 'article_code'        => 'required|json',
-                'lot'                 => 'required|string',
-                'health_registration' => 'required|string',
-                'quantity_to_produce' => 'required|integer',
                 'attachment'          => 'nullable|file',
                 'master'              => 'nullable|json',
                 'bom'                 => 'nullable|json',

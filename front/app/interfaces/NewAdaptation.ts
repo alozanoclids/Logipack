@@ -2,23 +2,23 @@ export interface Data {
   id: number;
   clientId: number;
   orderNumber: string;
-  deliveryDate: string; 
+  deliveryDate: string;
   articleCode: string;
   lot: string;
   healthRegistration: string;
   quantityToProduce: number;
   attachment?: string;
-  master?: string;  
-  bom?: string; 
+  master?: string;
+  bom?: string;
 }
 
 export interface BOM {
   id: number;
   client_id: number;
   base_quantity: string;
-  details: string;  
+  details: string;
   status: number;
-  ingredients: string;  
+  ingredients: string;
   code_ingredients: string;
   code_details: string;
 }
@@ -28,10 +28,33 @@ export interface BOMResponse {
 }
 
 export interface Adaptation {
-    id: number;
-    client_id: number;
-    order_number: string;
-    delivery_date: string;
-    article_code: string;
-    client_name?: string; // 🟢 Hacerlo opcional para evitar errores
+  id: number;
+  client_id: number;
+  order_number: string;
+  delivery_date: string;
+  article_code: string;
+  client_name?: string;
+}
+
+export interface ArticleFormData {
+  orderNumber: string;
+  deliveryDate: string;
+  quantityToProduce: number;
+  lot: string;
+  healthRegistration: string;
+  attachment?: File;
+}
+
+export interface ArticleFieldsMap {
+  [codart: string]: ArticleFormData;
+}
+
+export interface Articles {
+  codart: string;
+  orderNumber: string;
+  deliveryDate: string;
+  quantityToProduce: number;
+  lot: string;
+  healthRegistration: string;
+  attachment?: File;
 }

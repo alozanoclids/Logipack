@@ -268,7 +268,7 @@ const Maestra = () => {
                             <input
                                 type="text"
                                 placeholder="Descripción"
-                                className="w-full p-2 border text-black mb-2 min-w-0"
+                                className="w-full p-2 border text-black mb-2 min-w-0 text-center"
                                 value={descripcion}
                                 onChange={(e) => setDescripcion(e.target.value)}
                             />
@@ -317,9 +317,12 @@ const Maestra = () => {
                             <Text type="subtitle">Seleccione Tipo de Producto</Text>
                             <select
                                 className="w-full p-2 border mb-2 min-w-0 text-black text-center"
-                                value={tipoSeleccionado} // Ahora es un string, no un array
-                                onChange={(e) => setTipoSeleccionado(e.target.value)} // Cambia el estado con un único valor
+                                value={tipoSeleccionado}
+                                onChange={(e) => setTipoSeleccionado(e.target.value)}
                             >
+                                <option value="" disabled>
+                                    -- Seleccione un tipo de producto --
+                                </option>
                                 {tiposProducto.map((tipo, index) => (
                                     <option key={index} value={tipo}>
                                         {tipo}
