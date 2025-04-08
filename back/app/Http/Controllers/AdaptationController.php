@@ -7,6 +7,11 @@ use Illuminate\Http\Request;
 use App\Models\Adaptation;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\UploadedFile as LaravelUploadedFile;
+use Symfony\Component\HttpFoundation\File\UploadedFile as SymfonyUploadedFile;
+
 
 class AdaptationController extends Controller
 {
@@ -14,26 +19,60 @@ class AdaptationController extends Controller
     {
         try {
             $validatedData = $request->validate([
-                'client_id'           => 'required|exists:clients,id',
-                'article_code'        => 'required|json',
-                'attachment'          => 'nullable|file',
-                'master'              => 'nullable|json',
-                'bom'                 => 'nullable|json',
-                'ingredients'         => 'nullable|json',
+                'client_id'    => 'required|exists:clients,id',
+                'article_code' => 'required|json',
+                'attachment'   => 'nullable|file',
+                'master'       => 'nullable|json',
+                'bom'          => 'nullable|json',
+                'ingredients'  => 'nullable|json',
             ]);
 
-            // Si hay un archivo adjunto, guardarlo
+            $articleAttachments = [];
+
+            // 🧩 Archivo plano general (cuando hay solo uno, sin codart)
             if ($request->hasFile('attachment')) {
                 $file = $request->file('attachment');
-                $filePath = $file->store('attachments', 'public'); // Guarda en storage/app/public/attachments
-                $validatedData['attachment'] = $filePath;
+
+                // 🧼 Nombre: general_20250408_165432.pdf
+                $filename = 'general_' . now()->format('Ymd_His') . '.' . $file->getClientOriginalExtension();
+                $path = $file->storeAs('attachments', $filename, 'public');
+
+                // 🧠 Guardamos como si fuera parte del array (clave 'general')
+                $articleAttachments['general'] = $path;
             }
 
+            // 🔥 Archivos por artículo (attachment_10197-0053, etc)
+            foreach ($request->files as $key => $file) {
+                if (Str::startsWith($key, 'attachment_')) {
+                    $codart = Str::after($key, 'attachment_');
+
+                    if (!$file instanceof LaravelUploadedFile && $file instanceof SymfonyUploadedFile) {
+                        $file = LaravelUploadedFile::createFromBase($file);
+                    }
+
+                    // 🧼 Sanitiza codart
+                    $safeCodart = preg_replace('/[^A-Za-z0-9_\-\.]/', '_', $codart);
+
+                    // 🧾 Nombre: codart_20250408_165432.ext
+                    $filename = $safeCodart . '_' . now()->format('Ymd_His') . '.' . $file->getClientOriginalExtension();
+                    $path = $file->storeAs('attachments', $filename, 'public');
+
+                    $articleAttachments[$codart] = $path;
+                }
+            }
+
+            // 🧷 Unificamos: plano o por artículo, siempre se guarda en attachment
+            if (!empty($articleAttachments)) {
+                $validatedData['attachment'] = json_encode($articleAttachments);
+            }
+
+            // 💾 Creamos la adaptación
             $adaptation = Adaptation::create($validatedData);
 
             return response()->json([
-                'message'    => 'Adaptation saved successfully',
-                'adaptation' => $adaptation
+                'message'       => 'Adaptation saved successfully',
+                'adaptation'    => $adaptation,
+                'article_files' => $articleAttachments,
             ], 201);
         } catch (ValidationException $e) {
             return response()->json([
@@ -90,18 +129,58 @@ class AdaptationController extends Controller
             $adaptation = Adaptation::findOrFail($id);
 
             $validatedData = $request->validate([
-                'client_id'           => 'required|exists:clients,id',
-                'article_code'        => 'required|json',
-                'attachment'          => 'nullable|file',
-                'master'              => 'nullable|json',
-                'bom'                 => 'nullable|json',
-                'ingredients'         => 'nullable|json',
+                'client_id'    => 'required|exists:clients,id',
+                'article_code' => 'required|json',
+                'attachment'   => 'nullable|file',
+                'master'       => 'nullable|json',
+                'bom'          => 'nullable|json',
+                'ingredients'  => 'nullable|json',
             ]);
+
+            $articleAttachments = [];
+
+            $oldAttachments = json_decode($adaptation->attachment, true) ?? [];
+
+            foreach ($request->files as $key => $file) {
+                if (Str::startsWith($key, 'attachment_')) {
+                    $codart = Str::after($key, 'attachment_');
+
+                    // 🧽 Convertir archivo si viene como SymfonyUploadedFile
+                    if ($file instanceof SymfonyUploadedFile && !$file instanceof LaravelUploadedFile) {
+                        $file = LaravelUploadedFile::createFromBase($file);
+                    }
+
+                    // 🧨 Eliminar el viejo si existe
+                    if (isset($oldAttachments[$codart])) {
+                        Storage::disk('public')->delete($oldAttachments[$codart]);
+                    }
+
+                    $filename = $codart . '_' . now()->format('Ymd_His') . '.' . $file->getClientOriginalExtension();
+                    $path = $file->storeAs('attachments', $filename, 'public');
+                    $articleAttachments[$codart] = $path;
+                }
+            }
 
             if ($request->hasFile('attachment')) {
                 $file = $request->file('attachment');
-                $filePath = $file->store('attachments', 'public');
+
+                // Convertir si hace falta
+                if ($file instanceof SymfonyUploadedFile && !$file instanceof LaravelUploadedFile) {
+                    $file = LaravelUploadedFile::createFromBase($file);
+                }
+
+                // Eliminar viejo si es un archivo plano
+                if (is_string($adaptation->attachment)) {
+                    Storage::disk('public')->delete($adaptation->attachment);
+                }
+
+                $filename = 'plano_' . now()->format('Ymd_His') . '.' . $file->getClientOriginalExtension();
+                $filePath = $file->storeAs('attachments', $filename, 'public');
                 $validatedData['attachment'] = $filePath;
+            }
+
+            if (!empty($articleAttachments)) {
+                $validatedData['attachment'] = json_encode($articleAttachments);
             }
 
             $adaptation->update($validatedData);

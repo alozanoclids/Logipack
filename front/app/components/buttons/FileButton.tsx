@@ -22,9 +22,9 @@ const FileButton: React.FC<FileButtonProps> = ({ onChange }) => {
         className="relative w-fit max-w-sm mx-auto px-4 py-2 rounded-lg border-2 border-blue-500 bg-gray-50 flex items-center space-x-2 cursor-pointer"
       >
         <FaFileAlt className="text-blue-500" size={20} />
-        <span className="text-gray-500 font-semibold text-sm">
+        {/* <span className="text-gray-500 font-semibold text-sm">
           {fileName || "Arrastra o selecciona archivos"}
-        </span>
+        </span> */}
         <input
           id="file-upload"
           type="file"

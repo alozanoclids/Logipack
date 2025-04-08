@@ -236,30 +236,27 @@ function NewAdaptation() {
     }, []);
 
     const handleSubmit = async () => {
-        // Validación inicial
         if (!selectedClient) {
             showError("Por favor, selecciona un cliente.");
             return;
         }
-    
+
         let articlesData;
-    
+
         if (maestraRequiereBOM) {
             if (!orderNumber) {
                 showError("Por favor, ingresa el número de orden.");
                 return;
             }
-    
-            // Se arma la data sin incluir el attachment en el JSON.
+
             articlesData = [
                 {
-                    codart: selectedArticles[0]?.codart || "", // En BOM se usa solo el primer artículo
+                    codart: selectedArticles[0]?.codart || "",
                     orderNumber,
                     deliveryDate,
                     quantityToProduce,
                     lot,
                     healthRegistration,
-                    // NO incluyo attachment acá
                 },
             ];
         } else {
@@ -277,27 +274,34 @@ function NewAdaptation() {
                         quantityToProduce: fields.quantityToProduce || 0,
                         lot: fields.lot || "",
                         healthRegistration: fields.healthRegistration || "",
-                        // NO incluyo attachment acá
                     };
                 })
-                .filter(Boolean); // Evita incluir elementos undefined si falta algún dato
+                .filter(Boolean);
         }
-    
-        // Armamos el FormData para enviar al backend
+
         const formData = new FormData();
         formData.append("client_id", selectedClient.toString());
         formData.append("article_code", JSON.stringify(articlesData));
-    
-        // ¡IMPORTANTE! Agrega el archivo directamente al FormData,
-        // ya que si lo incluyes en el JSON se pierde su contenido.
-        if (attachment) {
-            formData.append("attachment", attachment);
-        }
-    
         formData.append("master", JSON.stringify(selectedMaestras));
         formData.append("bom", JSON.stringify(selectedBom) || "");
         formData.append("ingredients", JSON.stringify(ingredients));
-    
+
+        // ✅ Archivos adjuntos
+        if (maestraRequiereBOM) {
+            if (attachment) {
+                // Solo uno, va plano
+                formData.append("attachment", attachment);
+            }
+        } else {
+            // Varios artículos => varios adjuntos
+            selectedArticles.forEach((article) => {
+                const file = articleFields[article.codart]?.attachment;
+                if (file) {
+                    formData.append(`attachment_${article.codart}`, file);
+                }
+            });
+        }
+
         try {
             setIsLoading(true);
             if (isEditMode) {
@@ -312,14 +316,25 @@ function NewAdaptation() {
             const { adaptations } = await getAdaptations();
             setAdaptation(adaptations);
             fetchAdaptations();
-        } catch (error) {
+        } catch (error: any) {
+            // Muestra el error genérico
             showError("Error al guardar.");
-            console.error(error);
-        } finally {
+
+            // Muestra en consola toda la info del error
+            console.error("🔥 Error completo:", error);
+
+            // Si el backend respondió, logueamos el detalle
+            if (error?.response) {
+                console.error("🧠 Respuesta del servidor:", error.response.data);
+            } else {
+                console.error("💥 Error sin respuesta del servidor:", error.message);
+            }
+        }
+        finally {
             setIsLoading(false);
         }
     };
-    
+
     // Handler de edicion
     const handleEdit = async (id: number) => {
         try {
@@ -641,64 +656,69 @@ function NewAdaptation() {
                                 </div>
                             ) : (
                                 <>
-                                    {selectedArticles.map((article) => (
-                                        <div key={article.codart} className="border border-gray-200 p-4 rounded-lg mb-6 shadow-md bg-gray-50">
-                                            <Text type="title"  >Artículo: {article.codart}</Text>
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                                                <div className="col-span-1">
-                                                    <Text type="subtitle" >N° Orden:</Text>
-                                                    <input
-                                                        type="text"
-                                                        className="border border-gray-300 rounded-md px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 text-center text-black"
-                                                        value={articleFields[article.codart]?.orderNumber || ""}
-                                                        onChange={(e) => handleFieldChange(article.codart, "orderNumber", e.target.value)}
-                                                    />
-                                                </div>
-                                                <div className="col-span-1">
-                                                    <Text type="subtitle"  >Fecha Entrega:</Text>
-                                                    <input
-                                                        type="date"
-                                                        className="border border-gray-300 rounded-md px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 text-center text-black"
-                                                        value={articleFields[article.codart]?.deliveryDate || ""}
-                                                        onChange={(e) => handleFieldChange(article.codart, "deliveryDate", e.target.value)}
-                                                    />
-                                                </div>
-                                                <div className="col-span-1">
-                                                    <Text type="subtitle"  >Cantidad a Producir:</Text>
-                                                    <input
-                                                        type="number"
-                                                        className="border border-gray-300 rounded-md px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 text-center text-black"
-                                                        value={articleFields[article.codart]?.quantityToProduce || ""}
-                                                        onChange={(e) => handleFieldChange(article.codart, "quantityToProduce", Number(e.target.value))}
-                                                    />
-                                                </div>
-                                                <div className="col-span-1">
-                                                    <Text type="subtitle"  >Lote:</Text>
-                                                    <input
-                                                        type="text"
-                                                        className="border border-gray-300 rounded-md px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 text-center text-black"
-                                                        value={articleFields[article.codart]?.lot || ""}
-                                                        onChange={(e) => handleFieldChange(article.codart, "lot", e.target.value)}
-                                                    />
-                                                </div>
-                                                <div className="col-span-1">
-                                                    <Text type="subtitle" >Registro Sanitario:</Text>
-                                                    <input
-                                                        type="text"
-                                                        className="border border-gray-300 rounded-md px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 text-center text-black"
-                                                        value={articleFields[article.codart]?.healthRegistration || ""}
-                                                        onChange={(e) => handleFieldChange(article.codart, "healthRegistration", e.target.value)}
-                                                    />
-                                                </div>
-                                                <div className="col-span-1 flex flex-col">
-                                                    <Text type="subtitle">Adjuntar:</Text>
-                                                    <File
-                                                        onChange={(file) => handleFieldChange(article.codart, "attachment", file)}
-                                                    />
+                                    <div className="grid gap-6"
+                                        style={{
+                                            gridTemplateColumns: `repeat(${selectedArticles.length}, minmax(410px, 1fr))`
+                                        }}>
+                                        {selectedArticles.map((article) => (
+                                            <div key={article.codart} className="border border-gray-200 p-4 rounded-lg bg-gray-50">
+                                                <Text type="title"  >Artículo: {article.codart}</Text>
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                                    <div className="col-span-1">
+                                                        <Text type="subtitle" >N° Orden:</Text>
+                                                        <input
+                                                            type="text"
+                                                            className="border border-gray-300 rounded-md px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 text-center text-black"
+                                                            value={articleFields[article.codart]?.orderNumber || ""}
+                                                            onChange={(e) => handleFieldChange(article.codart, "orderNumber", e.target.value)}
+                                                        />
+                                                    </div>
+                                                    <div className="col-span-1">
+                                                        <Text type="subtitle"  >Fecha Entrega:</Text>
+                                                        <input
+                                                            type="date"
+                                                            className="border border-gray-300 rounded-md px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 text-center text-black"
+                                                            value={articleFields[article.codart]?.deliveryDate || ""}
+                                                            onChange={(e) => handleFieldChange(article.codart, "deliveryDate", e.target.value)}
+                                                        />
+                                                    </div>
+                                                    <div className="col-span-1">
+                                                        <Text type="subtitle"  >Cant. a Producir:</Text>
+                                                        <input
+                                                            type="number"
+                                                            className="border border-gray-300 rounded-md px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 text-center text-black"
+                                                            value={articleFields[article.codart]?.quantityToProduce || ""}
+                                                            onChange={(e) => handleFieldChange(article.codart, "quantityToProduce", Number(e.target.value))}
+                                                        />
+                                                    </div>
+                                                    <div className="col-span-1">
+                                                        <Text type="subtitle"  >Lote:</Text>
+                                                        <input
+                                                            type="text"
+                                                            className="border border-gray-300 rounded-md px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 text-center text-black"
+                                                            value={articleFields[article.codart]?.lot || ""}
+                                                            onChange={(e) => handleFieldChange(article.codart, "lot", e.target.value)}
+                                                        />
+                                                    </div>
+                                                    <div className="col-span-1">
+                                                        <Text type="subtitle" >R. Sanitario:</Text>
+                                                        <input
+                                                            type="text"
+                                                            className="border border-gray-300 rounded-md px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 text-center text-black"
+                                                            value={articleFields[article.codart]?.healthRegistration || ""}
+                                                            onChange={(e) => handleFieldChange(article.codart, "healthRegistration", e.target.value)}
+                                                        />
+                                                    </div>
+                                                    <div className="col-span-1 flex flex-col">
+                                                        <Text type="subtitle">Adjuntar:</Text>
+                                                        <File
+                                                            onChange={(file) => handleFieldChange(article.codart, "attachment", file)}
+                                                        />
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    ))}
+                                        ))}
+                                    </div>
                                 </>
                             )}
 
