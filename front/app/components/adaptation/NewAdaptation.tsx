@@ -30,7 +30,7 @@ function NewAdaptation() {
     const [selectedArticles, setSelectedArticles] = useState<Article[]>([]);
     const [lot, setLot] = useState<string>("");
     const [healthRegistration, setHealthRegistration] = useState<string>("");
-    const [quantityToProduce, setQuantityToProduce] = useState<number | "">("");
+    const [quantityToProduce, setQuantityToProduce] = useState("");
     const [attachment, setAttachment] = useState<File | null>(null);
     const [attachmentUrl, setAttachmentUrl] = useState<string | null>(null);
     const [clients, setClients] = useState<Client[]>([]);
@@ -151,32 +151,30 @@ function NewAdaptation() {
     useEffect(() => {
         const fetchBom = async () => {
             if (!selectedClient || selectedMaestras.length === 0) return;
+
             const selectedMaestraObj = maestra.find(
                 (m) => m.id.toString() === selectedMaestras[0]
             );
+
             if (!selectedMaestraObj?.requiere_bom) {
-                setBoms([]); // Limpiar
+                setBoms([]);
                 setIngredients([]);
                 return;
             }
+
             try {
                 const clientData = await getClientsId(Number(selectedClient));
                 const bomData = await getArticleByClient(clientData.id);
+
                 if (bomData?.boms?.length > 0) {
                     setBoms(bomData.boms);
+
                     const ingredientsJSON = bomData.boms[0].ingredients;
                     const parsedIngredients: Ingredient[] = JSON.parse(ingredientsJSON);
-                    const enhancedIngredients = parsedIngredients.map((ing) => ({
-                        ...ing,
-                        teteorica:
-                            ing.teorica === ""
-                                ? (parseFloat(ing.quantity) + parseFloat(ing.quantity) * parseFloat(ing.merma)).toString()
-                                : ing.teorica,
-                        validar: ing.validar,
-                    }));
-                    setIngredients(enhancedIngredients);
+
+                    setIngredients(parsedIngredients); // sin teorica aún
                 } else {
-                    setBoms([]); // También vaciar si no hay BOMs
+                    setBoms([]);
                     setIngredients([]);
                 }
             } catch (error) {
@@ -185,8 +183,29 @@ function NewAdaptation() {
                 setIngredients([]);
             }
         };
+
         fetchBom();
     }, [selectedClient, selectedMaestras, maestra]);
+
+    useEffect(() => {
+        if (quantityToProduce != "") {
+            const quantityToProduceNumber = Number(quantityToProduce);
+            if (!ingredients.length || isNaN(quantityToProduceNumber)) return;
+
+            const recalculated = ingredients.map((ing) => {
+                const merma = parseFloat(ing.merma);
+                const teoricaPorUnidad = quantityToProduceNumber + quantityToProduceNumber * merma;
+                const teoricaCalculada = (teoricaPorUnidad).toFixed(4);
+                return {
+                    ...ing,
+                    teorica: teoricaCalculada,
+                };
+            });
+
+            setIngredients(recalculated);
+        }
+    }, [quantityToProduce]);
+
 
     const maestraSeleccionada = useMemo(() => {
         return maestra.find(m => m.id.toString() === selectedMaestras[0]);
@@ -623,7 +642,8 @@ function NewAdaptation() {
                                             type="number"
                                             className="w-full border p-3 rounded-lg text-gray-800 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 text-center"
                                             value={quantityToProduce}
-                                            onChange={e => setQuantityToProduce(Number(e.target.value))}
+                                            onChange={e => setQuantityToProduce(e.target.value)}
+                                            min={1}
                                         />
                                     </div>
                                     {/* Lote */}
@@ -732,8 +752,8 @@ function NewAdaptation() {
                                                 <tr className="bg-gray-200">
                                                     <th className="border border-black p-2 text-center">Codart</th>
                                                     <th className="border border-black p-2 text-center">Desart</th>
-                                                    <th className="border border-black p-2 text-center">Quantity</th>
-                                                    <th className="border border-black p-2 text-center">Merma</th>
+                                                    <th className="border border-black p-2 text-center">Cant. a Producir:</th>
+                                                    <th className="border border-black p-2 text-center">Merma%</th>
                                                     <th className="border border-black p-2 text-center">Cantidad Teorica</th>
                                                     <th className="border border-black p-2 text-center">Validar </th>
                                                 </tr>

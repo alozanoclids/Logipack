@@ -16,7 +16,7 @@ export interface Ingredient {
   quantity: string;
   merma: string;
   theoreticalQuantity?: string; // New field
-  teorica?: string;
+  teorica: string;
   validar?: string;
 }
 
