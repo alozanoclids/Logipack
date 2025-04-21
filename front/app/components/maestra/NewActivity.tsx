@@ -1,20 +1,15 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-    createActivitie,
-    deleteActivitie,
-    getActivitie,
-    getActivitieId,
-    updateActivitie,
-} from "../../services/maestras/activityServices";
+import { createActivitie, deleteActivitie, getActivitie, getActivitieId, updateActivitie, } from "../../services/maestras/activityServices";
 import { showError, showSuccess, showConfirm } from "../toastr/Toaster";
 import Button from "../buttons/buttons";
 import Table from "../table/Table";
 import { useAuth } from '../../hooks/useAuth'
 import { getUserByEmail } from '../../services/userDash/authservices';
 import nookies from "nookies";
-import {ActivityType, Activities, EditFormData} from "../../interfaces/NewActivity";
+import { ActivityType, Activities, EditFormData } from "../../interfaces/NewActivity";
+import Text from "../text/Text";
 
 const activityTypes: Record<string, ActivityType> = {
     "Texto corto": { type: "text" },
@@ -405,9 +400,10 @@ export default function NewActivity() {
                             exit={{ scale: 0.8, opacity: 0 }}
                             transition={{ duration: 0.3 }}
                         >
-                            <h2 className="text-xl font-semibold mb-4 text-black text-center">Crear Actividad</h2>
+                            <Text type="title">Crear Actividad</Text> 
 
                             {/* Campo de descripción */}
+                            <Text type="subtitle">Descripción</Text>
                             <input
                                 type="text"
                                 name="description"
@@ -418,6 +414,7 @@ export default function NewActivity() {
                             />
 
                             {/* Selector de tipo de actividad */}
+                            <Text type="subtitle">Tipo de Actividad</Text>
                             <select
                                 value={selectedType}
                                 onChange={(e) => handleTypeChange(e.target.value)}
@@ -431,7 +428,8 @@ export default function NewActivity() {
                             </select>
 
                             {/* Checkbox para "Requerido" */}
-                            <label className="flex items-center space-x-2 mb-4">
+                            <div className="flex flex-col items-center">
+                                <Text type="subtitle">Requerido</Text>
                                 <input
                                     type="checkbox"
                                     checked={formData.binding}
@@ -440,9 +438,7 @@ export default function NewActivity() {
                                     }
                                     className="h-5 w-5 text-blue-500 rounded-md"
                                 />
-                                <span className="text-black">Requerido</span>
-                            </label>
-
+                            </div>
                             {/* Opciones dinámicas */}
                             {parsedConfig &&
                                 ["select", "radio", "checkbox"].includes(parsedConfig.type || "") && (

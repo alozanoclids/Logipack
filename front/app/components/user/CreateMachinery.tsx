@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { motion } from "framer-motion"; 
+import { motion } from "framer-motion";
 // 🔹 Servicios
 import * as machineryService from "../../services/userDash/machineryServices";
 import { getFactory } from "../../services/userDash/factoryServices";
@@ -169,113 +169,120 @@ function CreateMachinery() {
           >
             <Text type="title">{isEditMode ? "Editar" : "Crear"} Maquinaria</Text>
 
-            <form className="space-y-4">
-              <div>
-                <Text type="subtitle">Nombre</Text>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full border border-gray-300 rounded px-3 py-2 text-black text-center"
-                />
+            <form className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Columna 1 */}
+              <div className="space-y-4">
+                <div>
+                  <Text type="subtitle">Nombre</Text>
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="w-full border border-gray-300 rounded px-3 py-2 text-black text-center"
+                  />
+                </div>
+
+                <div>
+                  <Text type="subtitle">Categoría</Text>
+                  <select
+                    className="w-full border border-gray-300 rounded px-3 py-2 text-black text-center"
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                  >
+                    <option value="grande">Grande</option>
+                    <option value="mediana">Mediana</option>
+                    <option value="pequeña">Pequeña</option>
+                  </select>
+                </div>
+
+                <div>
+                  <Text type="subtitle">Potencia</Text>
+                  <input
+                    type="number"
+                    value={power}
+                    onChange={(e) => setPower(e.target.value)}
+                    className="w-full border border-gray-300 rounded px-3 py-2 text-black text-center"
+                  />
+                </div>
+
+                <div>
+                  <Text type="subtitle">Dimensiones</Text>
+                  <input
+                    type="text"
+                    value={dimensions}
+                    onChange={(e) => setDimensions(e.target.value)}
+                    className="w-full border border-gray-300 rounded px-3 py-2 text-black text-center"
+                  />
+                </div>
+                <div>
+                  <Text type="subtitle">Descripción</Text>
+                  <textarea
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    className="w-full border border-gray-300 rounded px-3 py-2 text-black"
+                    rows={4}
+                  />
+                </div>
               </div>
 
-              <div>
-                <Text type="subtitle">Plantas</Text>
-                <select
-                  className="w-full border border-gray-300 rounded px-3 py-2 text-black text-center"
-                  value={factory_id}
-                  onChange={(e) => setFactoryId(e.target.value)}
-                >
-                  <option value="">Seleccionar Planta</option>
-                  {factory.map((fac) => (
-                    <option key={fac.id} value={fac.id}>
-                      {fac.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {/* Columna 2 */}
+              <div className="space-y-4">
+                <div>
+                  <Text type="subtitle">Plantas</Text>
+                  <select
+                    className="w-full border border-gray-300 rounded px-3 py-2 text-black text-center"
+                    value={factory_id}
+                    onChange={(e) => setFactoryId(e.target.value)}
+                  >
+                    <option value="">Seleccionar Planta</option>
+                    {factory.map((fac) => (
+                      <option key={fac.id} value={fac.id}>
+                        {fac.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-              <div>
-                <Text type="subtitle">Categoría</Text>
-                <select
-                  className="w-full border border-gray-300 rounded px-3 py-2 text-black text-center"
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                >
-                  <option value="grande">Grande</option>
-                  <option value="mediana">Mediana</option>
-                  <option value="pequeña">Pequeña</option>
-                </select>
-              </div>
+                <div>
+                  <Text type="subtitle">Tipo</Text>
+                  <input
+                    type="text"
+                    value={type}
+                    onChange={(e) => setType(e.target.value)}
+                    className="w-full border border-gray-300 rounded px-3 py-2 text-black text-center"
+                  />
+                </div>
 
-              <div>
-                <Text type="subtitle">Tipo</Text>
-                <input
-                  type="text"
-                  value={type}
-                  onChange={(e) => setType(e.target.value)}
-                  className="w-full border border-gray-300 rounded px-3 py-2 text-black text-center"
-                />
-              </div>
+                <div>
+                  <Text type="subtitle">Capacidad</Text>
+                  <input
+                    type="text"
+                    value={capacity}
+                    onChange={(e) => setCapacity(e.target.value)}
+                    className="w-full border border-gray-300 rounded px-3 py-2 text-black text-center"
+                  />
+                </div>
 
-              <div>
-                <Text type="subtitle">Potencia</Text>
-                <input
-                  type="number"
-                  value={power}
-                  onChange={(e) => setPower(e.target.value)}
-                  className="w-full border border-gray-300 rounded px-3 py-2 text-black text-center"
-                />
-              </div>
+                <div>
+                  <Text type="subtitle">Peso</Text>
+                  <input
+                    type="text"
+                    value={weight}
+                    onChange={(e) => setWeight(e.target.value)}
+                    className="w-full border border-gray-300 rounded px-3 py-2 text-black text-center"
+                  />
+                </div>
 
-              <div>
-                <Text type="subtitle">Capacidad</Text>
-                <input
-                  type="text"
-                  value={capacity}
-                  onChange={(e) => setCapacity(e.target.value)}
-                  className="w-full border border-gray-300 rounded px-3 py-2 text-black text-center"
-                />
-              </div>
+                <div className="flex flex-col items-center">
+                  <Text type="subtitle">Movíl</Text>
+                  <input
+                    type="checkbox"
+                    checked={is_mobile}
+                    onChange={(e) => setIsMobile(e.target.checked)}
+                    className="h-5 w-5 text-blue-600 mt-2"
+                  />
+                </div>
 
-              <div>
-                <Text type="subtitle">Dimensiones</Text>
-                <input
-                  type="text"
-                  value={dimensions}
-                  onChange={(e) => setDimensions(e.target.value)}
-                  className="w-full border border-gray-300 rounded px-3 py-2 text-black text-center"
-                />
-              </div>
-
-              <div>
-                <Text type="subtitle">Peso</Text>
-                <input
-                  type="text"
-                  value={weight}
-                  onChange={(e) => setWeight(e.target.value)}
-                  className="w-full border border-gray-300 rounded px-3 py-2 text-black text-center"
-                />
-              </div>
-
-              <div>
-                <Text type="subtitle">Descripción</Text>
-                <textarea
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  className="w-full border border-gray-300 rounded px-3 py-2 text-black text-center"
-                />
-              </div>
-
-              <div>
-                <Text type="subtitle">Móvil</Text>
-                <input
-                  type="checkbox"
-                  checked={is_mobile}
-                  onChange={(e) => setIsMobile(e.target.checked)}
-                  className="mt-1"
-                />
               </div>
             </form>
 

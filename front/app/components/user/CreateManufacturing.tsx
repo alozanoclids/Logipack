@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { createManu, getManu, getManuId, updateManu, deleteManu } from "../../services/userDash/manufacturingServices";
 import { getProduct } from "../../services/userDash/productServices";
 import { getFactory, getFactoryId } from "../../services/userDash/factoryServices";
 import Table from "../table/Table";
 import { showSuccess, showError, showConfirm } from "../toastr/Toaster";
-import Button from "../buttons/buttons"; 
+import Button from "../buttons/buttons";
+import Text from "../text/Text";
 interface Manu {
     id?: number;
     name: string;
@@ -56,7 +57,7 @@ function CreateManufacturing() {
     useEffect(() => {
         fetchData();
     }, []);
- 
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({
@@ -143,20 +144,23 @@ function CreateManufacturing() {
             <div className="flex justify-center mb-2">
                 <Button onClick={openModal} variant="create" label="Crear Linea" />
             </div>
-            <AnimatePresence>
-                {isModalOpen && (
+            {isModalOpen && (
+                <motion.div
+                    className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center p-4 z-50"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                >
                     <motion.div
-                        className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
+                        className="bg-white p-6 rounded-lg shadow-lg w-full max-w-[100%] md:max-w-[600px] max-h-[90vh] overflow-y-auto z-50"
+                        initial={{ y: -50, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        exit={{ y: -50, opacity: 0 }}
                     >
-                        <motion.div className="bg-white p-8 rounded shadow-md w-4/5 max-w-4xl z-50">
-                            <h2 className="text-lg font-bold text-black mb-4 text-center">
-                                {formData.id ? "Editar" : "Crear"} Línea
-                            </h2>
-                            <form onSubmit={handleSubmit}>
-                                <label className="block text-black mb-1">Nombre de Línea</label>
+                        <Text type="title">{formData.id ? "Editar" : "Crear"} Línea</Text>
+                        <form onSubmit={handleSubmit}>
+                            <div className="mb-4">
+                                <Text type="subtitle">Nombre de Línea</Text>
                                 <input
                                     type="text"
                                     name="name"
@@ -165,8 +169,9 @@ function CreateManufacturing() {
                                     placeholder="Nombre"
                                     className="w-full text-black border p-2 mb-3"
                                 />
-
-                                <label className="block text-black mb-1">Seleccionar Fábrica</label>
+                            </div>
+                            <div className="mb-4">
+                                <Text type="subtitle">Seleccionar Fábrica</Text>
                                 <select
                                     name="factory_id"
                                     value={formData.factory_id || ""}
@@ -180,22 +185,25 @@ function CreateManufacturing() {
                                         </option>
                                     ))}
                                 </select>
-
+                            </div>
+                            <div className="mb-4">
                                 <div className="flex gap-4">
                                     <div className="w-1/2 border p-2 h-80 overflow-y-auto">
-                                        <h3 className="font-bold text-black text-center">Tipo de Productos Disponibles</h3>
-                                        {products.map(product => (
-                                            <div
-                                                key={product.id}
-                                                className="cursor-pointer text-black p-1 hover:bg-gray-200"
-                                                onClick={() => handleSelectChange(product.name)}
-                                            >
-                                                {product.name}
-                                            </div>
-                                        ))}
+                                        <Text type="subtitle">Tipo de Productos Disponibles</Text>
+                                        {products
+                                            .filter(product => !formData.line_types.includes(product.name)) 
+                                            .map(product => (
+                                                <div
+                                                    key={product.id}
+                                                    className="cursor-pointer text-black p-1 hover:bg-gray-200"
+                                                    onClick={() => handleSelectChange(product.name)}
+                                                >
+                                                    {product.name}
+                                                </div>
+                                            ))}
                                     </div>
                                     <div className="w-1/2 border p-2 h-80 overflow-y-auto">
-                                        <h3 className="font-bold text-black text-center">Tipos Seleccionados</h3>
+                                        <Text type="subtitle">Tipos Seleccionados</Text>
                                         {formData.line_types.map((item, index) => (
                                             <div
                                                 key={index}
@@ -207,16 +215,15 @@ function CreateManufacturing() {
                                         ))}
                                     </div>
                                 </div>
-
-                                <div className="flex justify-center gap-2 mt-2">
-                                    <Button onClick={closeModal} variant="cancel" />
-                                    <Button type="submit" variant="save" />
-                                </div>
-                            </form>
-                        </motion.div>
+                            </div>
+                            <div className="flex justify-center gap-2 mt-2">
+                                <Button onClick={closeModal} variant="cancel" />
+                                <Button type="submit" variant="save" />
+                            </div>
+                        </form>
                     </motion.div>
-                )}
-            </AnimatePresence>
+                </motion.div>
+            )}
             <Table columns={columns} rows={manu} columnLabels={columnLabels} onDelete={handleDelete} onEdit={openEditModal} />
         </div>
     );

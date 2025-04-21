@@ -8,6 +8,7 @@ import Table from "../table/Table";
 import Button from "../buttons/buttons";
 import { Stage, Data } from "../../interfaces/NewStage";
 const phases = ["Planeacion", "Conciliación", "Actividades"];
+import Text from "../text/Text";
 
 function NewStage() {
     const [isOpen, setIsOpen] = useState(false);
@@ -232,31 +233,29 @@ function NewStage() {
                             </svg>
                         </button>
 
-                        <h2 className="text-center text-xl font-bold text-black mb-4">
-                            {editingStage ? "Editar Fase" : "Crear Fase"}
-                        </h2>
+                        <Text type="title">{editingStage ? "Editar Fase" : "Crear Fase"}</Text>
 
                         <div className="space-y-4">
                             {/* Descripción */}
                             <div>
-                                <label className="block text-base font-semibold text-black">Descripción</label>
+                                <Text type="subtitle">Descripción</Text>
                                 <input
                                     type="text"
                                     value={description}
                                     onChange={(e) => setDescription(e.target.value)}
-                                    className="mt-1 w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-black"
+                                    className="mt-1 w-full text-center p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-black"
                                 />
                             </div>
 
                             {/* Tipo de Fase */}
                             <div>
-                                <label className="block text-base font-semibold text-black">Tipo de Fase</label>
+                                <Text type="subtitle">Tipo de Fase</Text>
                                 <select
                                     value={phaseType}
                                     onChange={(e) =>
                                         setPhaseType(e.target.value as "Planeacion" | "Conciliación" | "Actividades")
                                     }
-                                    className="mt-1 w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-black"
+                                    className="mt-1 w-full text-center p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-black"
                                 >
                                     {phases.map((phase) => (
                                         <option key={phase} value={phase}>
@@ -269,13 +268,11 @@ function NewStage() {
                             {/* Actividades (solo si Tipo de Fase es Actividades) */}
                             {phaseType === "Actividades" && (
                                 <div className="space-y-4">
-                                    <h3 className="text-lg font-bold text-center text-black">Actividades</h3>
+                                    <Text type="subtitle">Actividades</Text>
                                     <div className="flex flex-col md:flex-row gap-4">
                                         {/* Lista de actividades disponibles */}
                                         <div className="w-full md:w-1/2">
-                                            <label className="block text-base text-center font-semibold text-black mb-1">
-                                                Disponibles
-                                            </label>
+                                            <Text type="subtitle">Disponibles</Text>
                                             <ul className="mt-1 border border-gray-300 p-2 rounded-lg max-h-48 overflow-y-auto">
                                                 {availableActivities.map((activity) => {
                                                     const isAdded = selectedActivities.some(
@@ -310,9 +307,7 @@ function NewStage() {
 
                                         {/* Lista de actividades seleccionadas */}
                                         <div className="w-full md:w-1/2">
-                                            <label className="block text-base font-semibold text-center text-black mb-1">
-                                                Seleccionadas
-                                            </label>
+                                            <Text type="subtitle">Seleccionadas</Text>
                                             <ul className="mt-1 border border-gray-300 p-2 rounded-lg max-h-48 overflow-y-auto">
                                                 {selectedActivities.map((activity) => (
                                                     <li
