@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { motion } from "framer-motion"; 
+import { motion } from "framer-motion";
 // 🔹 Servicios
 import { getClients, getClientsId } from "@/app/services/userDash/clientServices";
 import { getArticleByCode, getArticleByClient } from "@/app/services/bom/articleServices";
-import { newAdaptation, getAdaptations, deleteAdaptation, updateAdaptation, getAdaptationsId } from "@/app/services/adaptation/adaptationServices"; 
+import { newAdaptation, getAdaptations, deleteAdaptation, updateAdaptation, getAdaptationsId } from "@/app/services/adaptation/adaptationServices";
 import { getMaestra } from "../../services/maestras/maestraServices";
 // 🔹 Componentes
 import Button from "../buttons/buttons";
@@ -37,7 +37,7 @@ function NewAdaptation() {
     const [adaptation, setAdaptation] = useState<Adaptation[]>([]);
     const [ingredients, setIngredients] = useState<Ingredient[]>([]);
     const [isEditMode, setIsEditMode] = useState(false);
-    const [editAdaptationId, setEditAdaptationId] = useState<number | null>(null); 
+    const [editAdaptationId, setEditAdaptationId] = useState<number | null>(null);
     const [selectedMaestras, setSelectedMaestras] = useState<string[]>([]);
     const [boms, setBoms] = useState<BOM[]>([]);
     const [selectedBom, setSelectedBom] = useState<number | "">("");
@@ -179,7 +179,6 @@ function NewAdaptation() {
         }
     }, [quantityToProduce]);
 
-
     const maestraSeleccionada = useMemo(() => {
         return maestra.find(m => m.id.toString() === selectedMaestras[0]);
     }, [selectedMaestras, maestra]);
@@ -299,7 +298,7 @@ function NewAdaptation() {
                 await updateAdaptation(editAdaptationId!, formData);
                 showSuccess("Acondicionamiento actualizado.");
             } else {
-                await newAdaptation(formData); 
+                await newAdaptation(formData);
                 showSuccess("Acondicionamiento creado.");
             }
             resetForm();
@@ -326,7 +325,13 @@ function NewAdaptation() {
         }
     };
 
-    // Handler de edicion
+    // 👉 Al principio de tu componente, antes de handleEdit:
+    const formatDate = (dateString: string): string => {
+        const dt = new Date(dateString);
+        if (isNaN(dt.getTime())) return "";
+        return dt.toISOString().slice(0, 10); // YYYY‑MM‑DD
+    };
+
     const handleEdit = async (id: number) => {
         try {
             const response = await getAdaptationsId(id);
@@ -335,78 +340,90 @@ function NewAdaptation() {
                 showError("La adaptación no existe");
                 return;
             }
+
             setIsEditMode(true);
             setEditAdaptationId(id);
-            // Cliente
-            setSelectedClient(adaptation.client_id);
-            // Maestra (asegúrate de parsear)
-            const masterParsed =
-                typeof adaptation.master === "string"
-                    ? JSON.parse(adaptation.master)
-                    : adaptation.master;
-            setSelectedMaestras(masterParsed ? masterParsed : []);
-            // BOM: parsear si es necesario
-            let bomParsed = "";
+
+            // — Cliente
+            setSelectedClient(adaptation.client_id.toString());
+
+            // — Master(s)
+            const masterParsed = typeof adaptation.master === "string"
+                ? JSON.parse(adaptation.master)
+                : adaptation.master;
+            setSelectedMaestras(Array.isArray(masterParsed)
+                ? masterParsed.map((m) => m.toString())
+                : []
+            );
+
+            // — BOM
+            let bomParsed: string | number = "";
             if (typeof adaptation.bom === "string") {
                 try {
                     bomParsed = JSON.parse(adaptation.bom);
-                } catch (error) {
+                } catch {
                     bomParsed = adaptation.bom;
                 }
-            }
-            setSelectedBom(Number(bomParsed));
-            // Artículos: usar el campo correcto y parsearlo
-            const articles = adaptation.article_code ? JSON.parse(adaptation.article_code) : [];
-            setSelectedArticles(
-                articles
-                    .filter((a: Article) => a && a.codart) // Filtra los nulos o sin codart
-                    .map((a: Article) => ({ codart: a.codart }))
-            );
-            if (adaptation.bom != "") {
-                const general = articles[0];
-                if (general) {
-                    setOrderNumber(general.orderNumber || "");
-                    setDeliveryDate(general.deliveryDate || "");
-                    setQuantityToProduce(general.quantityToProduce || 0);
-                    setLot(general.lot || "");
-                    setHealthRegistration(general.healthRegistration || "");
-                    setAttachment(null);
-                    setAttachmentUrl(general.attachment ? `/storage/${general.attachment}` : null);
-                }
             } else {
-                // Si NO requiere BOM: campos por artículo 
-                const fieldsMap: ArticleFieldsMap = {};
-                articles.forEach((a: Articles) => {
+                bomParsed = adaptation.bom;
+            }
+            setSelectedBom(bomParsed === "" ? "" : Number(bomParsed));
+
+            // — Artículos parseados
+            const parsedArticles = adaptation.article_code
+                ? JSON.parse(adaptation.article_code)
+                : [];
+            setSelectedArticles(parsedArticles.map((a: any) => ({ codart: a.codart })));
+
+            if (bomParsed !== "") {
+                // 🚀 Rama “requiere BOM”: un solo artículo “general”
+                const general = parsedArticles[0] || {};
+                setOrderNumber(general.orderNumber ?? "");
+                setDeliveryDate(formatDate(general.deliveryDate ?? ""));
+                setQuantityToProduce(String(general.quantityToProduce ?? ""));
+                setLot(general.lot ?? "");
+                setHealthRegistration(general.healthRegistration ?? "");
+                setAttachment(null);
+                setAttachmentUrl(
+                    general.attachment ? `/storage/${general.attachment}` : null
+                );
+                setArticleFields({}); // limpio campos por artículo
+            } else {
+                // 📝 Rama “sin BOM”: campos por cada codart
+                const fieldsMap: Record<string, ArticleFormData> = {};
+                parsedArticles.forEach((a: any) => {
                     fieldsMap[a.codart] = {
-                        orderNumber: a.orderNumber,
-                        deliveryDate: a.deliveryDate,
-                        quantityToProduce: a.quantityToProduce,
-                        lot: a.lot,
-                        healthRegistration: a.healthRegistration,
-                        attachment: a.attachment,
+                        orderNumber: a.orderNumber ?? "",
+                        deliveryDate: formatDate(a.deliveryDate ?? ""),
+                        quantityToProduce: a.quantityToProduce ?? "",
+                        lot: a.lot ?? "",
+                        healthRegistration: a.healthRegistration ?? "",
+                        attachment: a.attachment,  
                     };
                 });
                 setArticleFields(fieldsMap);
             }
-            // Ingredientes
+
+            // — Ingredientes
             if (adaptation.ingredients) {
                 try {
-                    const parsedIngredients = JSON.parse(adaptation.ingredients).map((ing: any) => ({
+                    const parsedIng = JSON.parse(adaptation.ingredients).map((ing: any) => ({
                         ...ing,
-                        teorica: ing.teorica ?? (
-                            parseFloat(ing.quantity || "0") * (1 + parseFloat(ing.merma || "0"))
-                        ).toFixed(2),
+                        teorica:
+                            ing.teorica ??
+                            (Number(ing.quantity || "0") * (1 + Number(ing.merma || "0"))).toFixed(4),
                         validar: ing.validar ?? "",
                     }));
-                    setIngredients(parsedIngredients);
-                } catch (error) {
-                    console.error("Error al parsear los ingredientes", error);
+                    setIngredients(parsedIng);
+                } catch (e) {
+                    console.error("Error al parsear ingredientes:", e);
                     setIngredients([]);
                 }
             } else {
                 setIngredients([]);
             }
-            // Abre el modal y refresca adaptaciones
+
+            // ✨ Abro modal y refresco tabla
             setIsOpen(true);
             fetchAdaptations();
         } catch (error) {
@@ -414,6 +431,7 @@ function NewAdaptation() {
             console.error(error);
         }
     };
+
 
     //Handle de eliminacion
     const handleDelete = async (id: number) => {
