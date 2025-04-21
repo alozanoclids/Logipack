@@ -118,6 +118,7 @@ function EditPlanning() {
 
     const handleEdit = useCallback((id: number) => {
         const selectedPlan = planning.find(plan => plan.id === id);
+        console.log("Selected Plan:", selectedPlan);
         if (selectedPlan) {
             setCurrentPlan(selectedPlan);
             setIsOpen(true);
@@ -245,11 +246,12 @@ function EditPlanning() {
                                 <Text type="subtitle">Estado</Text>
                                 <select
                                     className="w-full border p-3 rounded-lg text-gray-800 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 text-center"
-                                    value={currentPlan.status_date}
+                                    value={currentPlan.status_dates}
                                     onChange={(e) =>
-                                        setCurrentPlan({ ...currentPlan, status_date: e.target.value })
+                                        setCurrentPlan({ ...currentPlan, status_dates: e.target.value })
                                     }
                                 >
+                                    <option value="">Seleccione una opción</option>
                                     <option value="En Creación">En Creación</option>
                                     <option value="Planificación">Planificación</option>
                                 </select>
@@ -355,13 +357,13 @@ function EditPlanning() {
             )}
 
             <Table
-                columns={["client_name", "codart", "deliveryDate", "status_date", "factoryName", "lineName", "machineName"]}
+                columns={["client_name", "codart", "deliveryDate", "status_dates", "factoryName", "lineName", "machineName"]}
                 rows={planning}
                 columnLabels={{
                     client_name: "Cliente",
                     codart: "Artículo",
                     deliveryDate: "Fecha de entrega",
-                    status_date: "Estado",
+                    status_dates: "Estado",
                     factoryName: "Planta",
                     lineName: "Lineas",
                     machineName: "Maquinaria",

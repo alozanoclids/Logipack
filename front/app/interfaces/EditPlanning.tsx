@@ -16,7 +16,7 @@ export interface Plan {
     orderNumber: string;
     quantityToProduce: number;
     resource: string | null;
-    status_date: string;
+    status_dates: string;
     updated_at: string;
     client_name?: string; 
 }
