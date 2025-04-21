@@ -5,19 +5,19 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Factory extends Model
+class AdaptationDate extends Model
 {
     use HasFactory;
 
     protected $guarded = [];
 
-    public function manufacturings()
+    public function Adaptation()
     {
-        return $this->hasMany(Manufacturing::class);
+        return $this->belongsTo(Adaptation::class);
     }
-
-    public function machineries()
+    
+    public function client()
     {
-        return $this->hasMany(Machinery::class);
+        return $this->belongsTo(Clients::class);
     }
 }

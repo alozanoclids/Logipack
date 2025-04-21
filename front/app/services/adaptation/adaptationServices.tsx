@@ -23,7 +23,6 @@ export const newAdaptation = async (data: FormData) => {
     }
 };
 
-
 export const getAdaptations = async () => {
     try {
         const response = await Adaptations.get('/getAdaptation');

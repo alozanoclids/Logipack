@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Adaptation;
+use App\Models\AdaptationDate;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Str;
@@ -68,6 +69,25 @@ class AdaptationController extends Controller
 
             // 💾 Creamos la adaptación
             $adaptation = Adaptation::create($validatedData);
+
+            // 🔁 Guardar cada article_code en la tabla adaptation_dates
+            $articleCodes = json_decode($validatedData['article_code'], true);
+
+            foreach ($articleCodes as $article) {
+                AdaptationDate::create([
+                    'client_id'           => $validatedData['client_id'],
+                    'codart'              => $article['codart'],
+                    'orderNumber'         => $article['orderNumber'],
+                    'deliveryDate'        => $article['deliveryDate'],
+                    'quantityToProduce'   => $article['quantityToProduce'],
+                    'lot'                 => $article['lot'],
+                    'healthRegistration'  => $article['healthRegistration'],
+                    'master'              => $validatedData['master'],
+                    'bom'                 => $validatedData['bom'],
+                    'ingredients'         => $validatedData['ingredients'],
+                    'adaptation_id'       => $adaptation->id, // Relación importante
+                ]);
+            }
 
             return response()->json([
                 'message'       => 'Adaptation saved successfully',

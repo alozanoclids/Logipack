@@ -7,16 +7,7 @@ import Button from "../buttons/buttons"
 import { useAuth } from '../../hooks/useAuth'
 import { getUserByEmail } from '../../services/userDash/authservices';
 import nookies from "nookies";
-
-interface Factory {
-    id: number;
-    name: string;
-    location: string;
-    capacity: string;
-    manager: string;
-    employees: number;
-    status: boolean;
-}
+import { Factory } from "../../interfaces/NewFactory"
 
 function CreateFactory() {
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
@@ -32,7 +23,7 @@ function CreateFactory() {
     const columnLabels: { [key: string]: string } = {
         name: "Nombre de Planta",
         location: "Ubicación",
-        manager: "Persona a Cargo", 
+        manager: "Persona a Cargo",
         status: "Estado"
     };
 
@@ -60,28 +51,28 @@ function CreateFactory() {
     };
 
 
-      //UseEffect para actualizacion del token
-  const { isAuthenticated } = useAuth();
-  const [userName, setUserName] = useState("");
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const cookies = nookies.get(null);
-        const email = cookies.email;
-        if (email) {
-          const decodedEmail = decodeURIComponent(email);
-          const user = await getUserByEmail(decodedEmail);
-          if (user.usuario) {
-            setUserName(user.usuario.name);
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching user:", error);
-      }
-    };
-    if (isAuthenticated) fetchUserData();
-  }, [isAuthenticated]);
-  // Fin useEffect
+    //UseEffect para actualizacion del token
+    const { isAuthenticated } = useAuth();
+    const [userName, setUserName] = useState("");
+    useEffect(() => {
+        const fetchUserData = async () => {
+            try {
+                const cookies = nookies.get(null);
+                const email = cookies.email;
+                if (email) {
+                    const decodedEmail = decodeURIComponent(email);
+                    const user = await getUserByEmail(decodedEmail);
+                    if (user.usuario) {
+                        setUserName(user.usuario.name);
+                    }
+                }
+            } catch (error) {
+                console.error("Error fetching user:", error);
+            }
+        };
+        if (isAuthenticated) fetchUserData();
+    }, [isAuthenticated]);
+    // Fin useEffect
 
 
     const handleSave = async () => {
@@ -89,9 +80,9 @@ function CreateFactory() {
             showError("Por favor, completa todos los campos antes de continuar.");
             return;
         }
-        
+
         const factoryData = { name, location, capacity, manager, employees, status };
-        
+
         try {
             if (editingFactory) {
                 await updateFactory(editingFactory.id, factoryData);
@@ -151,7 +142,7 @@ function CreateFactory() {
                 <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">
                     <div className="bg-white p-6 rounded shadow-lg w-1/3">
                         <h2 className="text-xl text-black font-bold mb-4">{editingFactory ? "Editar Planta" : "Crear Planta"}</h2>
-                        
+
                         <input type="text" placeholder="Nombre" value={name} onChange={(e) => setName(e.target.value)} className="w-full text-black p-2 border mb-2" />
                         <input type="text" placeholder="Ubicación" value={location} onChange={(e) => setLocation(e.target.value)} className="w-full text-black p-2 border mb-2" />
                         <input type="text" placeholder="Capacidad" value={capacity} onChange={(e) => setCapacity(e.target.value)} className="w-full text-black p-2 border mb-2" />
@@ -178,4 +169,3 @@ function CreateFactory() {
 }
 
 export default CreateFactory;
- 

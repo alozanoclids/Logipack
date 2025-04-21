@@ -14,6 +14,8 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\RolesController;
 use App\Http\Controllers\StagesController;
 use App\Http\Controllers\AdaptationController;
+use App\Http\Controllers\AdaptationDateController;
+use App\Http\Controllers\MachineryController;
 
 Route::controller(AuthController::class)->group(function () {
     Route::post('login', 'login');
@@ -67,6 +69,15 @@ Route::controller(ManufacturingController::class)->group(function () {
     Route::get('/ManuId/{id}', 'ManuId'); // Obtener una lineas específica
     Route::put('/updateManu/{id}', 'updateManu'); // Actualizar una lineas
     Route::delete('/deleteManu/{id}', 'deleteManu'); // Eliminar una lineas
+});
+
+//Rutas Maquinaria
+Route::controller(MachineryController::class)->group(function () {
+    Route::get('/getMachin', 'getMachin'); // Obtener todas las lineas
+    Route::post('/newMachin', 'newMachin'); // Crear una nueva lineas
+    Route::get('/MachinId/{id}', 'MachinId'); // Obtener una lineas específica
+    Route::put('/updateMachin/{id}', 'updateMachin'); // Actualizar una lineas
+    Route::delete('/deleteMachin/{id}', 'deleteMachin'); // Eliminar una lineas
 });
 
 //Rutas Clientes
@@ -130,6 +141,7 @@ Route::controller(ArticlesController::class)->group(function () {
     Route::put('/updateArticle/{id}', 'updateArticle'); // Actualizar una lineas
     Route::delete('/deleteArticle/{id}', 'deleteArticle'); // Eliminar una lineas
 });
+
 //Rutas Acondicionamiento
 Route::controller(AdaptationController::class)->group(function () {
     Route::get('/getAdaptation', 'getAdaptation'); // Obtener todas las lineas 
@@ -138,4 +150,13 @@ Route::controller(AdaptationController::class)->group(function () {
     Route::get('/getAdaptationId/{id}', 'getAdaptationById'); // Obtener una lineas específica 
     Route::put('/updateAdaptation/{id}', 'updateAdaptation'); // Actualizar una lineas
     Route::delete('/deleteAdaptation/{id}', 'deleteAdaptation'); // Eliminar una lineas
+});
+
+//Rutas Planificación
+Route::controller(AdaptationDateController::class)->group(function () {
+    Route::get('/getPlan', 'getPlan'); // Obtener todas las lineas 
+    Route::post('/newPlan', 'newAPlan'); // Crear una nueva lineas 
+    Route::put('/updatePlan/{id}', 'update'); // Crear una nueva lineas 
+    Route::get('/getPlanId/{id}', 'getPlanById'); // Obtener una lineas específica  
+    Route::delete('/deletePlan/{id}', 'destroy'); // Eliminar una lineas
 });

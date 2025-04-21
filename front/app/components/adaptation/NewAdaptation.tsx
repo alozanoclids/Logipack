@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
 import nookies from "nookies";
-// 🔹 Hooks
+// 🔹 Hooks 
 import { useAuth } from "../../hooks/useAuth";
 // 🔹 Servicios
 import { getClients, getClientsId } from "@/app/services/userDash/clientServices";
@@ -21,6 +21,7 @@ import { showSuccess, showError, showConfirm } from "../toastr/Toaster";
 import { Client, Article, Ingredient } from "@/app/interfaces/BOM";
 import { Data } from "@/app/interfaces/NewMaestra";
 import { BOMResponse, BOM, Adaptation, ArticleFormData, ArticleFieldsMap, Articles } from "@/app/interfaces/NewAdaptation";
+import { deleteMachin } from "@/app/services/userDash/machineryServices";
 
 function NewAdaptation() {
     const [isOpen, setIsOpen] = useState(false);
@@ -47,8 +48,6 @@ function NewAdaptation() {
     const [selectedBom, setSelectedBom] = useState<number | "">("");
     const [isLoading, setIsLoading] = useState(false);
     const [articleFields, setArticleFields] = useState<Record<string, ArticleFormData>>({});
-
-
 
     // UseEffect para actualización del token
     const [userName, setUserName] = useState("");
@@ -320,14 +319,13 @@ function NewAdaptation() {
                 }
             });
         }
-
         try {
             setIsLoading(true);
             if (isEditMode) {
                 await updateAdaptation(editAdaptationId!, formData);
                 showSuccess("Acondicionamiento actualizado.");
             } else {
-                await newAdaptation(formData);
+                await newAdaptation(formData); 
                 showSuccess("Acondicionamiento creado.");
             }
             resetForm();
@@ -445,16 +443,17 @@ function NewAdaptation() {
 
     //Handle de eliminacion
     const handleDelete = async (id: number) => {
-        if (confirm("¿Estás seguro de que deseas eliminar esta adaptación?")) {
+        showConfirm("¿Estás seguro de eliminar este Acondicionamiento?", async () => {
             try {
-                await deleteAdaptation(id);
-                showSuccess("Adaptación eliminada exitosamente.");
-                setAdaptation(prev => prev.filter(adap => adap.id !== id));
+                await deleteMachin(id);
+                setMaestra((prevMachine) => prevMachine.filter((machine) => machine.id !== id));
+                showSuccess("Acondicionamiento eliminado exitosamente");
+                fetchAdaptations(); // Refrescar la lista
             } catch (error) {
-                showError("Error al eliminar la adaptación.");
-                console.error(error);
+                console.error("Error al eliminar Acondicionamiento:", error);
+                showError("Error al eliminar Acondicionamiento");
             }
-        }
+        });
     }
 
     // Resetear el formulario

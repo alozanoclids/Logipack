@@ -10,6 +10,7 @@ import Clients from "./CreateClient"
 import { useAuth } from "../../hooks/useAuth";
 import { getUserByEmail } from "../../services/userDash/authservices";
 import PermissionCheck from "..//permissionCheck/PermissionCheck";
+import Machinery from "./CreateMachinery";
 import nookies from "nookies";
 
 function User() {
@@ -61,6 +62,7 @@ function User() {
           { id: 4, title: "Lineas", component: <Lista />, isProtected: true },
           { id: 5, title: "Productos", component: <Products />, isProtected: true },
           { id: 6, title: "Clientes", component: <Clients />, isProtected: true },
+          { id: 7, title: "Maquinaria", component: <Machinery />, isProtected: true },
         ]}
       />
     </div>

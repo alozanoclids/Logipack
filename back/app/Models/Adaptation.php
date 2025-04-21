@@ -10,4 +10,9 @@ class Adaptation extends Model
     use HasFactory;
 
     protected $guarded = [];
+
+    public function adaptations()
+    {
+        return $this->hasMany(AdaptationDate::class);
+    }
 }

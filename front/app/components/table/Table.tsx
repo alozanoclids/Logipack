@@ -10,6 +10,7 @@ interface TableProps {
     columnLabels?: { [key: string]: string };
     onEdit: (id: any) => void;
     onDelete: (id: any) => void;
+    showDeleteButton?: boolean;
 }
 
 interface HeaderProps {
@@ -42,7 +43,7 @@ const Header: React.FC<HeaderProps> = ({ column, label, onSort, sortOrder, sortC
     );
 };
 
-export const Table: React.FC<TableProps> = ({ rows, columns, columnLabels = {}, onEdit, onDelete }) => {
+export const Table: React.FC<TableProps> = ({ rows, columns, columnLabels = {}, onEdit, onDelete, showDeleteButton = true }) => {
     const [sortColumn, setSortColumn] = useState<string>(columns[0]);
     const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
     const [searchTerm, setSearchTerm] = useState<string>("");
@@ -51,9 +52,14 @@ export const Table: React.FC<TableProps> = ({ rows, columns, columnLabels = {}, 
     const itemsPerPage = 5;
     const maxButtons = 4;
 
-    const filteredRows = rows.filter((row) =>
-        columns.some((column) => row[column]?.toString().toLowerCase().includes(searchTerm.toLowerCase()))
-    );
+    const filteredRows = Array.isArray(rows)
+        ? rows.filter((row) =>
+            columns.some((column) =>
+                row[column]?.toString().toLowerCase().includes(searchTerm.toLowerCase())
+            )
+        )
+        : [];
+
 
     const sortedRows = [...filteredRows].sort((a, b) => {
         const valA = a[sortColumn] ?? "";
@@ -161,10 +167,12 @@ export const Table: React.FC<TableProps> = ({ rows, columns, columnLabels = {}, 
                                                 onClick={() => { onEdit(row.id) }}
                                                 variant="edit"
                                             />
-                                            <Button
-                                                onClick={() => { onDelete(row.id) }}
-                                                variant="delete"
-                                            />
+                                            {showDeleteButton && (
+                                                <Button
+                                                    onClick={() => { onDelete(row.id) }}
+                                                    variant="delete"
+                                                />
+                                            )}
                                         </td>
                                     </tr>
                                 ))}
