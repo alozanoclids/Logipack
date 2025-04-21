@@ -1,13 +1,9 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { motion } from "framer-motion";
-import nookies from "nookies";
-// 🔹 Hooks 
-import { useAuth } from "../../hooks/useAuth";
+import { motion } from "framer-motion"; 
 // 🔹 Servicios
 import { getClients, getClientsId } from "@/app/services/userDash/clientServices";
 import { getArticleByCode, getArticleByClient } from "@/app/services/bom/articleServices";
-import { newAdaptation, getAdaptations, deleteAdaptation, updateAdaptation, getAdaptationsId } from "@/app/services/adaptation/adaptationServices";
-import { getUserByEmail } from "../../services/userDash/authservices";
+import { newAdaptation, getAdaptations, deleteAdaptation, updateAdaptation, getAdaptationsId } from "@/app/services/adaptation/adaptationServices"; 
 import { getMaestra } from "../../services/maestras/maestraServices";
 // 🔹 Componentes
 import Button from "../buttons/buttons";
@@ -41,34 +37,12 @@ function NewAdaptation() {
     const [adaptation, setAdaptation] = useState<Adaptation[]>([]);
     const [ingredients, setIngredients] = useState<Ingredient[]>([]);
     const [isEditMode, setIsEditMode] = useState(false);
-    const [editAdaptationId, setEditAdaptationId] = useState<number | null>(null);
-    const { isAuthenticated } = useAuth();
+    const [editAdaptationId, setEditAdaptationId] = useState<number | null>(null); 
     const [selectedMaestras, setSelectedMaestras] = useState<string[]>([]);
     const [boms, setBoms] = useState<BOM[]>([]);
     const [selectedBom, setSelectedBom] = useState<number | "">("");
     const [isLoading, setIsLoading] = useState(false);
     const [articleFields, setArticleFields] = useState<Record<string, ArticleFormData>>({});
-
-    // UseEffect para actualización del token
-    const [userName, setUserName] = useState("");
-    useEffect(() => {
-        const fetchUserData = async () => {
-            try {
-                const cookies = nookies.get(null);
-                const email = cookies.email;
-                if (email) {
-                    const decodedEmail = decodeURIComponent(email);
-                    const user = await getUserByEmail(decodedEmail);
-                    if (user.usuario) {
-                        setUserName(user.usuario.name);
-                    }
-                }
-            } catch (error) {
-                console.error("Error fetching user:", error);
-            }
-        };
-        if (isAuthenticated) fetchUserData();
-    }, [isAuthenticated]);
 
     // Cargar clientes
     useEffect(() => {

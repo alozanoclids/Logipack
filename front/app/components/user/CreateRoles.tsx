@@ -1,20 +1,11 @@
 "use client";
 import { useState, useEffect } from "react";
 import { getPermissions, updateRolePermissions, createPermission, deletePermission, getPermissionId, updatePermission } from "../../services/userDash/roleServices";
-import {
-  getRole,
-  getRoleId,
-  createRole,
-  updateRole,
-  deleteRole
-} from "../../services/userDash/rolesServices"; 
+import { getRole, getRoleId, createRole, updateRole, deleteRole } from "../../services/userDash/rolesServices"; 
 import { motion } from "framer-motion";
 import { showSuccess, showError, showConfirm } from "../toastr/Toaster";
 import PermissionCheck from "..//permissionCheck/PermissionCheck"; 
-import Button from "../buttons/buttons"
-import { useAuth } from '../../hooks/useAuth'
-import { getUserByEmail } from '../../services/userDash/authservices';
-import nookies from "nookies";
+import Button from "../buttons/buttons" 
 
 // 🛠️ Definición de Interfaces
 interface Permission {
@@ -78,30 +69,7 @@ const Roles = () => {
       setPermissions([]);
     }
   };
-
-  //UseEffect para actualizacion del token
-  const { isAuthenticated } = useAuth();
-  const [userName, setUserName] = useState("");
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const cookies = nookies.get(null);
-        const email = cookies.email;
-        if (email) {
-          const decodedEmail = decodeURIComponent(email);
-          const user = await getUserByEmail(decodedEmail);
-          if (user.usuario) {
-            setUserName(user.usuario.name);
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching user:", error);
-      }
-    };
-    if (isAuthenticated) fetchUserData();
-  }, [isAuthenticated]);
-  // Fin useEffect
-
+ 
   const fetcRole = async () => {
     try {
       const role = await getRole();

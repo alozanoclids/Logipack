@@ -1,18 +1,9 @@
 "use client";
 import { useState, useEffect } from "react";
-import {
-  createClients,
-  getClients,
-  getClientsId,
-  deleteClients,
-  updateClients,
-} from "../../services/userDash/clientServices";
+import { createClients, getClients, getClientsId, deleteClients, updateClients } from "../../services/userDash/clientServices";
 import { showSuccess, showError, showConfirm } from "../toastr/Toaster";
 import Table from "../table/Table";
-import Button from "../buttons/buttons";
-import { useAuth } from '../../hooks/useAuth'
-import { getUserByEmail } from '../../services/userDash/authservices';
-import nookies from "nookies";
+import Button from "../buttons/buttons"; 
 
 interface Clients {
   id: number;
@@ -41,31 +32,6 @@ function CreateClient() {
   useEffect(() => {
     fetchClients();
   }, []);
-
-
-
-  //UseEffect para actualizacion del token
-  const { isAuthenticated } = useAuth();
-  const [userName, setUserName] = useState("");
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const cookies = nookies.get(null);
-        const email = cookies.email;
-        if (email) {
-          const decodedEmail = decodeURIComponent(email);
-          const user = await getUserByEmail(decodedEmail);
-          if (user.usuario) {
-            setUserName(user.usuario.name);
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching user:", error);
-      }
-    };
-    if (isAuthenticated) fetchUserData();
-  }, [isAuthenticated]);
-  // Fin useEffect
   
   const fetchClients = async () => {
     try {

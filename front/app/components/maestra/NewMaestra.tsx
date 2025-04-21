@@ -5,16 +5,12 @@ import { motion } from "framer-motion";
 // ------------------------- 2. Importaciones de servicios -------------------------
 import { createMaestra, getMaestra, deleteMaestra, getMaestraId, updateMaestra, getTipo } from "../../services/maestras/maestraServices";
 import { getStage } from "../../services/maestras/stageServices";
-import { getUserByEmail } from '../../services/userDash/authservices';
 // ------------------------- 3. Importaciones de componentes de la UI -------------------------
 import Button from "../buttons/buttons";
 import { showSuccess, showError, showConfirm } from "../toastr/Toaster";
 import Text from "../text/Text";
 import Table from "../table/Table";
 import PermissionCheck from "..//permissionCheck/PermissionCheck";
-// ------------------------- 4. Importaciones de hooks y utilidades -------------------------
-import { useAuth } from '../../hooks/useAuth';
-import nookies from "nookies";
 // ------------------------- 5. Tipos de datos e interfaces -------------------------
 import { Stage, Data } from "../../interfaces/NewMaestra";
 // ------------------------- 6. Definición de constantes -------------------------
@@ -34,29 +30,6 @@ const Maestra = () => {
     const [selectedStages, setSelectedStages] = useState<Stage[]>([]);
     const [tipoSeleccionado, setTipoSeleccionado] = useState<string>('')
     const [tiposProducto, setTiposProducto] = useState<string[]>([]);
-    const { isAuthenticated } = useAuth();
-    const [userName, setUserName] = useState("");
-
-    // UseEffect para actualización del token
-    useEffect(() => {
-        const fetchUserData = async () => {
-            try {
-                const cookies = nookies.get(null);
-                const email = cookies.email;
-                if (email) {
-                    const decodedEmail = decodeURIComponent(email);
-                    const user = await getUserByEmail(decodedEmail);
-                    if (user.usuario) {
-                        setUserName(user.usuario.name);
-                    }
-                }
-            } catch (error) {
-                console.error("Error fetching user:", error);
-            }
-        };
-        if (isAuthenticated) fetchUserData();
-    }, [isAuthenticated]);
-    // Fin useEffect
 
     // Fetch de fases al cargar el componente
     useEffect(() => {

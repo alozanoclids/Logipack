@@ -1,16 +1,12 @@
 // React y librerías externas
 import React, { useState, useEffect, useMemo } from "react";
-import { motion } from "framer-motion";
-import nookies from "nookies";
-// Hooks personalizados
-import { useAuth } from "../../hooks/useAuth";
+import { motion } from "framer-motion"; 
 // Componentes locales
 import Button from "../buttons/buttons";
 import Text from "../text/Text";
 import Table from "../table/Table";
 import { showSuccess, showError, showConfirm } from "../toastr/Toaster";
-// Servicios
-import { getUserByEmail } from "../../services/userDash/authservices";
+// Servicios 
 import { getClients, getClientsId } from "@/app/services/userDash/clientServices";
 import { getArticleByCode, newArticle, getArticlesId, deleteArticle, updateArticle, getBoms } from "@/app/services/bom/articleServices";
 // Tipos e interfaces
@@ -40,29 +36,6 @@ function BOMManager() {
                 article.codart.toLowerCase().includes(searchTerm.toLowerCase())
         );
     }, [articles, searchTerm]);
-
-    const { isAuthenticated } = useAuth();
-    const [userName, setUserName] = useState("");
- 
-    // Cargar usuario 
-    useEffect(() => {
-        const fetchUserData = async () => {
-            try {
-                const cookies = nookies.get(null);
-                const email = cookies.email;
-                if (email) {
-                    const decodedEmail = decodeURIComponent(email);
-                    const user = await getUserByEmail(decodedEmail);
-                    if (user.usuario) {
-                        setUserName(user.usuario.name);
-                    }
-                }
-            } catch (error) {
-                console.error("Error fetching user:", error);
-            }
-        };
-        if (isAuthenticated) fetchUserData();
-    }, [isAuthenticated]);
  
     // Cargar clientes 
     useEffect(() => {

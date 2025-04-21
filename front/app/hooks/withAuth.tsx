@@ -12,14 +12,13 @@ function withAuth<P extends {}>(
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-      const cookies = nookies.get(null); 
-      
-      const token = cookies.token; 
-      
+      const cookies = nookies.get(null);
+      const token = cookies.token;
+
       if (!token || token.trim() === "") {
-        console.warn("No se encontró un token válido. Redirigiendo...");
-        router.push("/");
-      } else { 
+        console.warn("Token no encontrado. Redirigiendo a la vaca... 🐄");
+        router.push("/pages/noneUser");
+      } else {
         setLoading(false);
       }
     }, [router]);
@@ -27,6 +26,7 @@ function withAuth<P extends {}>(
     if (loading) {
       return <Loader />;
     }
+
     return <WrappedComponent {...props} />;
   };
 

@@ -119,6 +119,8 @@ const Sidebar: React.FC<SidebarProps> = ({ sidebarOpen, setSidebarOpen }) => {
     nookies.destroy(null, "token", { path: "/" });
     nookies.destroy(null, "userName", { path: "/" });
     nookies.destroy(null, "userData", { path: "/" });
+    nookies.destroy(null, "email", { path: "/" });
+    nookies.destroy(null, "role", { path: "/" });
     router.push("/");
   };
 

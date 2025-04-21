@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import useUserData from '../../hooks/useUserData';
 import {
   BarChart,
   Bar,
@@ -77,6 +78,7 @@ const pieData: PieDataItem[] = [
 const COLORS = ["#8884d8", "#82ca9d", "#ffc658", "#ff7300"];
 
 export default function Dashboard() {
+  const { userName } = useUserData();
   const [activeTab, setActiveTab] = useState("Inventario");
 
   // Datos simulados para las tarjetas

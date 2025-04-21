@@ -2,21 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-    createManu,
-    getManu,
-    getManuId,
-    updateManu,
-    deleteManu
-} from "../../services/userDash/manufacturingServices";
+import { createManu, getManu, getManuId, updateManu, deleteManu } from "../../services/userDash/manufacturingServices";
 import { getProduct } from "../../services/userDash/productServices";
 import { getFactory, getFactoryId } from "../../services/userDash/factoryServices";
 import Table from "../table/Table";
 import { showSuccess, showError, showConfirm } from "../toastr/Toaster";
-import Button from "../buttons/buttons";
-import { useAuth } from '../../hooks/useAuth'
-import { getUserByEmail } from '../../services/userDash/authservices';
-import nookies from "nookies";
+import Button from "../buttons/buttons"; 
 interface Manu {
     id?: number;
     name: string;
@@ -47,12 +38,12 @@ function CreateManufacturing() {
                 getManu(),
                 getFactory()
             ]);
-    
+
             const manuWithFactoryNames = manuResponse.map((manu: Manu) => {
                 const factory = factoriesResponse.find((f: Factory) => f.id === manu.factory_id);
                 return { ...manu, factory: factory ? factory.name : "Sin fábrica" };
             });
-    
+
             setProducts(productsResponse);
             setManu(manuWithFactoryNames);
             setFactories(factoriesResponse);
@@ -62,38 +53,10 @@ function CreateManufacturing() {
         }
     };
 
-useEffect(() => {
-    fetchData();
-}, []);
-
-
-  //UseEffect para actualizacion del token
-  const { isAuthenticated } = useAuth();
-  const [userName, setUserName] = useState("");
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const cookies = nookies.get(null);
-        const email = cookies.email;
-        if (email) {
-          const decodedEmail = decodeURIComponent(email);
-          const user = await getUserByEmail(decodedEmail);
-          if (user.usuario) {
-            setUserName(user.usuario.name);
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching user:", error);
-      }
-    };
-    if (isAuthenticated) fetchUserData();
-  }, [isAuthenticated]);
-  // Fin useEffect
-
-
-   
-
-
+    useEffect(() => {
+        fetchData();
+    }, []);
+ 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({
@@ -156,10 +119,10 @@ useEffect(() => {
         try {
             const data = await getManuId(id);
             if (!data) return showError("No se encontraron datos para esta manufactura.");
-            
+
             // Obtener detalles de la fábrica asociada
             const factoryData = await getFactoryId(data.factory_id);
-            
+
             setFormData({
                 ...data,
                 factory_id: factoryData?.id || "", // Asignar ID de la fábrica
@@ -171,7 +134,7 @@ useEffect(() => {
             showError("No se pudieron cargar los datos de la manufactura.");
         }
     };
-    
+
 
     const closeModal = () => setIsModalOpen(false);
 
@@ -193,7 +156,7 @@ useEffect(() => {
                                 {formData.id ? "Editar" : "Crear"} Línea
                             </h2>
                             <form onSubmit={handleSubmit}>
-                            <label className="block text-black mb-1">Nombre de Línea</label>
+                                <label className="block text-black mb-1">Nombre de Línea</label>
                                 <input
                                     type="text"
                                     name="name"

@@ -1,18 +1,9 @@
 import React, { useState, useEffect } from "react";
-import {
-  getProduct,
-  getProductId,
-  createProduct,
-  updateProduct,
-  deleteProduct,
-} from "../../services/userDash/productServices";
+import { getProduct, getProductId, createProduct, updateProduct, deleteProduct, } from "../../services/userDash/productServices";
 import Table from "../table/Table";
 import { showSuccess, showError, showConfirm } from "../toastr/Toaster";
 import { motion, AnimatePresence } from "framer-motion";
-import Button from "../buttons/buttons"
-import { useAuth } from '../../hooks/useAuth'
-import { getUserByEmail } from '../../services/userDash/authservices';
-import nookies from "nookies";
+import Button from "../buttons/buttons" 
 // Definición de la interfaz para un producto
 interface Product {
   id: number;
@@ -52,29 +43,6 @@ function Products() {
     setShowModal(true);
   };
 
-  
-  //UseEffect para actualizacion del token
-  const { isAuthenticated } = useAuth();
-  const [userName, setUserName] = useState("");
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const cookies = nookies.get(null);
-        const email = cookies.email;
-        if (email) {
-          const decodedEmail = decodeURIComponent(email);
-          const user = await getUserByEmail(decodedEmail);
-          if (user.usuario) {
-            setUserName(user.usuario.name);
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching user:", error);
-      }
-    };
-    if (isAuthenticated) fetchUserData();
-  }, [isAuthenticated]);
-  // Fin useEffect
 
   const openEditModal = async (productId: number) => {
     try {

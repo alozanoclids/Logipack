@@ -1,9 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import nookies from "nookies";
-import { useAuth } from '../../hooks/useAuth'
 import { motion } from "framer-motion";
-import { getUserByEmail } from '../../services/userDash/authservices';
 import { createStage, getStageId, updateStage, deleteStage, getStage } from "../../services/maestras/stageServices";
 import { getActivitie } from "../../services/maestras/activityServices";
 import { showError, showSuccess, showConfirm } from "../toastr/Toaster";
@@ -26,29 +23,6 @@ function NewStage() {
     const [canPause, setCanPause] = useState(false);
     const [availableActivities, setAvailableActivities] = useState<{ id: number; description: string; binding: number }[]>([]);
     const [selectedActivities, setSelectedActivities] = useState<{ id: number; description: string }[]>([]);
-    const { isAuthenticated } = useAuth();
-    const [userName, setUserName] = useState("");
-
-    //UseEffect para actualizacion del token
-    useEffect(() => {
-        const fetchUserData = async () => {
-            try {
-                const cookies = nookies.get(null);
-                const email = cookies.email;
-                if (email) {
-                    const decodedEmail = decodeURIComponent(email);
-                    const user = await getUserByEmail(decodedEmail);
-                    if (user.usuario) {
-                        setUserName(user.usuario.name);
-                    }
-                }
-            } catch (error) {
-                console.error("Error fetching user:", error);
-            }
-        };
-        if (isAuthenticated) fetchUserData();
-    }, [isAuthenticated]);
-    // Fin useEffect
 
     // Función para obtener las fases
     const fetchStage = async () => {

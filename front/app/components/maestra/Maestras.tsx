@@ -3,8 +3,9 @@ import WindowManager from "../windowManager/WindowManager";
 import NewMaestra from "./NewMaestra";
 import NewStage from "./NewStage";
 import NewActivity from "./NewActivity"; 
-
+import useUserData from '../../hooks/useUserData';
 function Maestras() {
+    const { userName } = useUserData();
     return (
         <div >
             <WindowManager

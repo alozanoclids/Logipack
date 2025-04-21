@@ -1,15 +1,11 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { motion } from "framer-motion";
-import nookies from "nookies";
-// 🔹 Hooks
-import { useAuth } from "../../hooks/useAuth";
+import { motion } from "framer-motion"; 
 // 🔹 Componentes
 import Button from "../buttons/buttons";
 import { showSuccess, showError } from "../toastr/Toaster";
 import Table from "../table/Table";
 import Text from "../text/Text";
-// 🔹 Servicios
-import { getUserByEmail } from "../../services/userDash/authservices";
+// 🔹 Servicios 
 import { getPlanning, updatePlanning } from "../../services/planing/planingServices";
 import { getClientsId } from "@/app/services/userDash/clientServices";
 import { getFactory, getFactoryId } from "@/app/services/userDash/factoryServices";
@@ -21,31 +17,11 @@ import { Plan } from "@/app/interfaces/EditPlanning";
 function EditPlanning() {
     const [planning, setPlanning] = useState<Plan[]>([]);
     const [isOpen, setIsOpen] = useState(false);
-    const [currentPlan, setCurrentPlan] = useState<Plan | null>(null);
-    const { isAuthenticated } = useAuth();
-    const [userName, setUserName] = useState("");
+    const [currentPlan, setCurrentPlan] = useState<Plan | null>(null); 
     const [factories, setFactories] = useState<{ id: number, name: string }[]>([]);
     const [manu, setManu] = useState<{ id: number, name: string }[]>([]);
     const [machine, setMachine] = useState<{ id: number, name: string }[]>([]);
-
-    useEffect(() => {
-        const fetchUserData = async () => {
-            try {
-                const cookies = nookies.get(null);
-                const email = cookies.email;
-                if (email) {
-                    const decodedEmail = decodeURIComponent(email);
-                    const user = await getUserByEmail(decodedEmail);
-                    if (user.usuario) {
-                        setUserName(user.usuario.name);
-                    }
-                }
-            } catch (error) {
-                console.error("Error fetching user:", error);
-            }
-        };
-        if (isAuthenticated) fetchUserData();
-    }, [isAuthenticated]);
+ 
 
     useEffect(() => {
         const fetchPlanning = async () => {

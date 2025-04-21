@@ -1,33 +1,10 @@
 'use client';
-import React, { useState, useEffect } from "react";  
-import { useAuth } from '../../hooks/useAuth'
-import { getUserByEmail } from '../../services/userDash/authservices';
-import nookies from "nookies";
+import React from "react"; 
+import useUserData from '../../hooks/useUserData';
+
 
 const Dashboard = () => { 
-
-  //UseEffect para actualizacion del token
-  const { isAuthenticated } = useAuth();
-  const [userName, setUserName] = useState("");
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const cookies = nookies.get(null);
-        const email = cookies.email;
-        if (email) {
-          const decodedEmail = decodeURIComponent(email);
-          const user = await getUserByEmail(decodedEmail);
-          if (user.usuario) {
-            setUserName(user.usuario.name);
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching user:", error);
-      }
-    };
-    if (isAuthenticated) fetchUserData();
-  }, [isAuthenticated]);
-  // Fin useEffect
+  const { userName } = useUserData();
 
   return (
     <div className="flex min-h-screen bg-gray-100">

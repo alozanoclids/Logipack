@@ -1,14 +1,11 @@
-import { useState, useEffect } from "react";
-import { useAuth } from "../../hooks/useAuth";
+import { useState, useEffect } from "react"; 
 import { post, getRole } from "../../services/userDash/authservices";
 import { getFactory } from "../../services/userDash/factoryServices";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import { BiLock } from "react-icons/bi";
 import PermissionInputs from "../permissionCheck/PermissionInputs";
 import { showError, showSuccess } from "../toastr/Toaster";
-import Button from "../buttons/buttons";
-import { getUserByEmail } from '../../services/userDash/authservices';
-import nookies from "nookies";
+import Button from "../buttons/buttons"; 
 
 interface Role {
   id: number;
@@ -36,32 +33,6 @@ function CreateUser({ onUserCreated }: CreateUserProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [roles, setRoles] = useState<Role[]>([]);
   const [factories, setFactories] = useState<Factory[]>([]);
-
-
-   //UseEffect para actualizacion del token
-   const { isAuthenticated } = useAuth();
-   const [userName, setUserName] = useState("");
-   useEffect(() => {
-     const fetchUserData = async () => {
-       try {
-         const cookies = nookies.get(null);
-         const email = cookies.email;
-         if (email) {
-           const decodedEmail = decodeURIComponent(email);
-           const user = await getUserByEmail(decodedEmail);
-           if (user.usuario) {
-             setUserName(user.usuario.name);
-           }
-         }
-       } catch (error) {
-         console.error("Error fetching user:", error);
-       }
-     };
-     if (isAuthenticated) fetchUserData();
-   }, [isAuthenticated]);
-   // Fin useEffect
- 
-  
 
   useEffect(() => {
     const fetchRoles = async () => {

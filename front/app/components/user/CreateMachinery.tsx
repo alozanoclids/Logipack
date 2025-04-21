@@ -1,7 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { motion } from "framer-motion";
-// 🔹 Hooks
-import { useAuth } from "../../hooks/useAuth";
+import { motion } from "framer-motion"; 
 // 🔹 Servicios
 import * as machineryService from "../../services/userDash/machineryServices";
 import { getFactory } from "../../services/userDash/factoryServices";

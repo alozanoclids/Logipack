@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from "react";
-import CreateUser from "./CreateUser";
+import React from "react";
 import DataUsers from "./DataUsers";
 import WindowManager from "../windowManager/WindowManager";
 import Roles from "./CreateRoles";
@@ -7,37 +6,11 @@ import Products from "./CreateProducts";
 import Factory from "./CreateFactory"
 import Lista from "./CreateManufacturing"
 import Clients from "./CreateClient"
-import { useAuth } from "../../hooks/useAuth";
-import { getUserByEmail } from "../../services/userDash/authservices";
 import PermissionCheck from "..//permissionCheck/PermissionCheck";
 import Machinery from "./CreateMachinery";
-import nookies from "nookies";
-
+import useUserData from '../../hooks/useUserData';
 function User() {
-  const { isAuthenticated } = useAuth();
-  const [userName, setUserName] = useState("");
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const cookies = nookies.get(null);
-        const email = cookies.email;
-        if (email) {
-          const decodedEmail = decodeURIComponent(email);
-          const user = await getUserByEmail(decodedEmail);
-          if (user.usuario) {
-            setUserName(user.usuario.name);
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching user:", error);
-        setError("No se pudo obtener la información del usuario.");
-      }
-    };
-
-    if (isAuthenticated) fetchUserData();
-  }, [isAuthenticated]);
+  const { userName } = useUserData();
 
   return (
     <div>
@@ -47,7 +20,7 @@ function User() {
           {
             id: 1, title: "Usuarios", component:
               <PermissionCheck requiredPermission="crear_usuarios">
-                <div>        
+                <div>
 
                   {/* Tabla de usuarios */}
                   <div className="overflow-x-auto">

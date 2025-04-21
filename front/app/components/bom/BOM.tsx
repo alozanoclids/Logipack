@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
-import WindowManager from "../windowManager/WindowManager"; 
+import WindowManager from "../windowManager/WindowManager";
 import NewBOM from './NewBOM';
+import useUserData from '../../hooks/useUserData';
 
 function BOM() {
+    const { userName } = useUserData();
     return (
         <div>
             <WindowManager
