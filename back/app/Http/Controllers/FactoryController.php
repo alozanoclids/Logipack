@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Factory;
 use Illuminate\Http\JsonResponse;
+use App\Models\Consecutive;
+use Illuminate\Support\Carbon;
 
 class FactoryController extends Controller
 {
@@ -23,15 +25,44 @@ class FactoryController extends Controller
             'location' => 'required|string|max:255',
             'capacity' => 'required|string|min:1',
             'manager' => 'required|string|max:255',
-            'employees' => 'required|string|min:1',
+            'employees' => 'required',
             'status' => 'required|boolean',
+            'prefix' => 'required|string',
         ]);
 
         $factory = Factory::create($request->all());
 
+        // Obtener fecha actual
+        $now = Carbon::now();
+        $month = $now->format('m');
+        $year = $now->format('Y');
+        $prefix = $request->prefix;
+
+        // Buscar el último consecutive con este prefijo, mes y año
+        $last = Consecutive::where('prefix', $prefix)
+            ->where('month', $month)
+            ->where('year', $year)
+            ->orderBy('id', 'desc')
+            ->first();
+
+        $nextNumber = $last
+            ? (int) $last->consecutive + 1
+            : 1;
+
+        $consecutiveFormatted = str_pad($nextNumber, 7, '0', STR_PAD_LEFT);
+
+        // Crear el nuevo consecutive
+        Consecutive::create([
+            'prefix' => $prefix,
+            'month' => $month,
+            'year' => $year,
+            'consecutive' => $consecutiveFormatted,
+        ]);
+
         return response()->json([
-            'message' => 'Fábrica creada exitosamente',
-            'factory' => $factory 
+            'message' => 'Fábrica creada exitosamente con consecutive',
+            'factory' => $factory,
+            'consecutive' => $prefix . '-' . $month . '-' . $year . '-' . $consecutiveFormatted
         ], 201);
     }
 
@@ -60,7 +91,19 @@ class FactoryController extends Controller
             'manager' => 'sometimes|string|max:255',
             'employees' => 'sometimes|string|min:0',
             'status' => 'sometimes|boolean',
+            'prefix' => 'sometimes|string',
         ]);
+
+        // Verifica si se envió un nuevo prefijo
+        if ($request->has('prefix') && $request->prefix !== $factory->prefix) {
+            $oldPrefix = $factory->prefix;
+            $newPrefix = $request->prefix;
+
+            // Actualiza todos los consecutives que tengan el prefijo anterior
+            \App\Models\Consecutive::where('prefix', $oldPrefix)->update([
+                'prefix' => $newPrefix
+            ]);
+        }
 
         $factory->update($request->all());
 

@@ -160,3 +160,9 @@ Route::controller(AdaptationDateController::class)->group(function () {
     Route::get('/getPlanId/{id}', 'getPlanById'); // Obtener una lineas específica  
     Route::delete('/deletePlan/{id}', 'destroy'); // Eliminar una lineas
 });
+
+//Rutas consecutivo
+Route::controller(AdaptationDateController::class)->group(function () {
+    Route::get('/getConsecutive', 'getAll'); // Obtener todas las lineas   
+    Route::put('/updateConsecutive/{id}', 'update'); // Crear una nueva lineas  
+});

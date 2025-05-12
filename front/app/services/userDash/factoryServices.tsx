@@ -17,6 +17,7 @@ export interface FactoryData {
     manager: string;
     employees: string;
     status: boolean;
+    prefix: string;
 }
 
 // Función para crear una nueva fábrica

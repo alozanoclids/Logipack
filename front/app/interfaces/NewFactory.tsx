@@ -6,4 +6,5 @@ export interface Factory {
     manager: string;
     employees: number;
     status: boolean;
+    prefix: string;
 }

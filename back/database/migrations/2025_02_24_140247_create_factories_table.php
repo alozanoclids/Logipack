@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('manager')->nullable(); // Nombre del gerente
             $table->string('employees')->nullable(); // Número de empleados
             $table->boolean('status')->default(true); // Estado de la planta
+            $table->string('prefix')->nullable(); // Estado de la planta
             $table->timestamps();
         });
     }
