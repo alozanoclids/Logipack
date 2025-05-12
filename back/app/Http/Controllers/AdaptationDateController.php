@@ -24,6 +24,7 @@ class AdaptationDateController extends Controller
             'client_id' => 'required|exists:clients,id',
             'codart' => 'required|string',
             'orderNumber' => 'required|string',
+            'number_order' => 'required|string', 
             'deliveryDate' => 'required|date',
             'quantityToProduce' => 'required|integer',
             'lot' => 'required|string',
@@ -32,6 +33,11 @@ class AdaptationDateController extends Controller
             'bom' => 'nullable|json',
             'ingredients' => 'nullable|json',
             'adaptation_id' => 'nullable|exists:adaptations,id',
+            'color' => 'nullable|string',
+            'icon' => 'nullable|string',
+            'duration' => 'nullable|string',
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date',
         ]);
 
         $record = AdaptationDate::create($validated);
@@ -46,6 +52,7 @@ class AdaptationDateController extends Controller
             'client_id' => 'sometimes|exists:clients,id',
             'codart' => 'sometimes|string',
             'orderNumber' => 'sometimes|string',
+            'number_order' => 'sometimes|string',
             'deliveryDate' => 'sometimes|date',
             'quantityToProduce' => 'sometimes|integer',
             'lot' => 'sometimes|string',
@@ -59,6 +66,11 @@ class AdaptationDateController extends Controller
             'line' => 'nullable|string',
             'resource' => 'nullable|string',
             'machine' => 'nullable|string',
+            'color' => 'nullable|string',
+            'icon' => 'nullable|string',
+            'duration' => 'nullable|string',
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date',
         ]);
 
         $record->update($validated);

@@ -16,10 +16,12 @@ return new class extends Migration
             $table->string('code')->unique();
             $table->text('descripcion');
             $table->boolean('requiere_bom')->default(false);
-            $table->json('type_product')->nullable();
+            $table->string('type_product')->nullable();
             $table->json('type_stage')->nullable();
-            $table->enum('status_type', ['En creación', 'Revisión', 'Aprobada', 'Obsoleta'])->default('En creación');
+            $table->string('status_type')->default('En creación');
             $table->boolean('aprobado')->default(false);
+            $table->string('duration')->nullable();
+            $table->string('duration_user')->nullable();
             $table->timestamps();
         });
     }

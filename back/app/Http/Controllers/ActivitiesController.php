@@ -24,6 +24,8 @@ class ActivitiesController extends Controller
             'description' => 'required|string',
             'config' => 'required|json',
             'binding' => 'boolean',
+            'has_time' => 'boolean', // Campo para indicar si se desea agregar tiempo
+            'duration' => 'nullable', // Formato para el tiempo HH:MM
         ]);
 
         // Obtener el último código y sumarle 1
@@ -41,7 +43,6 @@ class ActivitiesController extends Controller
             'Fase' => $Actividad
         ], 201);
     }
-
 
     /**
      * Mostrar una actividad específica.
@@ -73,7 +74,8 @@ class ActivitiesController extends Controller
             'description' => 'string',
             'config' => 'json',
             'binding' => 'boolean',
-
+            'has_time' => 'boolean', // Validar el campo has_time
+            'duration' => 'nullable|', // Validar el campo duration
         ]);
 
         $Activitie->update([
@@ -81,7 +83,8 @@ class ActivitiesController extends Controller
             'description' => $request->description ?? $Activitie->description,
             'config' => $request->config ? json_decode($request->config, true) : $Activitie->config,
             'binding' => $request->binding ? 1 : 0, // Convertir a 0 o 1
-
+            'has_time' => $request->has_time ?? $Activitie->has_time, // Actualizar has_time si está presente
+            'duration' => $request->duration ?? $Activitie->duration, // Actualizar duration si está presente
         ]);
 
         return response()->json(['message' => 'Actividad actualizada', 'data' => $Activitie], 200);

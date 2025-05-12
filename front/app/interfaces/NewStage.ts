@@ -20,4 +20,6 @@ export interface Data {
     can_pause: boolean;
     status: boolean;
     activities: string;
+    duration: string;
+    duration_user: string;
 }

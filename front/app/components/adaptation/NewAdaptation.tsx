@@ -17,11 +17,11 @@ import { showSuccess, showError, showConfirm } from "../toastr/Toaster";
 import { Client, Article, Ingredient } from "@/app/interfaces/BOM";
 import { Data } from "@/app/interfaces/NewMaestra";
 import { BOMResponse, BOM, Adaptation, ArticleFormData, ArticleFieldsMap, Articles } from "@/app/interfaces/NewAdaptation";
-import { deleteMachin } from "@/app/services/userDash/machineryServices";
 
 function NewAdaptation() {
     const [isOpen, setIsOpen] = useState(false);
     const [selectedClient, setSelectedClient] = useState<string>("");
+    const [client_order, setClientOrder] = useState<string>("");
     const [orderNumber, setOrderNumber] = useState<string>("");
     const [deliveryDate, setDeliveryDate] = useState<string>("");
     const [selectedArticles, setSelectedArticles] = useState<Article[]>([]);
@@ -210,7 +210,8 @@ function NewAdaptation() {
                     const clientData = await getClientsId(adaptation.client_id);
                     return {
                         ...adaptation,
-                        client_name: clientData.name, // Se agrega el nombre del cliente
+                        client_name: clientData.name,
+                        numberOrder: clientData.number_order,
                     };
                 })
             );
@@ -231,18 +232,16 @@ function NewAdaptation() {
             showError("Por favor, selecciona un cliente.");
             return;
         }
-
         let articlesData;
-
         if (maestraRequiereBOM) {
             if (!orderNumber) {
                 showError("Por favor, ingresa el número de orden.");
                 return;
             }
-
             articlesData = [
                 {
                     codart: selectedArticles[0]?.codart || "",
+                    number_order: client_order,
                     orderNumber,
                     deliveryDate,
                     quantityToProduce,
@@ -260,6 +259,7 @@ function NewAdaptation() {
                     }
                     return {
                         codart: article.codart,
+                        number_order: fields.numberOrder || "",
                         orderNumber: fields.orderNumber || "",
                         deliveryDate: fields.deliveryDate || "",
                         quantityToProduce: fields.quantityToProduce || 0,
@@ -273,6 +273,7 @@ function NewAdaptation() {
         const formData = new FormData();
         formData.append("client_id", selectedClient.toString());
         formData.append("article_code", JSON.stringify(articlesData));
+        formData.append("number_order", client_order);
         formData.append("master", JSON.stringify(selectedMaestras));
         formData.append("bom", JSON.stringify(selectedBom) || "");
         formData.append("ingredients", JSON.stringify(ingredients));
@@ -296,6 +297,8 @@ function NewAdaptation() {
             setIsLoading(true);
             if (isEditMode) {
                 await updateAdaptation(editAdaptationId!, formData);
+
+                console.log("Adaptation:", formData);
                 showSuccess("Acondicionamiento actualizado.");
             } else {
                 await newAdaptation(formData);
@@ -307,13 +310,8 @@ function NewAdaptation() {
             setAdaptation(adaptations);
             fetchAdaptations();
         } catch (error: any) {
-            // Muestra el error genérico
             showError("Error al guardar.");
-
-            // Muestra en consola toda la info del error
             console.error("🔥 Error completo:", error);
-
-            // Si el backend respondió, logueamos el detalle
             if (error?.response) {
                 console.error("🧠 Respuesta del servidor:", error.response.data);
             } else {
@@ -374,11 +372,12 @@ function NewAdaptation() {
                 ? JSON.parse(adaptation.article_code)
                 : [];
             setSelectedArticles(parsedArticles.map((a: any) => ({ codart: a.codart })));
-
+            setClientOrder(adaptation.number_order || "");
             if (bomParsed !== "") {
                 // 🚀 Rama “requiere BOM”: un solo artículo “general”
                 const general = parsedArticles[0] || {};
                 setOrderNumber(general.orderNumber ?? "");
+                setClientOrder(general.client_order ?? adaptation.number_order ?? "");
                 setDeliveryDate(formatDate(general.deliveryDate ?? ""));
                 setQuantityToProduce(String(general.quantityToProduce ?? ""));
                 setLot(general.lot ?? "");
@@ -394,11 +393,12 @@ function NewAdaptation() {
                 parsedArticles.forEach((a: any) => {
                     fieldsMap[a.codart] = {
                         orderNumber: a.orderNumber ?? "",
+                        numberOrder: a.client_order ?? "",
                         deliveryDate: formatDate(a.deliveryDate ?? ""),
                         quantityToProduce: a.quantityToProduce ?? "",
                         lot: a.lot ?? "",
                         healthRegistration: a.healthRegistration ?? "",
-                        attachment: a.attachment,  
+                        attachment: a.attachment,
                     };
                 });
                 setArticleFields(fieldsMap);
@@ -432,12 +432,11 @@ function NewAdaptation() {
         }
     };
 
-
     //Handle de eliminacion
     const handleDelete = async (id: number) => {
         showConfirm("¿Estás seguro de eliminar este Acondicionamiento?", async () => {
             try {
-                await deleteMachin(id);
+                await deleteAdaptation(id);
                 setMaestra((prevMachine) => prevMachine.filter((machine) => machine.id !== id));
                 showSuccess("Acondicionamiento eliminado exitosamente");
                 fetchAdaptations(); // Refrescar la lista
@@ -452,6 +451,7 @@ function NewAdaptation() {
     const resetForm = useCallback(() => {
         setSelectedClient("");
         setOrderNumber("");
+        setClientOrder("");
         setDeliveryDate("");
         setLot("");
         setHealthRegistration("");
@@ -504,23 +504,37 @@ function NewAdaptation() {
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                             {/* Cliente */}
                             <div className="col-span-full">
-                                <Text type="subtitle">Cliente:</Text>
-                                <select
-                                    className="w-full border p-3 rounded-lg text-gray-800 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 text-center"
-                                    value={selectedClient}
-                                    onChange={e => {
-                                        setSelectedClient(e.target.value);
-                                        setIngredients([]);
-                                    }}
-                                >
-                                    <option value="">Seleccione...</option>
-                                    {clients.map(client => (
-                                        <option key={client.id} value={client.id.toString()}>
-                                            {client.name}
-                                        </option>
-                                    ))}
-                                </select>
+                                <div className="flex gap-4">
+                                    <div className="w-1/2">
+                                        <Text type="subtitle">Cliente:</Text>
+                                        <select
+                                            className="w-full border p-3 rounded-lg text-gray-800 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 text-center"
+                                            value={selectedClient}
+                                            onChange={e => {
+                                                setSelectedClient(e.target.value);
+                                                setIngredients([]);
+                                            }}
+                                        >
+                                            <option value="">Seleccione...</option>
+                                            {clients.map(client => (
+                                                <option key={client.id} value={client.id.toString()}>
+                                                    {client.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div className="w-1/2">
+                                        <Text type="subtitle">Orden:</Text>
+                                        <input
+                                            type="text"
+                                            className="w-full border p-3 rounded-lg text-gray-800 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 text-center"
+                                            value={client_order}
+                                            onChange={e => setClientOrder(e.target.value)}
+                                        />
+                                    </div>
+                                </div>
                             </div>
+
                             {/* Maestras y BOM*/}
                             <div
                                 className={`col-span-full grid grid-cols-1 ${maestraRequiereBOM ? "sm:grid-cols-2" : "lg:grid-cols-1"
@@ -606,7 +620,7 @@ function NewAdaptation() {
                                 <div className="col-span-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                     {/* Número de Orden */}
                                     <div>
-                                        <Text type="subtitle">N° Orden:</Text>
+                                        <Text type="subtitle">N° Orden del Cliente:</Text>
                                         <input
                                             type="text"
                                             className="w-full border p-3 rounded-lg text-gray-800 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 text-center"
@@ -669,14 +683,15 @@ function NewAdaptation() {
                                 <>
                                     <div className="grid gap-6"
                                         style={{
-                                            gridTemplateColumns: `repeat(${selectedArticles.length}, minmax(410px, 1fr))`
+                                            gridTemplateColumns: 'repeat(2, minmax(410px, 1fr))',
+                                            gridAutoRows: 'auto',
                                         }}>
                                         {selectedArticles.map((article) => (
                                             <div key={article.codart} className="border border-gray-200 p-4 rounded-lg bg-gray-50">
-                                                <Text type="title"  >Artículo: {article.codart}</Text>
+                                                <Text type="title">Artículo: {article.codart}</Text>
                                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                                     <div className="col-span-1">
-                                                        <Text type="subtitle" >N° Orden:</Text>
+                                                        <Text type="subtitle">N° Orden del Cliente:</Text>
                                                         <input
                                                             type="text"
                                                             className="border border-gray-300 rounded-md px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 text-center text-black"
@@ -685,7 +700,7 @@ function NewAdaptation() {
                                                         />
                                                     </div>
                                                     <div className="col-span-1">
-                                                        <Text type="subtitle"  >Fecha Entrega:</Text>
+                                                        <Text type="subtitle">Fecha Entrega:</Text>
                                                         <input
                                                             type="date"
                                                             className="border border-gray-300 rounded-md px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 text-center text-black"
@@ -694,7 +709,7 @@ function NewAdaptation() {
                                                         />
                                                     </div>
                                                     <div className="col-span-1">
-                                                        <Text type="subtitle"  >Cant. a Producir:</Text>
+                                                        <Text type="subtitle">Cant. a Teorica:</Text>
                                                         <input
                                                             type="number"
                                                             className="border border-gray-300 rounded-md px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 text-center text-black"
@@ -703,7 +718,7 @@ function NewAdaptation() {
                                                         />
                                                     </div>
                                                     <div className="col-span-1">
-                                                        <Text type="subtitle"  >Lote:</Text>
+                                                        <Text type="subtitle">Lote:</Text>
                                                         <input
                                                             type="text"
                                                             className="border border-gray-300 rounded-md px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 text-center text-black"
@@ -712,7 +727,7 @@ function NewAdaptation() {
                                                         />
                                                     </div>
                                                     <div className="col-span-1">
-                                                        <Text type="subtitle" >R. Sanitario:</Text>
+                                                        <Text type="subtitle">R. Sanitario:</Text>
                                                         <input
                                                             type="text"
                                                             className="border border-gray-300 rounded-md px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 text-center text-black"
@@ -730,6 +745,7 @@ function NewAdaptation() {
                                             </div>
                                         ))}
                                     </div>
+
                                 </>
                             )}
 
@@ -743,7 +759,6 @@ function NewAdaptation() {
                                                 <tr className="bg-gray-200">
                                                     <th className="border border-black p-2 text-center">Codart</th>
                                                     <th className="border border-black p-2 text-center">Desart</th>
-                                                    <th className="border border-black p-2 text-center">Cant. a Producir:</th>
                                                     <th className="border border-black p-2 text-center">Merma%</th>
                                                     <th className="border border-black p-2 text-center">Cantidad Teorica</th>
                                                     <th className="border border-black p-2 text-center">Validar </th>
@@ -754,8 +769,9 @@ function NewAdaptation() {
                                                     <tr key={index}>
                                                         <td className="border border-black p-2 text-center">{ing.codart}</td>
                                                         <td className="border border-black p-2 text-center">{ing.desart}</td>
-                                                        <td className="border border-black p-2 text-center">{ing.quantity}</td>
-                                                        <td className="border border-black p-2 text-center">{ing.merma}</td>
+                                                        <td className="border border-black p-2 text-center">
+                                                            {(ing.merma * 100).toFixed(2)}%
+                                                        </td>
                                                         <td className="border border-black p-2 text-center">
                                                             <input
                                                                 type="number"
@@ -795,10 +811,11 @@ function NewAdaptation() {
             )}
 
             <Table
-                columns={["client_name",]}
+                columns={["client_name", "number_order"]}
                 rows={adaptation}
                 columnLabels={{
                     client_name: "Cliente",
+                    number_order: "N° Orden",
                 }}
                 onDelete={handleDelete}
                 onEdit={handleEdit}

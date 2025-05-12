@@ -13,6 +13,8 @@ export interface Data {
     description: string;
     config: string;
     binding: boolean;
+    has_time: boolean;
+    duration: number;
 }
 
 // Función para crear un nuevo Activitie.

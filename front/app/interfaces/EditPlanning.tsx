@@ -1,3 +1,4 @@
+import { Icon } from 'lucide-react';
 export interface Plan {
     adaptation_id: number;
     bom: string;
@@ -19,4 +20,8 @@ export interface Plan {
     status_dates: string;
     updated_at: string;
     client_name?: string; 
+    color?: string;
+    icon?: string;
+    start_date?: string;
+    end_date?: string;
 }

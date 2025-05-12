@@ -11,14 +11,17 @@ const Maestras = axios.create({
 interface Data {
     descripcion: string;
     requiere_bom: boolean;
-    type_product: string; // Se envía como JSON.stringify, por eso es string
-    type_stage: string; // Se envía como JSON.stringify, por eso es string
-    status_type: string;
+    type_product: string;
+    type_stage: number[];
+    status_type: string | null; 
     aprobado: boolean;
+    duration: string;
+    duration_user: string;
 }
 
 // Crear una nueva Maestra
 export const createMaestra = async (data: Data): Promise<any> => {
+    console.log('Data a enviar:', data); // Agregado para depuración
     try {
         const response = await Maestras.post('/newMaestra', data);
         return response.data;
@@ -54,7 +57,6 @@ export const getTipo = async () => {
     }
 };
 
-
 // Eliminar una Maestra por su ID
 export const deleteMaestra = async (id: number): Promise<any> => {
     try {
@@ -67,9 +69,9 @@ export const deleteMaestra = async (id: number): Promise<any> => {
 };
 
 // Obtener una Maestra por su ID
-export const getMaestraId = async (id: number): Promise<any> => {
+export const getMaestraId = async (id: number): Promise<any> => { 
     try {
-        const response = await Maestras.get(`/MaestraId/${id}`);
+        const response = await Maestras.get(`/MaestraId/${id}`); 
         return response.data;
     } catch (error) {
         console.error('Error en getMaestraId:', error);

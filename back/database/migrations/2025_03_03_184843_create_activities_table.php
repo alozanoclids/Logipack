@@ -17,6 +17,8 @@ return new class extends Migration
             $table->string('description'); // Descripción de la fase
             $table->json('config')->nullable(); // Almacena tipo y opciones en JSON
             $table->boolean('binding')->default(false); // Indica si tiene 
+            $table->boolean('has_time')->default(false); // Indica si requiere tiempo
+            $table->string('duration')->nullable(); // Guarda el tiempo en formato HH:MM:SS
             $table->timestamps();
         });
     }

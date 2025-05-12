@@ -2,6 +2,7 @@
 // ------------------------- 1. Importaciones de dependencias principales -------------------------
 import React, { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
+import { Search, X, Clock } from "lucide-react";
 // ------------------------- 2. Importaciones de servicios -------------------------
 import { createMaestra, getMaestra, deleteMaestra, getMaestraId, updateMaestra, getTipo } from "../../services/maestras/maestraServices";
 import { getStage } from "../../services/maestras/stageServices";
@@ -28,8 +29,11 @@ const Maestra = () => {
     const [aprobado, setAprobado] = useState(false);
     const [stages, setStages] = useState<Stage[]>([]);
     const [selectedStages, setSelectedStages] = useState<Stage[]>([]);
-    const [tipoSeleccionado, setTipoSeleccionado] = useState<string>('')
+    const [tipoSeleccionado, setTipoSeleccionado] = useState("");
     const [tiposProducto, setTiposProducto] = useState<string[]>([]);
+    const [searchStage, setSearchStage] = useState("");
+    const [duration, setDuration] = useState("");
+    const [durationUser, setDurationUser] = useState("");
 
     // Fetch de fases al cargar el componente
     useEffect(() => {
@@ -102,15 +106,17 @@ const Maestra = () => {
             await createMaestra({
                 descripcion,
                 requiere_bom: requiereBOM,
-                type_product: JSON.stringify(tipoSeleccionado),
-                type_stage: JSON.stringify(selectedStages.map((s) => s.id)),
-                status_type: estado,
+                type_product: tipoSeleccionado,
+                type_stage: selectedStages.map((s) => s.id),
+                status_type: "En Creación",
                 aprobado,
+                duration,
+                duration_user: durationUser,
             });
             showSuccess("Maestra creada con éxito");
             setIsOpen(false);
             resetForm();
-            fetchMaestra(); // Refrescar la lista
+            fetchMaestra();
         } catch (error) {
             showError("Error al crear la maestra");
         }
@@ -142,22 +148,21 @@ const Maestra = () => {
     const handleEdit = async (id: number) => {
         try {
             const data = await getMaestraId(id);
+            console.log("Datos de la maestra a editar:", data);
             setEditingMaestra(data);
             setDescripcion(data.descripcion);
             setRequiereBOM(data.requiere_bom);
-
-            // Convertir los IDs de los tipos de producto a números
-            setTipoSeleccionado(JSON.parse(data.type_product));
-
-            // Convertir los IDs de las fases en objetos Stage completos
-            const selectedStageIds = JSON.parse(data.type_stage); // Array de IDs
+            setTipoSeleccionado(data.type_product);
+            const selectedStageIds = data.type_stage;
             const selectedStagesData = stages.filter((stage) =>
                 selectedStageIds.includes(stage.id)
-            ); // Filtrar los stages por ID
+            );
             setSelectedStages(selectedStagesData);
 
             setEstado(data.status_type);
             setAprobado(data.aprobado);
+            setDuration(data.duration);
+            setDurationUser(data.duration_user);
             setIsOpen(true);
         } catch (error) {
             console.error("Error obteniendo datos de la Maestra:", error);
@@ -186,15 +191,17 @@ const Maestra = () => {
             await updateMaestra(editingMaestra.id, {
                 descripcion,
                 requiere_bom: requiereBOM,
-                type_product: JSON.stringify(tipoSeleccionado),
-                type_stage: JSON.stringify(selectedStages.map((s) => s.id)),
+                type_product: tipoSeleccionado,
+                type_stage: selectedStages.map((s) => s.id),
                 status_type: estado,
                 aprobado,
+                duration,
+                duration_user: durationUser,
             });
             showSuccess("Maestra actualizada con éxito");
             setIsOpen(false);
             resetForm();
-            fetchMaestra(); // Refrescar la lista
+            fetchMaestra();
         } catch (error) {
             showError("Error al actualizar la maestra");
         }
@@ -208,6 +215,29 @@ const Maestra = () => {
         setEstado("");
         setAprobado(false);
         setSelectedStages([]);
+        setDuration("");
+        setDurationUser("");
+    };
+
+    useEffect(() => {
+        const totalDuration = selectedStages.reduce((total, stage) => total + (Number(stage.duration) || 0), 0);
+        const totalUserDuration = selectedStages.reduce((total, stage) => total + (Number(stage.duration_user) || 0), 0);
+
+        setDuration(String(totalDuration));
+        setDurationUser(String(totalUserDuration));
+    }, [selectedStages]);
+
+    const getFormattedDuration = (minutes: number): string => {
+        if (minutes <= 0) return 'menos de 1 minuto';
+        const days = Math.floor(minutes / 1440); // 1440 min = 1 día
+        const remainingMinutesAfterDays = minutes % 1440;
+        const hours = Math.floor(remainingMinutesAfterDays / 60);
+        const remainingMinutes = remainingMinutesAfterDays % 60;
+        const parts: string[] = [];
+        if (days > 0) parts.push(`${days} día${days > 1 ? 's' : ''}`);
+        if (hours > 0) parts.push(`${hours} hora${hours > 1 ? 's' : ''}`);
+        if (remainingMinutes > 0) parts.push(`${remainingMinutes} min`);
+        return parts.join(' ');
     };
 
     return (
@@ -228,10 +258,11 @@ const Maestra = () => {
                     exit={{ opacity: 0 }}
                 >
                     <motion.div
-                        className="bg-white p-6 rounded-lg shadow-lg w-full max-w-[100%] md:max-w-[600px] max-h-[90vh] overflow-y-auto z-50"
+                        className="bg-white rounded-lg shadow-xl w-full max-w-xl sm:max-w-2xl md:max-w-3xl lg:max-w-[900px] max-h-[90vh] overflow-y-auto p-4 sm:p-6"
                         initial={{ y: -50, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
-                        exit={{ y: -50, opacity: 0 }}
+                        exit={{ y: 50, opacity: 0 }}
+                        transition={{ duration: 0.3 }}
                     >
                         <Text type="title">{editingMaestra ? "Editar Maestra" : "Crear Maestra"}</Text>
 
@@ -258,31 +289,7 @@ const Maestra = () => {
                                     className="mt-2 w-4 h-4"
                                 />
                             </div>
-                            <div className="flex flex-col items-center">
-                                <Text type="subtitle">Aprobado</Text>
-                                <input
-                                    type="checkbox"
-                                    checked={aprobado}
-                                    onChange={() => setAprobado(!aprobado)}
-                                    className="mt-2 w-4 h-4"
-                                />
-                            </div>
-                        </div>
 
-                        {/* Selección de Estado */}
-                        <div className="mt-4">
-                            <Text type="subtitle">Seleccione Estado</Text>
-                            <select
-                                className="w-full p-2 border mb-2 min-w-0 text-black text-center"
-                                value={estado}
-                                onChange={(e) => setEstado(e.target.value)}
-                            >
-                                {estados.map((estado) => (
-                                    <option key={estado} value={estado}>
-                                        {estado}
-                                    </option>
-                                ))}
-                            </select>
                         </div>
 
                         {/* Selección Tipo de Producto */}
@@ -308,72 +315,159 @@ const Maestra = () => {
                         <div className="mt-4">
                             <Text type="subtitle">Seleccione las Fases</Text>
                             <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
+
                                 {/* Lista de fases disponibles */}
-                                <div className="w-full md:w-1/2 border p-2 max-h-40 overflow-y-auto">
+                                <div className="w-full md:w-1/2 border p-4 max-h-60 overflow-y-auto rounded-xl bg-white shadow-sm">
                                     <Text type="subtitle">Disponibles</Text>
+
+                                    <div className="relative mb-3">
+                                        <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-500" />
+                                        <input
+                                            type="text"
+                                            placeholder="Buscar fase..."
+                                            className="w-full border border-gray-300 p-2 pl-9 rounded-md text-sm text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            value={searchStage}
+                                            onChange={(e) => setSearchStage(e.target.value)}
+                                        />
+                                    </div>
+
                                     {stages.length > 0 ? (
-                                        stages.map((stage) => {
-                                            const isSelected = selectedStages.some(s => s.id === stage.id);
-                                            const isBindingDisabled = stage.status === 0;
-                                            const isDisabled = isSelected || isBindingDisabled;
-                                            return (
-                                                <div key={stage.id} className="p-2 border-b">
-                                                    <button
-                                                        disabled={isDisabled}
-                                                        className={`w-full text-sm transition text-center ${isBindingDisabled
-                                                            ? "text-red-500 cursor-not-allowed"
-                                                            : isDisabled
+                                        stages
+                                            .filter((stage) => stage.status !== 0) // solo activos
+                                            .filter((stage) =>
+                                                stage.description.toLowerCase().includes(searchStage.toLowerCase())
+                                            )
+                                            .map((stage) => {
+                                                const isSelected = selectedStages.some((s) => s.id === stage.id);
+                                                return (
+                                                    <div key={stage.id} className="p-2 border-b">
+                                                        <button
+                                                            disabled={isSelected}
+                                                            className={`w-full text-sm transition text-center ${isSelected
                                                                 ? "text-gray-400 cursor-not-allowed"
                                                                 : "text-blue-500 hover:text-blue-700"
-                                                            }`}
-                                                        onClick={() => {
-                                                            if (!isSelected) handleSelectStage(stage);
-                                                        }}
-                                                    >
-                                                        {stage.description}
-                                                    </button>
-                                                </div>
-                                            );
-                                        })
+                                                                }`}
+                                                            onClick={() => {
+                                                                if (!isSelected) handleSelectStage(stage);
+                                                            }}
+                                                        >
+                                                            {stage.description}
+                                                        </button>
+                                                    </div>
+                                                );
+                                            })
                                     ) : (
                                         <p className="text-gray-500 text-center">No hay fases disponibles</p>
                                     )}
                                 </div>
 
                                 {/* Lista de fases seleccionadas */}
-                                <div className="w-full md:w-1/2 border p-2 max-h-40 overflow-y-auto">
-                                    <Text type="subtitle">Seleccionadas</Text>
+                                <div className="w-full md:w-1/2 p-4 rounded-xl bg-white border shadow-sm">
+                                    <Text type="subtitle">Fases Seleccionadas</Text>
                                     {selectedStages.length > 0 ? (
-                                        selectedStages.map((stage) => (
-                                            <div key={stage.id} className="p-2 border-b">
-                                                <span
-                                                    className="block w-full text-black cursor-pointer hover:bg-red-500 hover:text-white text-center p-2"
+                                        <div className="flex flex-wrap gap-2 mt-3">
+                                            {selectedStages.map((stage) => (
+                                                <div
+                                                    key={stage.id}
+                                                    className="flex items-center bg-gray-100 text-gray-800 rounded-full px-3 py-1 text-sm hover:bg-red-400 hover:text-white transition-all cursor-pointer"
                                                     onClick={() => handleRemoveStage(stage)}
                                                 >
                                                     {stage.description}
-                                                </span>
-                                            </div>
-                                        ))
+                                                    <X className="w-4 h-4 ml-2" />
+                                                </div>
+                                            ))}
+                                        </div>
                                     ) : (
-                                        <p className="text-gray-500 text-center">No hay fases seleccionadas</p>
+                                        <p className="text-gray-400 text-sm text-center mt-4">No hay fases seleccionadas</p>
                                     )}
+
+                                    {/* Sumar las durations y mostrar */}
+                                </div>
+                            </div>
+                            <div className="flex flex-col md:flex-row gap-4 mt-2">
+                                {/* Tiempo estimado por sistema */}
+                                <div className="w-full md:w-1/2">
+                                    <Text type="subtitle">Tiempo Estimado Sistema</Text>
+                                    <div className="mt-2 relative">
+                                        <Clock className="absolute left-3 top-2.5 w-4 h-4 text-gray-500" />
+                                        <input
+                                            type="text"
+                                            readOnly
+                                            className="w-full pl-10 pr-4 py-2 rounded-md border border-gray-300 bg-gray-100 text-sm text-gray-700"
+                                            value={`${duration} min ---> ${getFormattedDuration(Number(duration))}`}
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Tiempo estimado por usuario */}
+                                <div className="w-full md:w-1/2">
+                                    <Text type="subtitle">Tiempo Por Usuario</Text>
+                                    <div className="mt-2 relative">
+                                        <Clock className="absolute left-3 top-2.5 w-4 h-4 text-gray-500" />
+                                        <input
+                                            type="text"
+                                            readOnly
+                                            className="w-full pl-10 pr-4 py-2 rounded-md border border-gray-300 bg-gray-100 text-sm text-gray-700"
+                                            value={`${durationUser} min ---> ${getFormattedDuration(Number(durationUser))}`}
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
+
                         {/* Botones de acción */}
-                        <div className="flex justify-end space-x-4 mt-4">
+                        <div className="flex justify-center space-x-4 mt-4">
                             <Button onClick={() => setIsOpen(false)} variant="cancel" label="Cancelar" />
+                            {/* Botón Finalizado */}
                             <Button
-                                onClick={editingMaestra ? handleUpdate : handleSubmit}
+                                onClick={async () => {
+                                    const payload = {
+                                        descripcion,
+                                        requiere_bom: requiereBOM,
+                                        type_product: tipoSeleccionado,
+                                        type_stage: selectedStages.map((s) => s.id),
+                                        status_type: "Aprobada",
+                                        aprobado: true,
+                                        duration,
+                                        duration_user: durationUser,
+                                    };
+
+                                    try {
+                                        if (editingMaestra) {
+                                            await updateMaestra(editingMaestra.id, payload);
+                                        } else {
+                                            await createMaestra(payload);
+                                        }
+                                        showSuccess(editingMaestra ? "Maestra actualizada con éxito" : "Maestra creada con éxito");
+                                        setIsOpen(false);
+                                        resetForm();
+                                        fetchMaestra();
+                                    } catch (error) {
+                                        showError("Error al guardar la maestra");
+                                        console.error("Error al guardar:", error);
+                                    }
+                                }}
+                                variant="create2"
+                                label={editingMaestra ? "Finalizar Edición" : "Finalizar"}
+                            />
+
+
+                            {/* Botón Crear o Actualizar */}
+                            <Button
+                                onClick={() => {
+                                    setEstado("En creación");
+                                    setAprobado(false);
+                                    editingMaestra ? handleUpdate() : handleSubmit();
+                                }}
                                 variant="create"
                                 label={editingMaestra ? "Actualizar" : "Crear"}
                             />
                         </div>
                     </motion.div>
                 </motion.div>
-            )}
-
+            )
+            }
 
             {/* Tabla de maestras */}
             <Table
@@ -387,7 +481,7 @@ const Maestra = () => {
                 onDelete={handleDelete}
                 onEdit={handleEdit}
             />
-        </div>
+        </div >
     );
 };
 

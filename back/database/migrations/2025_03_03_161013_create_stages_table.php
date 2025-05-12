@@ -22,6 +22,8 @@ return new class extends Migration
             $table->boolean('alert')->default(false); // Indica si tiene alerta
             $table->boolean('can_pause')->default(false); // Indica si se puede pausar
             $table->boolean('status')->default(false); // Indica si se puede pausar
+            $table->string('duration')->nullable();
+            $table->string('duration_user')->nullable();
             $table->timestamps(); // Fechas de creación y actualización
         });
     }

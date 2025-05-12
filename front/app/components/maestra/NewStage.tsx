@@ -9,6 +9,7 @@ import Button from "../buttons/buttons";
 import { Stage, Data } from "../../interfaces/NewStage";
 const phases = ["Planeacion", "Conciliación", "Actividades"];
 import Text from "../text/Text";
+import { Search, Clock } from "lucide-react";
 
 function NewStage() {
     const [isOpen, setIsOpen] = useState(false);
@@ -16,14 +17,17 @@ function NewStage() {
     const [stage, setStage] = useState<Stage[]>([]);
     const [editingStage, setEditingStage] = useState<Stage | null>(null);
     const [description, setDescription] = useState("");
+    const [duration, setDuration] = useState("");
+    const [durationUser, setDurationUser] = useState("");
     const [phaseType, setPhaseType] = useState<"Planeacion" | "Conciliación" | "Actividades">("Planeacion");
     const [repeat, setRepeat] = useState(false);
     const [repeatMinutes, setRepeatMinutes] = useState("");
     const [alert, setAlert] = useState(false);
     const [status, setStatus] = useState(false);
     const [canPause, setCanPause] = useState(false);
-    const [availableActivities, setAvailableActivities] = useState<{ id: number; description: string; binding: number }[]>([]);
-    const [selectedActivities, setSelectedActivities] = useState<{ id: number; description: string }[]>([]);
+    const [availableActivities, setAvailableActivities] = useState<{ id: number; description: string; binding: number, duration: number }[]>([]);
+    const [selectedActivities, setSelectedActivities] = useState<{ id: number; description: string, duration: number }[]>([]);
+    const [searchTerm, setSearchTerm] = useState("");
 
     // Función para obtener las fases
     const fetchStage = async () => {
@@ -89,10 +93,10 @@ function NewStage() {
             alert,
             can_pause: canPause,
             status,
-            activities: "[]", // Inicializamos como una cadena vacía
+            activities: "[]",
+            duration_user: durationUser,
+            duration: duration,
         };
-
-        // Si el tipo de fase es "Actividades", agregamos las actividades seleccionadas
         if (phaseType === "Actividades") {
             const activityIds = selectedActivities.map((activity) => activity.id);
             newStage.activities = JSON.stringify(activityIds);
@@ -124,11 +128,18 @@ function NewStage() {
         }
     }, [availableActivities, editingStage, phaseType]);
 
+    useEffect(() => {
+        const total = selectedActivities.reduce(
+            (acc, act) => acc + (Number(act.duration) || 0),
+            0
+        );
+        setDuration(String(total));
+    }, [selectedActivities]);
+
     const handleEdit = async (id: number) => {
         try {
             const data = await getStageId(id);
             console.log("Datos obtenidos para editar la fase:", data); // 🚀 LOG
-
             setEditingStage(data);
             setDescription(data.description);
             setPhaseType(data.phase_type);
@@ -137,8 +148,8 @@ function NewStage() {
             setAlert(data.alert);
             setStatus(data.status);
             setCanPause(data.can_pause);
-
-
+            setDuration(data.duration);
+            setDurationUser(data.duration_user);
             setIsEditOpen(true);
         } catch (error) {
             console.error("Error obteniendo datos de la fase:", error);
@@ -158,6 +169,8 @@ function NewStage() {
             can_pause: canPause,
             status,
             activities: "[]",
+            duration_user: durationUser,
+            duration: duration,
         };
 
         if (phaseType === "Actividades") {
@@ -203,6 +216,21 @@ function NewStage() {
         setStatus(false);
         setCanPause(false);
         setSelectedActivities([]);
+        setDuration("");
+        setDurationUser("");
+    };
+
+    const getFormattedDuration = (minutes: number): string => {
+        if (minutes <= 0) return 'menos de 1 minuto';
+        const days = Math.floor(minutes / 1440); // 1440 min = 1 día
+        const remainingMinutesAfterDays = minutes % 1440;
+        const hours = Math.floor(remainingMinutesAfterDays / 60);
+        const remainingMinutes = remainingMinutesAfterDays % 60;
+        const parts: string[] = [];
+        if (days > 0) parts.push(`${days} día${days > 1 ? 's' : ''}`);
+        if (hours > 0) parts.push(`${hours} hora${hours > 1 ? 's' : ''}`);
+        if (remainingMinutes > 0) parts.push(`${remainingMinutes} min`);
+        return parts.join(' ');
     };
 
     return (
@@ -214,12 +242,18 @@ function NewStage() {
 
             {(isOpen || isEditOpen && editingStage) && (
                 <motion.div
-                    initial={{ opacity: 0, y: -50 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -50 }}
-                    className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 p-4"
+                    className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center p-4 z-50"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
                 >
-                    <motion.div className="relative bg-white p-4 rounded-lg shadow-lg w-full max-w-3xl max-h-screen overflow-y-auto">
+                    <motion.div
+                        className="bg-white rounded-lg shadow-xl w-full max-w-xl sm:max-w-2xl md:max-w-3xl lg:max-w-[900px] max-h-[90vh] overflow-y-auto p-4 sm:p-6"
+                        initial={{ y: -50, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        exit={{ y: 50, opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                    >
                         {/* Botón de cierre */}
                         <button
                             onClick={() => {
@@ -273,35 +307,46 @@ function NewStage() {
                                         {/* Lista de actividades disponibles */}
                                         <div className="w-full md:w-1/2">
                                             <Text type="subtitle">Disponibles</Text>
+                                            <div className="relative mb-2">
+                                                <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-500" />
+                                                <input
+                                                    type="text"
+                                                    placeholder="Buscar actividad..."
+                                                    value={searchTerm}
+                                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                                    className="w-full border border-gray-300 p-2 pl-9 rounded-md text-sm text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                />
+                                            </div>
                                             <ul className="mt-1 border border-gray-300 p-2 rounded-lg max-h-48 overflow-y-auto">
-                                                {availableActivities.map((activity) => {
-                                                    const isAdded = selectedActivities.some(
-                                                        (item) => item.id === activity.id
-                                                    );
-                                                    const isBindingDisabled = activity.binding === 0;
-                                                    const isDisabled = isAdded || isBindingDisabled;
-                                                    return (
-                                                        <li
-                                                            key={activity.id}
-                                                            className="py-1 border-b border-gray-200 last:border-0"
-                                                        >
-                                                            <button
-                                                                disabled={isDisabled}
-                                                                onClick={() =>
-                                                                    setSelectedActivities((prev) => [...prev, activity])
-                                                                }
-                                                                className={`w-full text-sm transition text-center ${isBindingDisabled
-                                                                    ? "text-red-500 cursor-not-allowed"
-                                                                    : isAdded
+                                                {availableActivities
+                                                    .filter((activity) => activity.binding === 1)
+                                                    .filter((activity) =>
+                                                        activity.description.toLowerCase().includes(searchTerm.toLowerCase())
+                                                    )
+                                                    .map((activity) => {
+                                                        const isAdded = selectedActivities.some(
+                                                            (item) => item.id === activity.id
+                                                        );
+                                                        return (
+                                                            <li
+                                                                key={activity.id}
+                                                                className="py-1 border-b border-gray-200 last:border-0"
+                                                            >
+                                                                <button
+                                                                    disabled={isAdded}
+                                                                    onClick={() =>
+                                                                        setSelectedActivities((prev) => [...prev, activity])
+                                                                    }
+                                                                    className={`w-full text-sm transition text-center ${isAdded
                                                                         ? "text-gray-400 cursor-not-allowed"
                                                                         : "text-blue-500 hover:text-blue-700"
-                                                                    }`}
-                                                            >
-                                                                {activity.description}
-                                                            </button>
-                                                        </li>
-                                                    );
-                                                })}
+                                                                        }`}
+                                                                >
+                                                                    {activity.description}
+                                                                </button>
+                                                            </li>
+                                                        );
+                                                    })}
                                             </ul>
                                         </div>
 
@@ -330,6 +375,43 @@ function NewStage() {
                                                     </li>
                                                 ))}
                                             </ul>
+
+                                        </div>
+                                    </div>
+                                    {/* Total de duración */}
+                                    <div className="flex flex-col md:flex-row gap-4">
+                                        <div className="w-full md:w-1/2">
+                                            <Text type="subtitle">Tiempo Estimado</Text>
+                                            <div className="mt-4 relative">
+                                                <Clock className="absolute left-3 top-2.5 w-4 h-4 text-gray-500" />
+                                                <input
+                                                    type="text"
+                                                    readOnly
+                                                    value={`${duration} minutos`}
+                                                    className="w-full border border-gray-300 p-2 pl-9 pr-24 rounded-md text-sm text-black bg-gray-100 cursor-default"
+                                                />
+                                                <span className="absolute right-7 top-2.5 text-sm text-gray-600">
+                                                    ({getFormattedDuration(Number(duration))})
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <div className="w-full md:w-1/2">
+                                            <Text type="subtitle">T. Estimado Por El Usuario</Text>
+                                            <div className="mt-4 relative">
+                                                <Clock className="absolute left-3 top-2.5 w-4 h-4 text-gray-500" />
+                                                <input
+                                                    type="number"
+                                                    value={durationUser}
+                                                    onChange={(e) => setDurationUser(e.target.value)}
+                                                    className="w-full border border-gray-300 p-2 pl-9 rounded-md text-sm text-black bg-white"
+                                                />
+                                                {durationUser && (
+                                                    <span className="absolute right-7 top-2.5 text-sm text-gray-600">
+                                                        ({getFormattedDuration(Number(durationUser))})
+                                                    </span>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>

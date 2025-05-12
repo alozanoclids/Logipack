@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Adaptation;
+use App\Models\Maestra;
 use App\Models\AdaptationDate;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Validation\ValidationException;
@@ -26,23 +27,20 @@ class AdaptationController extends Controller
                 'master'       => 'nullable|json',
                 'bom'          => 'nullable|json',
                 'ingredients'  => 'nullable|json',
+                'number_order' => 'required|string',
             ]);
 
             $articleAttachments = [];
 
-            // 🧩 Archivo plano general (cuando hay solo uno, sin codart)
+            // 🧩 Archivo plano general
             if ($request->hasFile('attachment')) {
                 $file = $request->file('attachment');
-
-                // 🧼 Nombre: general_20250408_165432.pdf
                 $filename = 'general_' . now()->format('Ymd_His') . '.' . $file->getClientOriginalExtension();
                 $path = $file->storeAs('attachments', $filename, 'public');
-
-                // 🧠 Guardamos como si fuera parte del array (clave 'general')
                 $articleAttachments['general'] = $path;
             }
 
-            // 🔥 Archivos por artículo (attachment_10197-0053, etc)
+            // 🔥 Archivos por artículo
             foreach ($request->files as $key => $file) {
                 if (Str::startsWith($key, 'attachment_')) {
                     $codart = Str::after($key, 'attachment_');
@@ -51,32 +49,39 @@ class AdaptationController extends Controller
                         $file = LaravelUploadedFile::createFromBase($file);
                     }
 
-                    // 🧼 Sanitiza codart
                     $safeCodart = preg_replace('/[^A-Za-z0-9_\-\.]/', '_', $codart);
-
-                    // 🧾 Nombre: codart_20250408_165432.ext
                     $filename = $safeCodart . '_' . now()->format('Ymd_His') . '.' . $file->getClientOriginalExtension();
                     $path = $file->storeAs('attachments', $filename, 'public');
-
                     $articleAttachments[$codart] = $path;
                 }
             }
 
-            // 🧷 Unificamos: plano o por artículo, siempre se guarda en attachment
             if (!empty($articleAttachments)) {
                 $validatedData['attachment'] = json_encode($articleAttachments);
             }
 
-            // 💾 Creamos la adaptación
+            // 💾 Crear Adaptation
             $adaptation = Adaptation::create($validatedData);
 
-            // 🔁 Guardar cada article_code en la tabla adaptation_dates
-            $articleCodes = json_decode($validatedData['article_code'], true);
+            // 🧠 Obtener duración desde master (si aplica)
+            $masterDuration = null;
+            if (!empty($validatedData['master'])) {
+                $masterData = json_decode($validatedData['master'], true);
+                if (isset($masterData['id'])) {
+                    $master = Maestra::find($masterData['id']);
+                    if ($master) {
+                        $masterDuration = $master->duration;
+                    }
+                }
+            }
 
+            // 🔁 Guardar en adaptation_dates
+            $articleCodes = json_decode($validatedData['article_code'], true);
             foreach ($articleCodes as $article) {
                 AdaptationDate::create([
                     'client_id'           => $validatedData['client_id'],
                     'codart'              => $article['codart'],
+                    'number_order'        => $article['number_order'],
                     'orderNumber'         => $article['orderNumber'],
                     'deliveryDate'        => $article['deliveryDate'],
                     'quantityToProduce'   => $article['quantityToProduce'],
@@ -85,7 +90,8 @@ class AdaptationController extends Controller
                     'master'              => $validatedData['master'],
                     'bom'                 => $validatedData['bom'],
                     'ingredients'         => $validatedData['ingredients'],
-                    'adaptation_id'       => $adaptation->id, // Relación importante
+                    'adaptation_id'       => $adaptation->id,
+                    'duration'            => $masterDuration,
                 ]);
             }
 
@@ -151,6 +157,7 @@ class AdaptationController extends Controller
             $validatedData = $request->validate([
                 'client_id'    => 'required|exists:clients,id',
                 'article_code' => 'required|json',
+                'number_order' => 'required|string',
                 'attachment'   => 'nullable|file',
                 'master'       => 'nullable|json',
                 'bom'          => 'nullable|json',
@@ -158,19 +165,16 @@ class AdaptationController extends Controller
             ]);
 
             $articleAttachments = [];
-
             $oldAttachments = json_decode($adaptation->attachment, true) ?? [];
 
             foreach ($request->files as $key => $file) {
                 if (Str::startsWith($key, 'attachment_')) {
                     $codart = Str::after($key, 'attachment_');
 
-                    // 🧽 Convertir archivo si viene como SymfonyUploadedFile
                     if ($file instanceof SymfonyUploadedFile && !$file instanceof LaravelUploadedFile) {
                         $file = LaravelUploadedFile::createFromBase($file);
                     }
 
-                    // 🧨 Eliminar el viejo si existe
                     if (isset($oldAttachments[$codart])) {
                         Storage::disk('public')->delete($oldAttachments[$codart]);
                     }
@@ -184,12 +188,10 @@ class AdaptationController extends Controller
             if ($request->hasFile('attachment')) {
                 $file = $request->file('attachment');
 
-                // Convertir si hace falta
                 if ($file instanceof SymfonyUploadedFile && !$file instanceof LaravelUploadedFile) {
                     $file = LaravelUploadedFile::createFromBase($file);
                 }
 
-                // Eliminar viejo si es un archivo plano
                 if (is_string($adaptation->attachment)) {
                     Storage::disk('public')->delete($adaptation->attachment);
                 }
@@ -203,16 +205,49 @@ class AdaptationController extends Controller
                 $validatedData['attachment'] = json_encode($articleAttachments);
             }
 
-            $adaptation->update($validatedData);
+            // 🔄 Decodificar JSON a array si existen
+            $validatedData['master'] = isset($validatedData['master']) ? json_decode($validatedData['master'], true) : null;
+            $validatedData['bom'] = isset($validatedData['bom']) ? json_decode($validatedData['bom'], true) : null;
+            $validatedData['ingredients'] = isset($validatedData['ingredients']) ? json_decode($validatedData['ingredients'], true) : null;
+
+            $masterDuration = null;
+            if (!empty($validatedData['master']) && isset($validatedData['master']['id'])) {
+                $master = Maestra::find($validatedData['master']['id']);
+                if ($master) {
+                    $masterDuration = $master->duration;
+                }
+            }
+
+            $adaptation->update($validatedData); 
+            $articleCodes = json_decode($validatedData['article_code'], true);
+            foreach ($articleCodes as $article) {
+                AdaptationDate::updateOrCreate(
+                    [
+                        'adaptation_id' => $adaptation->id,
+                        'codart'        => $article['codart'],
+                    ],
+                    [
+                        'client_id'           => $validatedData['client_id'],
+                        'number_order'        => $validatedData['number_order'],
+                        'orderNumber'         => $article['orderNumber'],
+                        'deliveryDate'        => $article['deliveryDate'],
+                        'quantityToProduce'   => $article['quantityToProduce'],
+                        'lot'                 => $article['lot'],
+                        'healthRegistration'  => $article['healthRegistration'],
+                        'master'              => $validatedData['master'],
+                        'bom'                 => $validatedData['bom'],
+                        'ingredients'         => $validatedData['ingredients'],
+                        'duration'            => $masterDuration,
+                    ]
+                );
+            }
 
             return response()->json([
                 'message'    => 'Adaptation updated successfully',
                 'adaptation' => $adaptation
             ], 200);
         } catch (ModelNotFoundException $e) {
-            return response()->json([
-                'error' => 'Adaptation not found'
-            ], 404);
+            return response()->json(['error' => 'Adaptation not found'], 404);
         } catch (ValidationException $e) {
             return response()->json([
                 'error'   => 'Validation failed',
@@ -226,14 +261,15 @@ class AdaptationController extends Controller
         }
     }
 
+
     public function deleteAdaptation($id)
     {
         try {
             $adaptation = Adaptation::findOrFail($id);
+            AdaptationDate::where('adaptation_id', $adaptation->id)->delete();
             $adaptation->delete();
-
             return response()->json([
-                'message' => 'Adaptation deleted successfully'
+                'message' => 'Adaptation and related dates deleted successfully'
             ], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json([

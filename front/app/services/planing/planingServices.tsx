@@ -31,10 +31,8 @@ export const getPlanningId = async (id: number) => {
 }
 
 export const updatePlanning = async (id: number, updatedPlan: Plan) => {
-    try {
-        console.log("Updated plan:", updatedPlan);
-        const response = await Planning.put(`/updatePlan/${id}`, updatedPlan);
-        console.log("Response from updatePlan:", response.data);
+    try { 
+        const response = await Planning.put(`/updatePlan/${id}`, updatedPlan); 
         return response.data;
     } catch (error: any) {
         console.error("Error en updatePlan:", error);

@@ -1,3 +1,4 @@
+import { number } from 'framer-motion';
 export interface Data {
   id: number;
   clientId: number;
@@ -34,6 +35,7 @@ export interface Adaptation {
   delivery_date: string;
   article_code: string;
   client_name?: string;
+  numberOrder?: string;
 }
 
 export interface ArticleFormData {
@@ -43,6 +45,10 @@ export interface ArticleFormData {
   lot: string;
   healthRegistration: string;
   attachment?: File;
+  duration?: string;
+  start_date?: string;
+  end_date?: string;
+  numberOrder?: string;
 }
 
 export interface ArticleFieldsMap {
@@ -57,4 +63,5 @@ export interface Articles {
   lot: string;
   healthRegistration: string;
   attachment?: File;
+  numberOrder?: string;
 }

@@ -8,6 +8,7 @@ export interface Article {
   codart: string;
   desart: string;
   coddiv: string;
+  numberOrder?: string;
 }
 
 export interface Ingredient {

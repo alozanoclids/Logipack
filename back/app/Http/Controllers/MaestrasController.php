@@ -7,6 +7,7 @@ use App\Models\Maestra;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class MaestrasController extends Controller
 {
@@ -22,11 +23,15 @@ class MaestrasController extends Controller
         $validatedData = $request->validate([
             'descripcion' => 'required|string',
             'requiere_bom' => 'required|boolean',
-            'type_product' => 'required|json',
-            'type_stage' => 'required|json',
-            'status_type' => 'required|string',
+            'type_product' => 'required|string',
+            'type_stage' => 'required|array',
+            'status_type' => 'nullable|string',
             'aprobado' => 'required|boolean',
+            'duration' => 'nullable',
+            'duration_user' => 'nullable',
         ]);
+
+        Log::info('Datos recibidos en newMaestra:', $request->all());
 
         // Generar código autoincremental manualmente
         $lastCode = Maestra::max('code') ?? 0;
@@ -62,10 +67,12 @@ class MaestrasController extends Controller
         $request->validate([ 
             'descripcion' => 'required|string',
             'requiere_bom' => 'required|boolean',
-            'type_product' => 'required|json',
-            'type_stage' => 'required|json',
-            'status_type' => 'required|string',
+            'type_product' => 'required|string',
+            'type_stage' => 'required|array',
+            'status_type' => 'nullable|string',
             'aprobado' => 'required|boolean',
+            'duration' => 'nullable',
+            'duration_user' => 'nullable',
         ]);
 
         $Maestra->update($request->all());

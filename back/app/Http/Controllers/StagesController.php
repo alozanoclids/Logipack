@@ -27,6 +27,8 @@ class StagesController extends Controller
             'can_pause' => 'boolean',
             'status' => 'boolean',
             'activities' => 'required|json',
+            'duration' => 'nullable',
+            'duration_user' => 'nullable',
         ]);
 
         // Generar código autoincremental manualmente
@@ -69,6 +71,8 @@ class StagesController extends Controller
             'can_pause' => 'boolean',
             'status' => 'boolean',
             'activities' => 'required|json',
+            'duration' => 'nullable',
+            'duration_user' => 'nullable',
         ]);
 
         $Fase->update($validatedData);

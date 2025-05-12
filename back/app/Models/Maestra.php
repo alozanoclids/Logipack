@@ -10,4 +10,8 @@ class Maestra extends Model
     use HasFactory;
 
     protected $guarded = [];
+
+    protected $casts = [
+        'type_stage' => 'array',
+    ];
 }

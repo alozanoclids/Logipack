@@ -49,8 +49,9 @@ export const updateAdaptation = async (id: number, data: FormData) => {
         const response = await Adaptations.post(`/updateAdaptation/${id}`, data, {
             headers: {
                 "Content-Type": "multipart/form-data"
-            }
+            }               
         });
+        console.log("Editando adaptación:", response.data);
         return response.data;
     } catch (error: any) {
         console.error("Error en updateAdaptation:", error);

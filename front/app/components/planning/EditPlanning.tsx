@@ -1,46 +1,45 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { motion } from "framer-motion"; 
+import { motion, number } from "framer-motion";
 // 🔹 Componentes
 import Button from "../buttons/buttons";
 import { showSuccess, showError } from "../toastr/Toaster";
 import Table from "../table/Table";
 import Text from "../text/Text";
+import { IconSelector } from "../dinamicSelect/IconSelector";
 // 🔹 Servicios 
 import { getPlanning, updatePlanning } from "../../services/planing/planingServices";
 import { getClientsId } from "@/app/services/userDash/clientServices";
 import { getFactory, getFactoryId } from "@/app/services/userDash/factoryServices";
 import { getManu, getManuId } from "@/app/services/userDash/manufacturingServices";
 import { getMachin, getMachinById } from "@/app/services/userDash/machineryServices";
+import { getMaestraId } from "@/app/services/maestras/maestraServices";
 // 🔹 Interfaces
 import { Plan } from "@/app/interfaces/EditPlanning";
 
 function EditPlanning() {
     const [planning, setPlanning] = useState<Plan[]>([]);
     const [isOpen, setIsOpen] = useState(false);
-    const [currentPlan, setCurrentPlan] = useState<Plan | null>(null); 
+    const [currentPlan, setCurrentPlan] = useState<Plan | null>(null);
     const [factories, setFactories] = useState<{ id: number, name: string }[]>([]);
     const [manu, setManu] = useState<{ id: number, name: string }[]>([]);
     const [machine, setMachine] = useState<{ id: number, name: string }[]>([]);
- 
 
     useEffect(() => {
         const fetchPlanning = async () => {
             try {
-                const response = await getPlanning();
+                const response = await getPlanning(); 
                 const updatedPlanning: Plan[] = await Promise.all(
                     response.map(async (plan: Plan) => {
                         const clientData = await getClientsId(plan.client_id);
                         const factoryData = plan.factory ? await getFactoryId(Number(plan.factory)) : { name: "—" };
                         const manuData = plan.line ? await getManuId(Number(plan.line)) : { name: "—" };
                         const machineData = plan.machine ? await getMachinById(Number(plan.machine)) : { name: "—" };
-                        console.log("Factory Data:", factoryData.name);
-
                         return {
                             ...plan,
                             client_name: clientData.name,
                             factoryName: factoryData.name,
                             lineName: manuData.name,
-                            machineName: machineData.name,
+                            machineName: machineData.name, 
                         };
                     })
                 );
@@ -101,13 +100,19 @@ function EditPlanning() {
             showError("No hay datos para guardar.");
             return;
         }
-
         try {
-            await updatePlanning(updatedPlan.id, updatedPlan);
+            const masterIds = JSON.parse(updatedPlan.master);
+            const master = await getMaestraId(masterIds[0]);
+            const updatedWithDuration = {
+                ...updatedPlan,
+                duration: master.duration,
+            };
+            await updatePlanning(updatedWithDuration.id, updatedWithDuration);
             showSuccess("Planificación actualizada");
-
             setPlanning(prev =>
-                prev.map(plan => (plan.id === updatedPlan.id ? { ...updatedPlan } : plan))
+                prev.map(plan =>
+                    plan.id === updatedWithDuration.id ? updatedWithDuration : plan
+                )
             );
             setIsOpen(false);
         } catch (error) {
@@ -116,9 +121,9 @@ function EditPlanning() {
         }
     };
 
+
     const handleEdit = useCallback((id: number) => {
         const selectedPlan = planning.find(plan => plan.id === id);
-        console.log("Selected Plan:", selectedPlan);
         if (selectedPlan) {
             setCurrentPlan(selectedPlan);
             setIsOpen(true);
@@ -154,6 +159,7 @@ function EditPlanning() {
                                 <Text type="subtitle">Artículo</Text>
                                 <input
                                     className="w-full border p-3 rounded-lg text-gray-800 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 text-center"
+                                    readOnly
                                     value={currentPlan.codart}
                                     onChange={(e) =>
                                         setCurrentPlan({ ...currentPlan, codart: e.target.value })
@@ -167,6 +173,7 @@ function EditPlanning() {
                                 <input
                                     className="w-full border p-3 rounded-lg text-gray-800 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 text-center"
                                     type="date"
+                                    readOnly
                                     value={currentPlan.deliveryDate}
                                     onChange={(e) =>
                                         setCurrentPlan({ ...currentPlan, deliveryDate: e.target.value })
@@ -180,6 +187,7 @@ function EditPlanning() {
                                 <input
                                     className="w-full border p-3 rounded-lg text-gray-800 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 text-center"
                                     value={currentPlan.healthRegistration}
+                                    readOnly
                                     onChange={(e) =>
                                         setCurrentPlan({
                                             ...currentPlan,
@@ -195,6 +203,7 @@ function EditPlanning() {
                                 <input
                                     className="w-full border p-3 rounded-lg text-gray-800 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 text-center"
                                     value={currentPlan.lot}
+                                    readOnly
                                     onChange={(e) =>
                                         setCurrentPlan({ ...currentPlan, lot: e.target.value })
                                     }
@@ -207,6 +216,7 @@ function EditPlanning() {
                                 <input
                                     className="w-full border p-3 rounded-lg text-gray-800 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 text-center"
                                     value={currentPlan.orderNumber}
+                                    readOnly
                                     onChange={(e) =>
                                         setCurrentPlan({ ...currentPlan, orderNumber: e.target.value })
                                     }
@@ -219,6 +229,7 @@ function EditPlanning() {
                                 <input
                                     className="w-full border p-3 rounded-lg text-gray-800 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 text-center"
                                     type="number"
+                                    readOnly
                                     value={currentPlan.quantityToProduce.toString()}
                                     onChange={(e) =>
                                         setCurrentPlan({
@@ -228,19 +239,18 @@ function EditPlanning() {
                                     }
                                 />
                             </div>
-
                             {/* 🔹 Cliente */}
                             <div>
                                 <Text type="subtitle">Cliente</Text>
                                 <input
                                     className="w-full border p-3 rounded-lg text-gray-800 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 text-center"
                                     value={currentPlan.client_name || ""}
+                                    readOnly
                                     onChange={(e) =>
                                         setCurrentPlan({ ...currentPlan, client_name: e.target.value })
                                     }
                                 />
                             </div>
-
                             {/* 🔹 Estado */}
                             <div>
                                 <Text type="subtitle">Estado</Text>
@@ -256,7 +266,6 @@ function EditPlanning() {
                                     <option value="Planificación">Planificación</option>
                                 </select>
                             </div>
-
                             {/* 🔹 Planta */}
                             <div>
                                 <Text type="subtitle">Planta</Text>
@@ -345,7 +354,55 @@ function EditPlanning() {
                                     rows={4}
                                 />
                             </div>
-
+                            {/* Color */}
+                            <div>
+                                <Text type="subtitle">Color</Text>
+                                <input
+                                    type="color"
+                                    className="w-full border p-3 rounded-lg mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    value={currentPlan.color}
+                                    onChange={(e) =>
+                                        setCurrentPlan({ ...currentPlan, color: e.target.value })
+                                    }
+                                    style={{ backgroundColor: currentPlan.color }} // Muestra el color como fondo
+                                />
+                            </div>
+                            {/* Icono */}
+                            <div>
+                                <Text type="subtitle">Icono</Text>
+                                <IconSelector
+                                    selectedIcon={currentPlan?.icon || ""}
+                                    onChange={(iconName) =>
+                                        setCurrentPlan((prev) =>
+                                            prev ? { ...prev, icon: iconName } : prev
+                                        )
+                                    }
+                                />
+                            </div>
+                            {/* 🔹 Fecha de Inicio */}
+                            <div>
+                                <Text type="subtitle">Fecha y Hora de Inicio</Text>
+                                <input
+                                    className="w-full border p-3 rounded-lg text-gray-800 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 text-center"
+                                    value={currentPlan.start_date || ""}
+                                    type="datetime-local"
+                                    onChange={(e) =>
+                                        setCurrentPlan({ ...currentPlan, start_date: e.target.value })
+                                    }
+                                />
+                            </div>
+                            {/* 🔹 Fecha de Inicio */}
+                            <div>
+                                <Text type="subtitle">Fecha y Hora de Final</Text>
+                                <input
+                                    className="w-full border p-3 rounded-lg text-gray-800 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 text-center"
+                                    value={currentPlan.end_date || ""}
+                                    type="datetime-local"
+                                    onChange={(e) =>
+                                        setCurrentPlan({ ...currentPlan, end_date: e.target.value })
+                                    }
+                                />
+                            </div>
                         </div>
 
                         <div className="flex justify-end gap-2 mt-6">
@@ -357,7 +414,7 @@ function EditPlanning() {
             )}
 
             <Table
-                columns={["client_name", "codart", "deliveryDate", "status_dates", "factoryName", "lineName", "machineName"]}
+                columns={["client_name", "codart", "deliveryDate", "status_dates", "factoryName", "lineName", "machineName" ]}
                 rows={planning}
                 columnLabels={{
                     client_name: "Cliente",
@@ -366,7 +423,7 @@ function EditPlanning() {
                     status_dates: "Estado",
                     factoryName: "Planta",
                     lineName: "Lineas",
-                    machineName: "Maquinaria",
+                    machineName: "Maquinaria", 
                 }}
                 onDelete={handleDelete}
                 showDeleteButton={false}
