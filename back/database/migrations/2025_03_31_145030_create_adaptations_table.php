@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('adaptations', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('client_id');
+            $table->unsignedBigInteger('factory_id');
             $table->json('article_code');
             $table->string('attachment')->nullable();
             $table->string('number_order')->nullable();
@@ -21,6 +22,7 @@ return new class extends Migration
             $table->json('bom')->nullable();
             $table->json('ingredients')->nullable();
             $table->foreign('client_id')->references('id')->on('clients')->onDelete('cascade');
+            $table->foreign('factory_id')->references('id')->on('factories')->onDelete('cascade');
             $table->timestamps();
         });
         

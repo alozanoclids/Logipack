@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('adaptation_dates', function (Blueprint $table) {
             $table->id();
             $table->foreignId('client_id')->constrained('clients');
+            $table->foreignId('factory_id')->constrained('factories'); 
 
             // Los campos que vienen dentro de cada article_code
             $table->string('number_order')->nullable();

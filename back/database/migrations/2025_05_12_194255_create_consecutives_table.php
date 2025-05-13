@@ -13,10 +13,10 @@ return new class extends Migration
     {
         Schema::create('consecutives', function (Blueprint $table) {
             $table->id();
-            $table->string('prefix')->unique();
-            $table->string('year')->unique();
-            $table->string('month')->unique();
-            $table->string('consecutive')->unique();
+            $table->string('prefix');
+            $table->string('year');
+            $table->string('month');
+            $table->string('consecutive');
             $table->timestamps();
         });
     }

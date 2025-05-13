@@ -21,7 +21,7 @@ export default function NewActivity() {
         duration: 0,
     });
     const [activities, setActivities] = useState<Activities[]>([]);
-    const [options, setOptions] = useState<string[]>([]);
+    const [options, setOptions] = useState<string[]>([""]);
     const [parsedConfig, setParsedConfig] = useState<ActivityType | null>(null);
     const [editingActivity, setEditingActivity] = useState<EditFormData | null>(null);
     const [originalConfig, setOriginalConfig] = useState<ActivityType | null>(null);
@@ -316,33 +316,40 @@ export default function NewActivity() {
                         exit={{ y: 50, opacity: 0 }}
                         transition={{ duration: 0.3 }}
                     >
-                        <Text type="title">Crear Actividad</Text>
+                        <div className="text-center">
+                            <Text type="title">Crear Actividad</Text>
+                        </div>
 
                         {/* Campo de descripción */}
-                        <Text type="subtitle">Descripción</Text>
-                        <input
-                            type="text"
-                            name="description"
-                            value={formData.description}
-                            onChange={(e) =>
-                                setFormData({ ...formData, description: e.target.value })
-                            }
-                            className="w-full border p-2 rounded-md text-black mb-4 text-center"
-                        />
+                        <div>
+                            <Text type="subtitle">Descripción</Text>
+                            <input
+                                type="text"
+                                name="description"
+                                value={formData.description}
+                                onChange={(e) =>
+                                    setFormData({ ...formData, description: e.target.value })
+                                }
+                                className="w-full border p-2 rounded-md text-black mb-4 text-center"
+                            />
+                        </div>
 
                         {/* Selector de tipo de actividad */}
-                        <Text type="subtitle">Tipo de Actividad</Text>
-                        <select
-                            value={selectedType}
-                            onChange={(e) => handleTypeChange(e.target.value)}
-                            className="w-full border p-2 rounded-md text-black mb-4 text-center"
-                        >
-                            {Object.keys(activityTypes).map((type) => (
-                                <option key={type} value={type}>
-                                    {type}
-                                </option>
-                            ))}
-                        </select>
+                        <div>
+                            <Text type="subtitle">Tipo de Actividad</Text>
+                            <select
+                                value={selectedType}
+                                onChange={(e) => handleTypeChange(e.target.value)}
+                                className="w-full border p-2 rounded-md text-black mb-4 text-center"
+                            >
+                                {Object.keys(activityTypes).map((type) => (
+                                    <option key={type} value={type}>
+                                        {type}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                        
                         {/* Opciones dinámicas */}
                         {parsedConfig &&
                             ["select", "radio", "checkbox"].includes(parsedConfig.type || "") && (
@@ -355,8 +362,8 @@ export default function NewActivity() {
                                         onRemove={removeOption}
                                     />
                                 </div>
-                            )}
-
+                            )
+                        }
 
                         {/* Contenedor para los tres elementos en fila */}
                         <div className="mt-4 flex flex-wrap justify-center gap-6">
@@ -566,7 +573,7 @@ export default function NewActivity() {
                         </div>
 
                         {/* Botones */}
-                        <div className="flex justify-end space-x-4 mt-2">
+                        <div className="flex justify-end space-x-4 mt-4">
                             <Button
                                 onClick={() => {
                                     setIsEditOpen(false);
@@ -584,7 +591,7 @@ export default function NewActivity() {
 
             {/* Tabla de actividades */}
             <Table columns={["description", "binding"]} rows={activities}
-                columnLabels={{ 
+                columnLabels={{
                     description: "Descripción",
                     binding: "Obligatorio",
                 }} onDelete={handleDelete} onEdit={handleEdit} />

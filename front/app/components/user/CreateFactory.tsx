@@ -200,7 +200,8 @@ function CreateFactory() {
                     </motion.div>
                 </motion.div>
             )}
-            <Table columns={["name", "prefix", "location", "manager", "status"]} rows={factories} columnLabels={{
+            <Table columns={["name", "prefix", "location", "manager", "status"
+            ]} rows={factories} columnLabels={{
                 name: "Nombre de Planta",
                 prefix: "Prefijo",
                 location: "Ubicación",

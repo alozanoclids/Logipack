@@ -13,13 +13,14 @@ return new class extends Migration
     {
         Schema::create('consecutive_dates', function (Blueprint $table) {
             $table->id();
-            $table->string('prefix')->unique();
-            $table->string('year')->unique();
-            $table->string('month')->unique();
-            $table->string('consecutive')->unique();
-            $table->string('date')->unique();
-            $table->string('user'); 
-            $table->boolean('status')->default('active');
+            $table->string('prefix');
+            $table->string('year');
+            $table->string('month');
+            $table->string('consecutive');
+            $table->string('date');
+            $table->string('user');
+            $table->boolean('status')->default(true);
+            $table->unsignedBigInteger('adaptation_id');
             $table->foreign('adaptation_id')->references('id')->on('adaptations')->onDelete('cascade');
             $table->timestamps();
         });

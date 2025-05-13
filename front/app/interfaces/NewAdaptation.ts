@@ -65,3 +65,8 @@ export interface Articles {
   attachment?: File;
   numberOrder?: string;
 }
+
+export interface Plant {
+  id: number;
+  name: string;
+}

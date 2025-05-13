@@ -28,6 +28,7 @@ class AdaptationController extends Controller
                 'bom'          => 'nullable|json',
                 'ingredients'  => 'nullable|json',
                 'number_order' => 'required|string',
+                'factory_id' => 'required|exists:factories,id',
             ]);
 
             $articleAttachments = [];
@@ -80,6 +81,7 @@ class AdaptationController extends Controller
             foreach ($articleCodes as $article) {
                 AdaptationDate::create([
                     'client_id'           => $validatedData['client_id'],
+                    'factory_id'          => $validatedData['factory_id'],
                     'codart'              => $article['codart'],
                     'number_order'        => $article['number_order'],
                     'orderNumber'         => $article['orderNumber'],
@@ -156,6 +158,7 @@ class AdaptationController extends Controller
 
             $validatedData = $request->validate([
                 'client_id'    => 'required|exists:clients,id',
+                'factory_id'   => 'required|exists:factories,id',
                 'article_code' => 'required|json',
                 'number_order' => 'required|string',
                 'attachment'   => 'nullable|file',
@@ -218,7 +221,7 @@ class AdaptationController extends Controller
                 }
             }
 
-            $adaptation->update($validatedData); 
+            $adaptation->update($validatedData);
             $articleCodes = json_decode($validatedData['article_code'], true);
             foreach ($articleCodes as $article) {
                 AdaptationDate::updateOrCreate(
@@ -228,6 +231,7 @@ class AdaptationController extends Controller
                     ],
                     [
                         'client_id'           => $validatedData['client_id'],
+                        'factory_id'          => $validatedData['factory_id'],
                         'number_order'        => $validatedData['number_order'],
                         'orderNumber'         => $article['orderNumber'],
                         'deliveryDate'        => $article['deliveryDate'],

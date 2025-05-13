@@ -31,7 +31,7 @@ export const activityTypes: Record<string, ActivityType> = {
     Adjunto: { type: "file" },
     Foto: { type: "image" },
     "Lista desplegable": { type: "select", options: ["Opción 1", "Opción 2"] },
-    "Selección única": { type: "radio", options: ["Sí"] },
+    "Selección única": { type: "radio", options: [""] },
     "Selección múltiple": { type: "checkbox", options: ["Opción A", "Opción B"] },
     Firma: { type: "signature" },
     Informativo: { type: "text", placeholder: "Escribe aquí..." },

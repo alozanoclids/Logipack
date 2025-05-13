@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
 // 🔹 Servicios
 import { getClients, getClientsId } from "@/app/services/userDash/clientServices";
+import { getFactory, getFactoryId } from "@/app/services/userDash/factoryServices";
 import { getArticleByCode, getArticleByClient } from "@/app/services/bom/articleServices";
 import { newAdaptation, getAdaptations, deleteAdaptation, updateAdaptation, getAdaptationsId } from "@/app/services/adaptation/adaptationServices";
 import { getMaestra } from "../../services/maestras/maestraServices";
@@ -16,11 +17,13 @@ import { showSuccess, showError, showConfirm } from "../toastr/Toaster";
 // 🔹 Interfaces
 import { Client, Article, Ingredient } from "@/app/interfaces/BOM";
 import { Data } from "@/app/interfaces/NewMaestra";
-import { BOMResponse, BOM, Adaptation, ArticleFormData, ArticleFieldsMap, Articles } from "@/app/interfaces/NewAdaptation";
+import { BOMResponse, BOM, Adaptation, ArticleFormData, ArticleFieldsMap, Articles, Plant } from "@/app/interfaces/NewAdaptation";
 
 function NewAdaptation() {
     const [isOpen, setIsOpen] = useState(false);
     const [selectedClient, setSelectedClient] = useState<string>("");
+    const [plantas, setPlantas] = useState<Plant[]>([]);
+    const [planta, setPlanta] = useState<string>('');
     const [client_order, setClientOrder] = useState<string>("");
     const [orderNumber, setOrderNumber] = useState<string>("");
     const [deliveryDate, setDeliveryDate] = useState<string>("");
@@ -60,6 +63,23 @@ function NewAdaptation() {
         };
         fetchClients();
     }, []);
+
+    useEffect(() => {
+        const fetchFactories = async () => {
+            try {
+                setIsLoading(true);
+                const factoriesData: Plant[] = await getFactory(); // Asegurate de tipar esto
+                setPlantas(factoriesData);
+            } catch (error) {
+                showError("Error al cargar las plantas.");
+                console.error(error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchFactories();
+    }, []);
+
 
     // Cargar Maestras
     useEffect(() => {
@@ -229,7 +249,11 @@ function NewAdaptation() {
 
     const handleSubmit = async () => {
         if (!selectedClient) {
-            showError("Por favor, selecciona un cliente.");
+            showError("Por favor, selecciona un Cliente.");
+            return;
+        }
+        if (!planta) {
+            showError("Por favor, selecciona una Planta.");
             return;
         }
         let articlesData;
@@ -272,6 +296,7 @@ function NewAdaptation() {
 
         const formData = new FormData();
         formData.append("client_id", selectedClient.toString());
+        formData.append("plant_id", planta);
         formData.append("article_code", JSON.stringify(articlesData));
         formData.append("number_order", client_order);
         formData.append("master", JSON.stringify(selectedMaestras));
@@ -344,6 +369,7 @@ function NewAdaptation() {
 
             // — Cliente
             setSelectedClient(adaptation.client_id.toString());
+            setPlanta(adaptation.plant_id.toString());
 
             // — Master(s)
             const masterParsed = typeof adaptation.master === "string"
@@ -450,6 +476,7 @@ function NewAdaptation() {
     // Resetear el formulario
     const resetForm = useCallback(() => {
         setSelectedClient("");
+        setPlanta("");
         setOrderNumber("");
         setClientOrder("");
         setDeliveryDate("");
@@ -505,6 +532,23 @@ function NewAdaptation() {
                             {/* Cliente */}
                             <div className="col-span-full">
                                 <div className="flex gap-4">
+                                    <div className="w-1/2">
+                                        <Text type="subtitle">Planta:</Text>
+                                        <select
+                                            className="w-full border p-3 rounded-lg text-gray-800 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 text-center"
+                                            value={planta}
+                                            onChange={e => setPlanta(e.target.value)}
+                                        >
+                                            <option value="">Seleccione...</option>
+                                            {plantas.map((plant) => (
+                                                <option key={plant.id} value={plant.id.toString()}>
+                                                    {plant.name}
+                                                </option>
+                                            ))}
+                                        </select>
+
+                                    </div>
+
                                     <div className="w-1/2">
                                         <Text type="subtitle">Cliente:</Text>
                                         <select
@@ -770,7 +814,7 @@ function NewAdaptation() {
                                                         <td className="border border-black p-2 text-center">{ing.codart}</td>
                                                         <td className="border border-black p-2 text-center">{ing.desart}</td>
                                                         <td className="border border-black p-2 text-center">
-                                                            {(ing.merma * 100).toFixed(2)}%
+                                                            {(Number(ing.merma) * 100).toFixed(2)}%
                                                         </td>
                                                         <td className="border border-black p-2 text-center">
                                                             <input
