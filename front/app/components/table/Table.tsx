@@ -48,7 +48,7 @@ export const Table: React.FC<TableProps> = ({ rows, columns, columnLabels = {}, 
     const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
     const [searchTerm, setSearchTerm] = useState<string>("");
     const [currentPage, setCurrentPage] = useState<number>(1);
-    const booleanColumns = ["binding", "status", "aprobado"];
+    const booleanColumns = ["binding", "es_editable", "repite_minutes", "status", "control"];
     const itemsPerPage = 5;
     const maxButtons = 4;
 

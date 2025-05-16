@@ -16,6 +16,8 @@ use App\Http\Controllers\StagesController;
 use App\Http\Controllers\AdaptationController;
 use App\Http\Controllers\AdaptationDateController;
 use App\Http\Controllers\MachineryController;
+use App\Http\Controllers\TipoAcondicionamientoController;
+use App\Http\Controllers\LineaTipoAcondicionamientoController;
 
 Route::controller(AuthController::class)->group(function () {
     Route::post('login', 'login');
@@ -166,3 +168,24 @@ Route::controller(AdaptationDateController::class)->group(function () {
     Route::get('/getConsecutive', 'getAll'); // Obtener todas las lineas   
     Route::put('/updateConsecutive/{id}', 'update'); // Crear una nueva lineas  
 });
+
+//Rutas Tipo de Acondicionamiento
+Route::controller(TipoAcondicionamientoController::class)->group(function () {
+    Route::get('/getTipoAcondicionamiento', 'getAll'); // Obtener todas las lineas   
+    Route::post('/newTipoAcondicionamiento', 'newTipoAcondicionamiento'); // Crear una nueva lineas 
+    Route::put('/updateTipoAcondicionamiento/{id}', 'updateTipoAcondicionamiento'); // Actualizar una lineas
+    Route::delete('/deleteTipoAcondicionamiento/{id}', 'deleteTipoAcondicionamiento'); // Eliminar una lineas
+});
+
+
+//Rutas Lineas Tipo de Acondicionamiento
+Route::controller(LineaTipoAcondicionamientoController::class)->group(function () {
+    Route::get('/getLineaTipoAcondicionamiento', 'getAll'); // Obtener todas las lineas   
+    Route::post('/newLineaTipoAcondicionamiento', 'store'); // Crear una nueva lineas 
+    Route::put('/updateLineaTipoAcondicionamiento/{id}', 'update'); // Actualizar una lineas
+    Route::delete('/deleteLineaTipoAcondicionamiento/{id}', 'destroy'); // Eliminar una lineas
+    Route::get('/getLineaTipoAcondicionamiento/{id}', 'getByTipoAcondicionamiento'); // Obtener una lineas específica
+    Route::get('/getListTipoyLineas/{id}', 'getListTipoyLineas'); // Obtener una lineas específica
+    Route::get('/getSelectStages', 'getSelectStages'); // Obtener una lineas específica
+});
+
